@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block title %}{{ page.title }}{% endblock %}
+{% block meta_description %}{{ page.intro|default:page.title }}{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <p class="breadcrumb"><a href="{% pageurl page.get_parent %}">← Actualités</a></p>
+        <h1>{{ page.title }}</h1>
+        <p class="news-meta">
+            <time>{{ page.date|date:"d F Y" }}</time>
+            {% if page.author %} · par {{ page.author }}{% endif %}
+        </p>
+        {% if page.tags.all %}
+            <p class="news-tags-inline">
+                {% for tag in page.tags.all %}
+                    <a href="{% pageurl page.get_parent %}?tag={{ tag|urlencode }}" class="tag">#{{ tag }}</a>
+                {% endfor %}
+            </p>
+        {% endif %}
+    </div>
+</section>
+
+{% if page.featured_image %}
+    {% image page.featured_image fill-1400x700 as hero_img %}
+    <div class="news-featured-image fade-target">
+        <img src="{{ hero_img.url }}" alt="{{ page.title }}" class="fade-up">
+    </div>
+{% endif %}
+
+<article class="news-body wrap fade-target">
+    {% if page.intro %}<p class="news-body__intro fade-up">{{ page.intro }}</p>{% endif %}
+    {% for block in page.body %}
+        <div class="info-body__block fade-up">
+            {% if block.block_type == "heading" %}
+                <h2>{{ block.value }}</h2>
+            {% elif block.block_type == "paragraph" %}
+                {{ block.value|richtext }}
+            {% elif block.block_type == "image" %}
+                {% image block.value width-1000 %}
+            {% else %}
+                {% include_block block %}
+            {% endif %}
+        </div>
+    {% endfor %}
+
+    {% if page.lien_url %}
+        <p class="news-body__lien">
+            <a class="btn btn--primary" href="{{ page.lien_url }}" target="_blank" rel="noopener">{{ page.lien_texte|default:"En savoir plus" }}</a>
+        </p>
+    {% endif %}
+
+    {% if peut_modifier %}
+        <div class="news-body__actions">
+            <a class="btn btn--secondary" href="{% url 'news_modifier' page.pk %}">Modifier cette actualité</a>
+            <a class="btn btn--danger" href="{% url 'news_supprimer' page.pk %}">Supprimer cette actualité</a>
+        </div>
+    {% endif %}
+</article>
+
+{% if related_posts %}
+<section class="news-related wrap fade-target">
+    <h2>À lire aussi</h2>
+    <div class="news-grid">
+        {% for post in related_posts %}
+            <article class="news-card fade-up">
+                <a href="{% pageurl post %}" class="news-card__link">
+                    {% if post.featured_image %}
+                        {% image post.featured_image fill-500x340 as img %}
+                        <img src="{{ img.url }}" alt="{{ post.title }}" loading="lazy">
+                    {% endif %}
+                    <div class="news-card__body">
+                        <time>{{ post.date|date:"d F Y" }}</time>
+                        <h2>{{ post.title }}</h2>
+                    </div>
+                </a>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}

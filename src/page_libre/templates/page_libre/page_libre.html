@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags wagtailimages_tags %}
+
+{% block body_class %}template-page-libre{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'page_libre/css/page_libre.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<section class="page-libre-entete fade-target">
+    <div class="wrap">
+        {% if page.logo %}
+            {% image page.logo width-240 as logo_img %}
+            <img class="page-libre-entete__logo fade-up" src="{{ logo_img.url }}" alt="{{ page.title }}">
+        {% endif %}
+        <h1 class="fade-up delay-1">{{ page.titre_affiche|default:page.title }}</h1>
+        {% if page.sous_titre %}<p class="page-libre-entete__sous-titre fade-up delay-2">{{ page.sous_titre }}</p>{% endif %}
+    </div>
+</section>
+
+{% for section in page.sections.all %}
+    {% include "includes/section_defilement.html" %}
+{% endfor %}
+
+{% if galerie_images %}
+    <section class="page-libre-galerie fade-target">
+        <div class="wrap">
+            {% if page.titre_galerie %}<h2 class="fade-up">{{ page.titre_galerie }}</h2>{% endif %}
+            <div class="page-libre-galerie__grille" id="lightbox-gallery">
+                {% for item in galerie_images %}
+                    {% image item.image fill-400x400 as thumb %}
+                    {% image item.image width-1600 as full %}
+                    <button type="button" class="photo-gallery__item fade-up" data-full="{{ full.url }}" data-caption="{{ item.legende }}">
+                        <img src="{{ thumb.url }}" alt="{{ item.legende|default:page.title }}" loading="lazy">
+                    </button>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <div class="lightbox" id="lightbox" aria-hidden="true">
+        <button class="lightbox__close" aria-label="Fermer">&times;</button>
+        <img class="lightbox__image" src="" alt="">
+        <p class="lightbox__caption"></p>
+    </div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+{% if galerie_images %}
+    <script src="{% static 'js/lightbox.js' %}" defer></script>
+{% endif %}
+{% endblock %}

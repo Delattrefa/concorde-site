@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Supprimer la demande de réservation{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <h1>Supprimer la demande de réservation</h1>
+    </div>
+</section>
+
+<section class="calendrier-form wrap">
+    <p>Êtes-vous sûr de vouloir supprimer définitivement la demande de
+        <strong>{{ reservation.prenom }} {{ reservation.nom }}</strong> pour le
+        {{ reservation.date_debut|date:"d F Y" }} ?</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn--danger">Oui, supprimer définitivement</button>
+        <a class="btn btn--secondary" href="{% url 'calendrier:reservation_liste' %}">Annuler</a>
+    </form>
+</section>
+{% endblock %}

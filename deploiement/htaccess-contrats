@@ -1,0 +1,4 @@
+# Les contrats de location contiennent des données personnelles.
+# Accès direct interdit : téléchargement uniquement via le site, par un
+# administrateur connecté (/calendrier/reservation/<id>/contrat/pdf/).
+Require all denied

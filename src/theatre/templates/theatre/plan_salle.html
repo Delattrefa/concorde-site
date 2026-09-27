@@ -1,0 +1,107 @@
+{% extends 'theatre/base.html' %}
+{% block title %}Plan de salle — {{ representation.nom }}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-grid-3x3"></i>
+            Plan de salle — {{ representation.nom }}
+            <small class="text-muted ms-2">{{ representation.date|date:"d/m/Y" }}</small>
+        </h5>
+        <span class="badge bg-secondary">{{ plan.nb_total_places }} places / {{ plan.nb_rangees }} rangées</span>
+    </div>
+
+    <div class="card-body">
+        <!-- Légende -->
+        <div class="d-flex gap-3 mb-3 flex-wrap">
+            <span class="badge-legende libre">Libre</span>
+            <span class="badge-legende occupe">Occupée</span>
+        </div>
+
+        <!-- Scène -->
+        <div class="scene-label">🎭 SCÈNE</div>
+
+        <!-- Grille de la salle -->
+        <div class="plan-salle-container">
+            {% for rangee in lignes %}
+            <div class="rangee">
+                <span class="num-rangee">R{{ forloop.counter }}</span>
+                {% for place in rangee %}
+                    {% if place %}
+                    <div class="place occupee"
+                         data-bs-toggle="tooltip"
+                         title="{{ place.reservation.nom }} {{ place.reservation.prenom }} (#{{ place.numero_place }})">
+                        {{ place.numero_place }}
+                    </div>
+                    {% else %}
+                    <div class="place libre">·</div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Tableau récapitulatif -->
+        <h6 class="mt-4 mb-2"><i class="bi bi-list-ul"></i> Récapitulatif des placements</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nom</th>
+                        <th>Prénom</th>
+                        <th>Places attribuées</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for rangee in lignes %}
+                    {% for place in rangee %}
+                        {% if place %}
+                        <!-- On n'affiche qu'une ligne par réservation grâce au groupby -->
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+                {# Récupération des réservations directement #}
+                {% regroup plan.places.all by reservation as groupes %}
+                {% for groupe in groupes %}
+                <tr>
+                    <td>{{ groupe.grouper.nom }}</td>
+                    <td>{{ groupe.grouper.prenom }}</td>
+                    <td>
+                        {% for p in groupe.list %}
+                        <span class="badge bg-dark me-1">{{ p.numero_place }}</span>
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-3">
+            <a href="{% url 'representation_list' %}" class="btn btn-outline-dark">
+                <i class="bi bi-arrow-left"></i> Retour aux représentations
+            </a>
+            <a href="{% url 'plan_salle_generer' representation.pk %}" class="btn btn-outline-warning ms-2">
+                <i class="bi bi-arrow-repeat"></i> Regénérer le plan
+            </a>
+            <!-- ← Nouveau bouton impression -->
+            <a href="{% url 'liste_places_imprimer' representation.pk %}" class="btn btn-dark" target="_blank">
+                <i class="bi bi-printer"></i> Imprimer la liste des places
+            </a>
+            <a href="{% url 'controle_entree' representation.pk %}"
+               class="btn btn-success">
+               <i class="bi bi-door-open"></i> Contrôle entrée
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Activation des tooltips Bootstrap
+const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+tooltips.forEach(el => new bootstrap.Tooltip(el));
+</script>
+{% endblock %}

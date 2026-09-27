@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block title %}{{ page.title }}{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <h1>{{ page.title }}</h1>
+        {% if page.intro %}<div class="page-header__intro">{{ page.intro|richtext }}</div>{% endif %}
+        {% if user.is_authenticated %}
+            <a class="btn btn--primary" href="{% url 'news_ajouter' %}">+ Publier une actualité</a>
+        {% endif %}
+    </div>
+</section>
+
+{% if all_tags %}
+<section class="news-tags wrap fade-target">
+    <a href="{% pageurl page %}" class="tag {% if not active_tag %}tag--active{% endif %}">Tout</a>
+    {% for tag in all_tags %}
+        <a href="?tag={{ tag|urlencode }}" class="tag {% if active_tag == tag %}tag--active{% endif %}">#{{ tag }}</a>
+    {% endfor %}
+</section>
+{% endif %}
+
+<section class="news-grid wrap fade-target">
+    {% for post in posts %}
+        <article class="news-card fade-up">
+            <a href="{% pageurl post %}" class="news-card__link">
+                {% if post.featured_image %}
+                    {% image post.featured_image fill-500x340 as img %}
+                    <img src="{{ img.url }}" alt="{{ post.title }}" loading="lazy">
+                {% endif %}
+                <div class="news-card__body">
+                    <time>{{ post.date|date:"d F Y" }}</time>
+                    <h2>{{ post.title }}</h2>
+                    {% if post.intro %}<p>{{ post.intro }}</p>{% endif %}
+                    <span class="news-card__readmore">Lire l'article →</span>
+                </div>
+            </a>
+            {% if user.is_authenticated and post.cree_par_id == user.id %}
+                <div class="news-card__owner-actions">
+                    <a href="{% url 'news_modifier' post.pk %}">Modifier</a>
+                    <a href="{% url 'news_supprimer' post.pk %}">Supprimer</a>
+                </div>
+            {% endif %}
+        </article>
+    {% empty %}
+        <p>Aucun article publié pour le moment.</p>
+    {% endfor %}
+</section>
+
+{% if posts.has_other_pages %}
+<nav class="pagination wrap" aria-label="Navigation des pages">
+    {% if posts.has_previous %}
+        <a href="?{% if active_tag %}tag={{ active_tag|urlencode }}&amp;{% endif %}page={{ posts.previous_page_number }}">← Précédent</a>
+    {% endif %}
+    <span>Page {{ posts.number }} / {{ posts.paginator.num_pages }}</span>
+    {% if posts.has_next %}
+        <a href="?{% if active_tag %}tag={{ active_tag|urlencode }}&amp;{% endif %}page={{ posts.next_page_number }}">Suivant →</a>
+    {% endif %}
+</nav>
+{% endif %}
+{% endblock %}

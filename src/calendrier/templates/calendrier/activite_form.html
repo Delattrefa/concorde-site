@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Modifier l'activité{% else %}Ajouter une activité{% endif %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <p class="breadcrumb"><a href="{% url 'calendrier:mois_courant' %}">← Retour au calendrier</a></p>
+        <h1>{% if object %}Modifier l'activité{% else %}Ajouter une activité{% endif %}</h1>
+    </div>
+</section>
+
+<section class="calendrier-form wrap">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-field">
+            {{ form.nom.label_tag }}
+            {{ form.nom }}
+            {{ form.nom.errors }}
+        </div>
+
+        <div class="form-field">
+            {{ form.description.label_tag }}
+            {{ form.description }}
+            {{ form.description.errors }}
+        </div>
+
+        <div class="form-field-row">
+            <div class="form-field">
+                {{ form.date_debut.label_tag }}
+                {{ form.date_debut }}
+                {{ form.date_debut.errors }}
+            </div>
+            <div class="form-field">
+                {{ form.date_fin.label_tag }}
+                {{ form.date_fin }}
+                <p class="form-field__help">Identique à la date de début pour une activité d'un seul jour.</p>
+                {{ form.date_fin.errors }}
+            </div>
+        </div>
+
+        <div class="form-field">
+            <span class="form-field__label">{{ form.visibilite.label }}</span>
+            {{ form.visibilite }}
+            <p class="form-field__help">
+                Une activité <strong>publique</strong> est visible par tous les visiteurs du site.
+                Une activité <strong>privée</strong> n'est visible que par les personnes connectées.
+            </p>
+            {{ form.visibilite.errors }}
+        </div>
+
+        <div class="form-field">
+            {{ form.couleur.label_tag }}
+            {{ form.couleur }}
+            <p class="form-field__help">Facultatif : une couleur est attribuée automatiquement selon la visibilité si vous ne choisissez rien.</p>
+        </div>
+
+        <button type="submit" class="btn btn--primary">
+            {% if object %}Enregistrer les modifications{% else %}Ajouter l'activité{% endif %}
+        </button>
+        {% if object %}
+            <a class="btn btn--danger" href="{% url 'calendrier:activite_supprimer' object.pk %}">Supprimer cette activité</a>
+        {% endif %}
+    </form>
+</section>
+{% endblock %}

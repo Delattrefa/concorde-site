@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags %}
+
+{% block title %}Supprimer l'actualité{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'news/css/news.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <h1>Supprimer l'actualité</h1>
+    </div>
+</section>
+
+<section class="news-form wrap">
+    <p>Êtes-vous sûr de vouloir supprimer définitivement l'actualité
+        « <strong>{{ news.title }}</strong> » ? Cette action est irréversible.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn--danger">Oui, supprimer définitivement</button>
+        <a class="btn btn--secondary" href="{% pageurl news %}">Annuler</a>
+    </form>
+</section>
+{% endblock %}

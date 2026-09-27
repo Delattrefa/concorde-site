@@ -1,0 +1,66 @@
+{% load wagtailcore_tags wagtailimages_tags %}
+{% if section.type_section == "colonnes" %}
+    <section class="cols-section fade-target">
+        <div class="wrap">
+            {% if section.titre_colonnes %}<h2 class="cols-section__titre fade-up">{{ section.titre_colonnes }}</h2>{% endif %}
+            <div class="cols-section__grid cols-section__grid--{{ section.nombre_colonnes }}">
+                {% for colonne in section.colonnes %}
+                    <div class="cols-section__col fade-up delay-{{ forloop.counter|add:'-1' }}">
+                        {% if colonne.image %}
+                            {% image colonne.image fill-500x350 as col_img %}
+                            <img src="{{ col_img.url }}" alt="{{ colonne.titre }}" loading="lazy">
+                        {% endif %}
+                        {% if colonne.titre %}<h3>{{ colonne.titre }}</h3>{% endif %}
+                        {{ colonne.texte|richtext }}
+                    </div>
+                {% endfor %}
+            </div>
+            {% if section.liens %}
+                <div class="cols-section__liens fade-up">
+                    {% for bloc_lien in section.liens %}
+                        <a class="btn btn--secondary" href="{{ bloc_lien.value.url }}">{{ bloc_lien.value.texte }}</a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </section>
+{% else %}
+    <section class="scroll-section scroll-section--{{ section.image_position }} fade-target">
+        {% if section.image_position == "full" and section.image %}
+            {% image section.image fill-1600x900 as bg %}
+            <div class="scroll-section__bg" style="background-image:url('{{ bg.url }}');"></div>
+            <div class="scroll-section__overlay"></div>
+            <div class="scroll-section__content scroll-section__content--on-image fade-up">
+                {% if section.title %}<h2>{{ section.title }}</h2>{% endif %}
+                {{ section.text|richtext }}
+                {% if section.liens %}
+                    <div class="scroll-section__liens">
+                        {% for bloc_lien in section.liens %}
+                            <a class="btn btn--outline" href="{{ bloc_lien.value.url }}">{{ bloc_lien.value.texte }}</a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="scroll-section__grid">
+                {% if section.image %}
+                    {% image section.image fill-900x700 as img %}
+                    <div class="scroll-section__image fade-in-{% if section.image_position == 'left' %}left{% else %}right{% endif %}">
+                        <img src="{{ img.url }}" alt="{{ section.image.title }}" loading="lazy">
+                    </div>
+                {% endif %}
+                <div class="scroll-section__text fade-up">
+                    {% if section.title %}<h2>{{ section.title }}</h2>{% endif %}
+                    {{ section.text|richtext }}
+                    {% if section.liens %}
+                        <div class="scroll-section__liens">
+                            {% for bloc_lien in section.liens %}
+                                <a class="btn btn--secondary" href="{{ bloc_lien.value.url }}">{{ bloc_lien.value.texte }}</a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </section>
+{% endif %}

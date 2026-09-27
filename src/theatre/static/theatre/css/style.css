@@ -1,0 +1,870 @@
+/* ═══════════════════════════════════════════
+   Gestion Théâtre — Feuille de styles
+   Thème sombre élégant, Bootstrap 5
+═══════════════════════════════════════════ */
+
+:root {
+    --couleur-principale: #1a1a2e;
+    --couleur-accent: #e94560;
+    --couleur-claire: #f5f5f5;
+    --couleur-place-libre: #e9ecef;
+    --couleur-place-occupee: #343a40;
+    --couleur-place-hover: #6c757d;
+}
+
+/* ─── Corps ─────────────────────────────── */
+body {
+    background-color: #f8f9fa;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main.container {
+    flex: 1;
+}
+
+/* ─── Navbar ─────────────────────────────── */
+.navbar-brand {
+    letter-spacing: 1px;
+    font-size: 1.3rem;
+}
+
+/* ─── Cartes ─────────────────────────────── */
+.card {
+    border: none;
+    border-radius: 0.75rem;
+}
+
+.card-header {
+    border-radius: 0.75rem 0.75rem 0 0 !important;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+/* ─── Boutons ─────────────────────────────── */
+.btn {
+    border-radius: 0.5rem;
+    font-weight: 500;
+}
+
+/* ─── Tables ─────────────────────────────── */
+.table th {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ─── Plan de salle ──────────────────────── */
+.scene-label {
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: bold;
+    letter-spacing: 4px;
+    background: var(--couleur-principale);
+    color: #fff;
+    padding: 8px 0;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+.plan-salle-container {
+    overflow-x: auto;
+    padding: 10px 0;
+}
+
+.rangee {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.num-rangee {
+    font-size: 0.7rem;
+    color: #6c757d;
+    width: 28px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.place {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    cursor: default;
+    transition:
+        transform 0.15s,
+        background 0.15s;
+    flex-shrink: 0;
+}
+
+.place.libre {
+    background: var(--couleur-place-libre);
+    color: #adb5bd;
+    border: 1px solid #dee2e6;
+}
+
+.place.occupee {
+    background: var(--couleur-place-occupee);
+    color: #fff;
+    border: 1px solid #495057;
+    cursor: pointer;
+}
+
+.place.occupee:hover {
+    background: var(--couleur-accent);
+    transform: scale(1.15);
+}
+
+/* ─── Légende ────────────────────────────── */
+.badge-legende {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+.badge-legende::before {
+    content: "";
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+}
+
+.badge-legende.libre::before {
+    background: var(--couleur-place-libre);
+    border: 1px solid #dee2e6;
+}
+.badge-legende.libre {
+    background: #f8f9fa;
+    color: #495057;
+}
+
+.badge-legende.occupe::before {
+    background: var(--couleur-place-occupee);
+}
+.badge-legende.occupe {
+    background: #f8f9fa;
+    color: #343a40;
+}
+
+/* ─── Alertes & flash messages ───────────── */
+.alert {
+    border-radius: 0.6rem;
+    border: none;
+}
+
+/* ─── Footer ─────────────────────────────── */
+footer {
+    font-size: 0.85rem;
+}
+
+/* ─── Formulaires ────────────────────────── */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--couleur-principale);
+    box-shadow: 0 0 0 0.2rem rgba(26, 26, 46, 0.15);
+}
+
+/* ─── Login page ─────────────────────────── */
+body.bg-dark {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
+}
+
+/* ═══════════════════════════════════════════
+   Styles pour la liste imprimable
+═══════════════════════════════════════════ */
+
+/* ─── Barre d'outils (écran seulement) ──── */
+.toolbar-print {
+    background: #1a1a2e;
+    color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ─── Conteneur principal ────────────────── */
+.print-container {
+    max-width: 900px;
+    padding-top: 1.5rem;
+    padding-bottom: 3rem;
+}
+
+/* ─── En-tête ────────────────────────────── */
+.print-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #1a1a2e;
+}
+
+.print-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 0.1rem;
+}
+
+.print-subtitle {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #1a1a2e;
+    margin-bottom: 0;
+}
+
+.print-date-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6c757d;
+}
+
+.print-date {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a2e;
+}
+
+/* ─── Badges stats (écran) ───────────────── */
+.stat-badge {
+    background: #f0f0f0;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.88rem;
+    color: #1a1a2e;
+}
+
+/* ─── Tableau ────────────────────────────── */
+.print-table {
+    font-size: 0.9rem;
+    border-color: #dee2e6;
+}
+
+.print-table thead tr {
+    background: #1a1a2e;
+    color: #fff;
+}
+
+.print-table thead th {
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-color: #1a1a2e;
+    padding: 10px 12px;
+}
+
+.print-table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.print-table tbody tr:hover {
+    background-color: #e9ecef;
+}
+
+.col-num {
+    width: 40px;
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+/* ─── Badges de numéros de places ───────── */
+.numeros-places {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.badge-place {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #1a1a2e;
+    color: #fff;
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    min-width: 28px;
+}
+
+.prix-cell {
+    white-space: nowrap;
+    color: #1a1a2e;
+}
+
+/* ─── Ligne de total ─────────────────────── */
+.total-row {
+    background: #1a1a2e !important;
+    color: #fff;
+}
+
+.total-row td {
+    border-color: #1a1a2e !important;
+    padding: 10px 12px;
+}
+
+.total-montant {
+    font-size: 1.1rem;
+    color: #fff;
+}
+
+/* ─── Pied de page imprimé ───────────────── */
+.print-footer {
+    font-size: 0.78rem;
+    color: #6c757d;
+    margin-top: 2rem;
+}
+
+/* ─── Stats version impression ───────────── */
+.print-stats {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 0.5rem;
+}
+
+/* ═══════════════════════════════════════════
+   Règles CSS d'impression (@media print)
+═══════════════════════════════════════════ */
+@media print {
+    /* Masquer les éléments inutiles à l'impression */
+    .no-print {
+        display: none !important;
+    }
+
+    /* Afficher uniquement les éléments dédiés à l'impression */
+    .only-print {
+        display: block !important;
+    }
+
+    body {
+        background: #fff !important;
+        font-size: 11pt;
+        color: #000;
+    }
+
+    .print-container {
+        max-width: 100%;
+        padding: 0;
+    }
+
+    .print-header {
+        border-bottom: 2pt solid #000;
+    }
+
+    .print-title {
+        font-size: 12pt;
+    }
+
+    .print-subtitle {
+        font-size: 16pt;
+    }
+
+    /* Tableau optimisé impression */
+    .print-table {
+        font-size: 9pt;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .print-table thead tr {
+        background: #000 !important;
+        color: #fff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .print-table tbody tr:nth-child(even) {
+        background-color: #f0f0f0 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .print-table td,
+    .print-table th {
+        padding: 5pt 7pt;
+        border: 0.5pt solid #999;
+    }
+
+    /* Badges de places en noir et blanc */
+    .badge-place {
+        background: #000 !important;
+        color: #fff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        font-size: 8pt;
+        padding: 1pt 5pt;
+    }
+
+    /* Ligne de total */
+    .total-row {
+        background: #000 !important;
+        color: #fff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .total-montant {
+        color: #fff !important;
+    }
+
+    /* Éviter les coupures de page dans les lignes */
+    .print-table tbody tr {
+        page-break-inside: avoid;
+    }
+
+    /* Répéter l'en-tête du tableau sur chaque page imprimée */
+    .print-table thead {
+        display: table-header-group;
+    }
+
+    .print-table tfoot {
+        display: table-footer-group;
+    }
+
+    /* Marges d'impression */
+    @page {
+        margin: 1.5cm 1.5cm 2cm 1.5cm;
+        size: A4 portrait;
+    }
+}
+
+/* Masquer par défaut les éléments only-print (écran) */
+.only-print {
+    display: none;
+}
+
+/* ═══════════════════════════════════════════
+   Plan de salle GRAND FORMAT (contrôle entrée)
+═══════════════════════════════════════════ */
+
+.scene-label-lg {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: bold;
+    letter-spacing: 6px;
+    background: var(--couleur-principale);
+    color: #fff;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+}
+
+.plan-grand-container {
+    overflow-x: auto;
+    padding: 8px 0 16px;
+}
+
+.rangee-grand {
+    display: flex;
+    align-items: stretch;
+    gap: 5px;
+    margin-bottom: 5px;
+}
+
+.num-rangee-grand {
+    font-size: 0.7rem;
+    color: #6c757d;
+    width: 32px;
+    text-align: right;
+    flex-shrink: 0;
+    padding-top: 4px;
+}
+
+/* ── Place grand format ── */
+.place-grand {
+    width: 72px;
+    min-height: 72px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3px;
+    cursor: pointer;
+    transition:
+        transform 0.12s,
+        box-shadow 0.12s;
+    flex-shrink: 0;
+    text-align: center;
+    border: 2px solid transparent;
+    user-select: none;
+}
+
+.place-grand:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    position: relative;
+}
+
+.place-grand.vide {
+    background: transparent;
+    border: none;
+    cursor: default;
+    pointer-events: none;
+}
+
+.place-grand.libre {
+    background: #e9ecef;
+    border-color: #ced4da;
+    color: #495057;
+}
+
+.place-grand.selectionnee {
+    background: #ffc107;
+    border-color: #e0a800;
+    color: #000;
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.4);
+}
+
+.place-grand.validee {
+    background: #198754;
+    border-color: #146c43;
+    color: #fff;
+}
+
+.place-grand.annulee {
+    background: #dc3545;
+    border-color: #b02a37;
+    color: #fff;
+    opacity: 0.7;
+}
+
+.place-numero {
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.place-nom {
+    font-size: 0.58rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-top: 2px;
+    word-break: break-all;
+    text-transform: uppercase;
+}
+
+.place-prenom {
+    font-size: 0.55rem;
+    line-height: 1.1;
+    word-break: break-all;
+}
+
+/* ── Légende ── */
+.legende-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.83rem;
+    margin-bottom: 4px;
+}
+
+.legende-box {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.legende-box.libre {
+    background: #e9ecef;
+    border: 1px solid #ced4da;
+}
+.legende-box.selectionnee {
+    background: #ffc107;
+    border: 1px solid #e0a800;
+}
+.legende-box.validee {
+    background: #198754;
+}
+.legende-box.annulee {
+    background: #dc3545;
+    opacity: 0.7;
+}
+
+/* ═══════════════════════════════════════════
+   Tickets format 80 mm
+═══════════════════════════════════════════ */
+
+.ticket-80mm {
+    width: 72mm;
+    margin: 0 auto 20px;
+    background: #fff;
+    border: 1px dashed #ccc;
+    border-radius: 6px;
+    padding: 10px;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 11pt;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.ticket-header {
+    text-align: center;
+    margin-bottom: 6px;
+}
+
+.ticket-theatre {
+    font-size: 14pt;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.ticket-representation {
+    font-size: 12pt;
+    font-weight: bold;
+    margin: 2px 0;
+}
+
+.ticket-date {
+    font-size: 10pt;
+    color: #555;
+}
+
+.ticket-separateur {
+    text-align: center;
+    color: #bbb;
+    font-size: 9pt;
+    margin: 5px 0;
+    letter-spacing: 1px;
+}
+
+.ticket-body {
+    margin: 6px 0;
+}
+
+.ticket-label {
+    font-size: 7pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #888;
+    margin-top: 4px;
+}
+
+.ticket-valeur-grande {
+    font-size: 13pt;
+    font-weight: bold;
+    line-height: 1.2;
+}
+
+.ticket-ligne {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+}
+
+.ticket-numero-place {
+    font-size: 16pt;
+    font-weight: bold;
+}
+
+.ticket-footer {
+    text-align: center;
+    margin-top: 4px;
+}
+
+.ticket-prix {
+    font-size: 18pt;
+    font-weight: bold;
+    margin: 2px 0;
+}
+
+.ticket-id {
+    font-size: 7pt;
+    color: #aaa;
+}
+
+.ticket-annule-banner {
+    background: #dc3545;
+    color: #fff;
+    text-align: center;
+    font-weight: bold;
+    font-size: 13pt;
+    padding: 4px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+}
+
+/* ═══════════════════════════════════════════
+   Impression des tickets (@media print)
+═══════════════════════════════════════════ */
+@media print {
+    /* Masquer tout sauf les tickets */
+    body > *:not(.modal) {
+        display: none !important;
+    }
+    .modal {
+        display: block !important;
+        position: static !important;
+    }
+    .modal-dialog {
+        margin: 0;
+        max-width: 100%;
+    }
+    .modal-header,
+    .modal-footer,
+    .no-print {
+        display: none !important;
+    }
+    .modal-body {
+        padding: 0;
+    }
+
+    .ticket-80mm {
+        width: 72mm;
+        margin: 0 auto;
+        page-break-after: always;
+        border: none;
+        box-shadow: none;
+    }
+
+    /* Garantit que le fond vert/rouge s'imprime */
+    .ticket-annule-banner {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    @page {
+        size: 80mm auto;
+        margin: 3mm;
+    }
+}
+
+/* ── Places libres (sans réservation) ── */
+.place-grand.place-libre-vide {
+    background: #f8f9fa;
+    border: 2px dashed #adb5bd;
+    color: #adb5bd;
+    cursor: pointer;
+}
+.place-grand.place-libre-vide:hover {
+    border-color: #ffc107;
+    background: #fff9e6;
+}
+.place-libre-label {
+    font-size: 0.5rem;
+    letter-spacing: 0.05em;
+    color: #adb5bd;
+}
+
+/* ── Place réservée non encore validée ── */
+.place-grand.libre-res {
+    background: #cfe2ff;
+    border-color: #9ec5fe;
+    color: #084298;
+    cursor: pointer;
+}
+.place-grand.libre-res:hover {
+    background: #9ec5fe;
+}
+
+/* ── Vente flash vendue ── */
+.place-grand.flash-vendue {
+    background: #fff3cd;
+    border-color: #ffc107;
+    color: #664d03;
+}
+
+/* ── En déplacement ── */
+.place-grand.en-deplacement {
+    background: #d3d3d3;
+    border: 2px dashed #6c757d;
+    color: #6c757d;
+    opacity: 0.6;
+}
+
+/* ── Cible de placement ── */
+.place-grand.cible-placement {
+    background: #d1ecf1;
+    border: 2px dashed #0dcaf0;
+    color: #055160;
+    animation: pulse-cible 1s infinite alternate;
+}
+@keyframes pulse-cible {
+    from {
+        box-shadow: 0 0 0 0 rgba(13, 202, 240, 0.3);
+    }
+    to {
+        box-shadow: 0 0 0 6px rgba(13, 202, 240, 0);
+    }
+}
+
+/* ── Zone tampon ── */
+.tampon-item {
+    background: #e8f4fd;
+    border: 1px solid #bee5fb;
+    border-radius: 6px;
+    padding: 6px 8px;
+    margin-bottom: 6px;
+    font-size: 0.82rem;
+}
+.tampon-item.tampon-actif {
+    background: #cff4fc;
+    border-color: #0dcaf0;
+    box-shadow: 0 0 0 3px rgba(13, 202, 240, 0.3);
+}
+
+.btn-xs {
+    padding: 2px 6px;
+    font-size: 0.72rem;
+    border-radius: 4px;
+}
+
+/* ── Badge vente flash sur ticket ── */
+.ticket-flash-badge {
+    background: #ffc107;
+    color: #000;
+    text-align: center;
+    font-weight: bold;
+    font-size: 10pt;
+    padding: 3px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+}
+
+/* ── Légende en grille ── */
+.legende-grille {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 8px;
+}
+.legende-box.lib {
+    background: #cfe2ff;
+    border: 1px solid #9ec5fe;
+}
+.legende-box.sel {
+    background: #ffc107;
+    border: 1px solid #e0a800;
+}
+.legende-box.val {
+    background: #198754;
+}
+.legende-box.ann {
+    background: #dc3545;
+    opacity: 0.7;
+}
+.legende-box.flash {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+}
+.legende-box.dep {
+    background: #d3d3d3;
+    border: 2px dashed #6c757d;
+}

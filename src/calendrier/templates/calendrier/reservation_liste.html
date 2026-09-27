@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Demandes de réservation de salle{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <p class="breadcrumb"><a href="{% url 'calendrier:mois_courant' %}">← Retour au calendrier</a></p>
+        <h1>Demandes de réservation de salle</h1>
+    </div>
+</section>
+
+<section class="calendrier-liste wrap">
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="message message--{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <div class="calendrier-liste__filtres">
+        <a href="{% url 'calendrier:reservation_liste' %}" class="tag {% if not statut_filtre %}tag--active{% endif %}">Toutes</a>
+        {% for valeur, libelle in statut_choices %}
+            <a href="?statut={{ valeur }}" class="tag {% if statut_filtre == valeur %}tag--active{% endif %}">{{ libelle }}</a>
+        {% endfor %}
+    </div>
+
+    <table class="calendrier-liste__table">
+        <thead>
+            <tr>
+                <th>Demandeur</th>
+                <th>Dates souhaitées</th>
+                <th>E-mail</th>
+                <th>Téléphone</th>
+                <th>Statut</th>
+                <th>Reçue le</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reservation in reservations %}
+                <tr>
+                    <td><a href="{% url 'calendrier:reservation_detail' reservation.pk %}">{{ reservation.prenom }} {{ reservation.nom }}</a></td>
+                    <td>
+                        {% if reservation.date_fin != reservation.date_debut %}
+                            Du {{ reservation.date_debut|date:"d/m/Y" }} au {{ reservation.date_fin|date:"d/m/Y" }}
+                        {% else %}
+                            {{ reservation.date_debut|date:"d/m/Y" }}
+                        {% endif %}
+                    </td>
+                    <td>{{ reservation.email }}</td>
+                    <td>{{ reservation.telephone }}</td>
+                    <td><span class="etiquette etiquette--{{ reservation.statut }}">{{ reservation.get_statut_display }}</span></td>
+                    <td>{{ reservation.date_demande|date:"d/m/Y H:i" }}</td>
+                    <td class="calendrier-liste__actions">
+                        {% if reservation.statut == "attente" %}
+                            <form method="post" action="{% url 'calendrier:reservation_traiter' reservation.pk %}" class="calendrier-liste__form-action">
+                                {% csrf_token %}
+                                <button type="submit" name="action" value="valider" class="btn btn--primary btn--small">Valider</button>
+                                <button type="submit" name="action" value="refuser" class="btn btn--danger btn--small">Refuser</button>
+                            </form>
+                        {% else %}
+                            <a href="{% url 'calendrier:reservation_detail' reservation.pk %}" class="btn btn--secondary btn--small">Détails</a>
+                        {% endif %}
+                        <a href="{% url 'calendrier:reservation_modifier' reservation.pk %}" class="btn btn--secondary btn--small">Modifier</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7">Aucune demande de réservation.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if is_paginated %}
+        <nav class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if statut_filtre %}&statut={{ statut_filtre }}{% endif %}">← Précédent</a>
+            {% endif %}
+            <span>Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if statut_filtre %}&statut={{ statut_filtre }}{% endif %}">Suivant →</a>
+            {% endif %}
+        </nav>
+    {% endif %}
+</section>
+{% endblock %}

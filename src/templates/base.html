@@ -1,0 +1,117 @@
+{% load static wagtailcore_tags wagtailuserbar %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {% if page %}
+        {# Titre, description, Open Graph, Twitter Card, canonique... fournis par wagtail-seo #}
+        {% include "wagtailseo/meta.html" %}
+    {% else %}
+        {# Pages hors arborescence Wagtail (recherche, calendrier, connexion...) : balises manuelles #}
+        <title>{% block title %}{{ page.title }}{% endblock %} — {{ settings.navigation.SocialSettings.address|default:"La Concorde asbl" }}</title>
+        <meta name="description" content="{% block meta_description %}Site officiel de l'ASBL La Concorde — théâtre et activités culturelles.{% endblock %}" />
+    {% endif %}
+
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    {% wagtailuserbar %}
+
+    <header class="site-header">
+        <div class="site-header__inner">
+            <a href="/" class="site-logo">La Concorde<span>asbl</span></a>
+
+            <nav class="main-nav" aria-label="Navigation principale">
+                <ul>
+                    {% for item in main_menu.items.all %}
+                        <li><a href="{{ item.url }}">{{ item.link_title }}</a></li>
+                    {% endfor %}
+                    <li><a href="{% url 'calendrier:mois_courant' %}">Réservations</a></li>
+                    {% if perms.theatre.acces_application %}
+                        <li><a href="/theatre/">Théâtre</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <div class="auth-nav">
+                {% if user.is_authenticated %}
+                    <span class="auth-nav__user">{{ user.get_full_name|default:user.username }}</span>
+                    <form action="{% url 'logout' %}" method="post" class="auth-nav__logout-form">
+                        {% csrf_token %}
+                        <button type="submit" class="auth-nav__link">Déconnexion</button>
+                    </form>
+                {% else %}
+                    <a class="auth-nav__link" href="{% url 'login' %}">Connexion</a>
+                {% endif %}
+            </div>
+
+            <form class="site-search" action="{% url 'search' %}" method="get" role="search">
+                <input type="text" name="query" placeholder="Rechercher…" aria-label="Rechercher sur le site" {% if search_query %}value="{{ search_query }}"{% endif %}>
+                <button type="submit" aria-label="Lancer la recherche">🔍</button>
+            </form>
+
+            <button class="nav-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <main id="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="site-footer__inner">
+            <div class="footer-col">
+                <h3>La Concorde asbl</h3>
+                {% with s=settings.navigation.SocialSettings %}
+                    {% if s.address %}<p>{{ s.address }}</p>{% endif %}
+                    {% if s.phone %}<p>Tél. {{ s.phone }}</p>{% endif %}
+                    {% if s.email %}<p><a href="mailto:{{ s.email }}">{{ s.email }}</a></p>{% endif %}
+                {% endwith %}
+            </div>
+
+            <div class="footer-col">
+                <h3>Liens</h3>
+                <ul>
+                    {% for link in footer_menu.links.all %}
+                        <li><a href="{{ link.url }}" {% if link.ouvrir_nouvel_onglet %}target="_blank" rel="noopener"{% endif %}>{{ link.link_title }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h3>Suivez-nous</h3>
+                {% with s=settings.navigation.SocialSettings %}
+                <ul class="social-links">
+                    {% for lien in s.liens_reseaux_sociaux.all %}
+                        <li>
+                            <a href="{{ lien.url }}" target="_blank" rel="noopener">
+                                {{ lien.get_reseau_display }}{% if lien.libelle %} — {{ lien.libelle }}{% endif %}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+                {% endwith %}
+            </div>
+        </div>
+        <p class="footer-bottom">&copy; {% now "Y" %} La Concorde asbl — Tous droits réservés</p>
+    </footer>
+
+    <script src="{% static 'js/scroll-effects.js' %}" defer></script>
+    {% block extra_js %}{% endblock %}
+
+    {% if page %}
+        {# Données structurées Schema.org (JSON-LD) de la page courante #}
+        {% include "wagtailseo/struct_data.html" %}
+        {% if page.depth == 2 %}
+            {# Page racine du site (page d'accueil) : données structurées de
+               l'organisation (coordonnées, logo, réseaux sociaux...), à
+               n'inclure qu'une fois, pas sur chaque page. #}
+            {% include "wagtailseo/struct_org_data.html" %}
+        {% endif %}
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <h1>{{ page.title }}</h1>
+    </div>
+</section>
+
+<section class="info-body wrap fade-target">
+    {% for block in page.body %}
+        <div class="info-body__block fade-up">
+            {% if block.block_type == "heading" %}
+                <h2>{{ block.value }}</h2>
+            {% elif block.block_type == "paragraph" %}
+                {{ block.value|richtext }}
+            {% elif block.block_type == "image" %}
+                {% image block.value width-1000 %}
+            {% else %}
+                {% include_block block %}
+            {% endif %}
+        </div>
+    {% endfor %}
+</section>
+{% endblock %}

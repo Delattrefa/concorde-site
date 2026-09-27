@@ -1,0 +1,114 @@
+{% extends 'theatre/base.html' %}
+{% block title %}Représentations — Théâtre{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Formulaire de création -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Nouvelle représentation</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                        <div class="text-danger small">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-dark">
+                            <i class="bi bi-save"></i> Créer
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Effacer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des représentations -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-calendar-event"></i> Représentations planifiées</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if representations %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Spectacle</th>
+                                <th>Date</th>
+                                <th class="text-end">Prix adulte</th>
+                                <th class="text-end">Prix enfant</th>
+                                <th class="text-center">Inscrits</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for rep in representations %}
+                        <tr>
+                            <td class="fw-semibold">{{ rep.nom }}</td>
+                            <td>{{ rep.date|date:"d/m/Y" }}</td>
+                            <td class="text-end">{{ rep.prix_adulte }} €</td>
+                            <td class="text-end">{{ rep.prix_enfant }} €</td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary">{{ rep.nb_inscrits }}</span>
+                            </td>
+                            <td class="text-center">
+                                <a href="{% url 'reservation_create' rep.pk %}"
+                                   class="btn btn-sm btn-dark me-1" title="Réserver">
+                                    <i class="bi bi-ticket-perforated"></i> Réserver
+                                </a>
+                                <a href="{% url 'plan_salle_generer' rep.pk %}"
+                                   class="btn btn-sm btn-outline-secondary me-1" title="Plan de salle">
+                                    <i class="bi bi-grid-3x3"></i> Plan
+                                </a>
+                                <form method="post" action="{% url 'representation_delete' rep.pk %}"
+                                      class="d-inline"
+                                      onsubmit="return confirm('Supprimer cette représentation et toutes ses réservations ?')">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                                {% if rep.plan_salle %}
+                                <a href="{% url 'controle_entree' rep.pk %}"
+                                    class="btn btn-sm btn-outline-success me-1"
+                                    title="Contrôle entrée">
+                                        <i class="bi bi-door-open"></i>
+                                </a>
+                                {% else %}
+                                <!-- Bouton grisé si pas de plan -->
+                                <button class="btn btn-sm btn-outline-secondary me-1"
+                                    disabled
+                                    title="Générez d'abord le plan de salle">
+                                    <i class="bi bi-door-open"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-calendar-x display-4"></i>
+                    <p class="mt-2">Aucune représentation pour le moment.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

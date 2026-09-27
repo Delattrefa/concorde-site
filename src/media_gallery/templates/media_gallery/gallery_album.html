@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags static %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <p class="breadcrumb"><a href="{% pageurl page.get_parent %}">← Médias</a></p>
+        <h1>{{ page.title }}</h1>
+        {% if page.date %}<time>{{ page.date|date:"d F Y" }}</time>{% endif %}
+        {% if page.description %}<div class="page-header__intro">{{ page.description|richtext }}</div>{% endif %}
+        {% if user.is_staff %}
+            <a class="btn btn--primary" href="{% url 'galerie_ajouter_photos' page.pk %}">+ Ajouter des photos</a>
+        {% endif %}
+    </div>
+</section>
+
+<section class="photo-gallery wrap fade-target" id="lightbox-gallery">
+    {% for item in page.gallery_images.all %}
+        {% image item.image fill-500x400 as thumb %}
+        {% image item.image width-1600 as full %}
+        <button type="button" class="photo-gallery__item fade-up" data-full="{{ full.url }}" data-caption="{{ item.caption }}">
+            <img src="{{ thumb.url }}" alt="{{ item.caption|default:page.title }}" loading="lazy">
+        </button>
+    {% empty %}
+        <p>Aucune photo n'a encore été ajoutée à cet album.</p>
+    {% endfor %}
+</section>
+
+<div class="lightbox" id="lightbox" aria-hidden="true">
+    <button class="lightbox__close" aria-label="Fermer">&times;</button>
+    <img class="lightbox__image" src="" alt="">
+    <p class="lightbox__caption"></p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/lightbox.js' %}" defer></script>
+{% endblock %}

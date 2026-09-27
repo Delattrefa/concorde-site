@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Environnements virtuels
+venv/
+.venv/
+
+# Bases de données locales
+*.sqlite3
+*.sqlite3-journal
+data.json
+
+# Secrets : ne JAMAIS publier sur GitHub
+.env
+src/.env
+src/concorde_site/settings/.env
+src/concorde_site/settings/local.py
+
+# Fichiers générés / téléversés (le projet est dans src/, d'où les chemins)
+src/media/
+src/staticfiles/
+src/tmp/
+*.log
+
+# Système
+.DS_Store
+__MACOSX/

@@ -1,0 +1,36 @@
+/* =========================================================
+   Application 'news' — feuille de style dédiée au formulaire
+   d'ajout public d'actualité (chargée en plus de static/css/main.css)
+   ========================================================= */
+
+.news-form { padding: 20px 24px 90px; max-width: 720px; margin: 0 auto; }
+
+.news-form .messages { list-style: none; padding: 0; margin: 0 0 24px; }
+.news-form .message {
+    padding: 12px 18px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-size: .92rem;
+}
+.news-form .message--success { background: #e6f4ea; color: #1e6b32; border: 1px solid #b6e0c2; }
+.news-form .message--error   { background: #fbeaea; color: #7a1f2b; border: 1px solid #f1c3c3; }
+
+.news-form .form-field { margin-bottom: 18px; }
+.news-form .form-field-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.news-form .form-field-row .form-field { flex: 1; min-width: 220px; }
+
+.news-form label { display: block; margin-bottom: 6px; font-weight: 600; }
+.news-form input[type="text"],
+.news-form input[type="url"],
+.news-form input[type="file"],
+.news-form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-family: inherit;
+}
+
+.news-form__actions { margin-top: 26px; }
+
+.btn--danger { background: #b23a3a; color: #fff; margin-left: 12px; }

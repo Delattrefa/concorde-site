@@ -1,0 +1,6 @@
+{% load wagtailcore_tags %}
+{% if value.page %}
+    <a class="btn btn--secondary fade-up" href="{% pageurl value.page %}">{{ value.title }}</a>
+{% else %}
+    <a class="btn btn--secondary fade-up" href="{{ value.url }}" target="_blank" rel="noopener">{{ value.title }}</a>
+{% endif %}

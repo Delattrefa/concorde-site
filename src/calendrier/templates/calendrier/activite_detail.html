@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ activite.nom }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <p class="breadcrumb"><a href="{% url 'calendrier:mois' activite.date_debut.year activite.date_debut.month %}">← Retour au calendrier</a></p>
+        <h1>{{ activite.nom }}</h1>
+        <p class="etiquette" style="background:{{ activite.couleur }};">{{ activite.get_visibilite_display }}</p>
+    </div>
+</section>
+
+<section class="calendrier-detail wrap">
+    {% if activite.date_fin != activite.date_debut %}
+        <p><strong>Du :</strong> {{ activite.date_debut|date:"l d F Y" }} <strong>au</strong> {{ activite.date_fin|date:"l d F Y" }}</p>
+    {% else %}
+        <p><strong>Date :</strong> {{ activite.date_debut|date:"l d F Y" }}</p>
+    {% endif %}
+    <p><strong>Ajoutée par :</strong> {{ activite.auteur.get_full_name|default:activite.auteur.username }}</p>
+
+    {% if activite.description %}
+        <div class="calendrier-detail__description">
+            <h2>Description</h2>
+            <p>{{ activite.description|linebreaks }}</p>
+        </div>
+    {% endif %}
+
+    {% if peut_modifier %}
+        <div class="calendrier-detail__actions">
+            <a class="btn btn--secondary" href="{% url 'calendrier:activite_modifier' activite.pk %}">Modifier</a>
+            <a class="btn btn--danger" href="{% url 'calendrier:activite_supprimer' activite.pk %}">Supprimer</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

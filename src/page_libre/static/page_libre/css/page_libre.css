@@ -1,0 +1,42 @@
+/* =========================================================
+   Application 'page_libre' — feuille de style dédiée
+   (chargée en plus de static/css/main.css du site)
+   ========================================================= */
+
+/* ---------- En-tête : logo + titres ---------- */
+.page-libre-entete {
+    padding: 80px 0 60px;
+    text-align: center;
+    background: #f1e9e2;
+}
+.page-libre-entete__logo {
+    max-width: 220px;
+    max-height: 140px;
+    width: auto;
+    margin: 0 auto 24px;
+    display: block;
+}
+.page-libre-entete h1 { margin-bottom: 8px; }
+.page-libre-entete__sous-titre {
+    font-size: 1.15rem;
+    color: #5a4a4a;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* ---------- Galerie de miniatures (4 colonnes fixes) ---------- */
+.page-libre-galerie { padding: 70px 0 90px; }
+.page-libre-galerie h2 { text-align: center; margin-bottom: 34px; }
+
+.page-libre-galerie__grille {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+}
+
+@media (max-width: 900px) {
+    .page-libre-galerie__grille { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+    .page-libre-galerie__grille { grid-template-columns: 1fr; }
+}

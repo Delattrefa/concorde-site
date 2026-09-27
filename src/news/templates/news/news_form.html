@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags %}
+
+{% block title %}{% if mode == "modification" %}Modifier l'actualité{% else %}Publier une actualité{% endif %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'news/css/news.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        {% if page_index %}
+            <p class="breadcrumb"><a href="{% pageurl page_index %}">← Retour aux actualités</a></p>
+        {% endif %}
+        <h1>{% if mode == "modification" %}Modifier l'actualité{% else %}Publier une actualité{% endif %}</h1>
+        {% if mode != "modification" %}
+            <p class="page-header__intro">
+                Partagez une information avec les visiteurs du site : elle sera
+                publiée immédiatement dans les actualités.
+            </p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="news-form wrap">
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="message message--{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-field">
+            {{ form.titre.label_tag }}
+            {{ form.titre }}
+            {{ form.titre.errors }}
+        </div>
+
+        <div class="form-field">
+            {{ form.intro.label_tag }}
+            {{ form.intro }}
+            {{ form.intro.errors }}
+        </div>
+
+        <div class="form-field">
+            {{ form.contenu.label_tag }}
+            {{ form.contenu }}
+            {{ form.contenu.errors }}
+        </div>
+
+        <div class="form-field">
+            {{ form.image.label_tag }}
+            {{ form.image }}
+            {{ form.image.errors }}
+        </div>
+
+        {% if mode == "modification" and news.featured_image %}
+            <p class="form-field__help">Une image est déjà associée à cette actualité. Choisissez-en une nouvelle uniquement si vous souhaitez la remplacer.</p>
+        {% endif %}
+
+        <div class="form-field-row">
+            <div class="form-field">
+                {{ form.lien_texte.label_tag }}
+                {{ form.lien_texte }}
+                {{ form.lien_texte.errors }}
+            </div>
+            <div class="form-field">
+                {{ form.lien_url.label_tag }}
+                {{ form.lien_url }}
+                {{ form.lien_url.errors }}
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn--primary">
+            {% if mode == "modification" %}Enregistrer les modifications{% else %}Publier l'actualité{% endif %}
+        </button>
+        {% if mode == "modification" %}
+            <a class="btn btn--danger" href="{% url 'news_supprimer' news.pk %}">Supprimer cette actualité</a>
+        {% endif %}
+    </form>
+</section>
+{% endblock %}

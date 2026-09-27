@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Supprimer l'activité{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <h1>Supprimer l'activité</h1>
+    </div>
+</section>
+
+<section class="calendrier-form wrap">
+    <p>Êtes-vous sûr de vouloir supprimer l'activité « <strong>{{ activite.nom }}</strong> » du
+        {{ activite.date_debut|date:"d F Y" }} ? Cette action est irréversible.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn--danger">Oui, supprimer définitivement</button>
+        <a class="btn btn--secondary" href="{% url 'calendrier:activite_detail' activite.pk %}">Annuler</a>
+    </form>
+</section>
+{% endblock %}

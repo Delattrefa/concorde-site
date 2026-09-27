@@ -1,0 +1,141 @@
+{% extends 'theatre/base.html' %}
+{% block title %}Modifier la réservation — {{ reservation }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-pencil-square"></i>
+                    Modifier — {{ reservation.nom }} {{ reservation.prenom }}
+                </h5>
+                <!-- Bouton suppression -->
+                <form method="post" action="{% url 'reservation_delete' reservation.pk %}"
+                      onsubmit="return confirm('Supprimer définitivement cette réservation ?')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger">
+                        <i class="bi bi-trash"></i> Supprimer
+                    </button>
+                </form>
+            </div>
+            <div class="card-body">
+                <form method="post" id="formEdit">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Représentation</label>
+                        {{ form.representation }}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">{{ form.nom.label }}</label>
+                            {{ form.nom }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">{{ form.prenom.label }}</label>
+                            {{ form.prenom }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">{{ form.nb_adultes.label }}</label>
+                            {{ form.nb_adultes }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">{{ form.nb_enfants.label }}</label>
+                            {{ form.nb_enfants }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">
+                                {{ form.preference_rangee.label }}
+                                <span class="text-muted fw-normal small">(optionnel)</span>
+                            </label>
+                            {{ form.preference_rangee }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">
+                                {{ form.preference_cote.label }}
+                                <span class="text-muted fw-normal small">(optionnel)</span>
+                            </label>
+                            {{ form.preference_cote }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold">
+                                {{ form.rangee_preferee.label }}
+                                <span class="text-muted fw-normal small">(optionnel)</span>
+                            </label>
+                            {{ form.rangee_preferee }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ form.remarque.label }}</label>
+                        {{ form.remarque }}
+                    </div>
+
+                    <!-- Prix total -->
+                    <div class="alert alert-dark d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-cash-coin"></i> <strong>Prix total estimé :</strong></span>
+                        <span class="fs-4 fw-bold" id="prixTotal">{{ reservation.prix_total }} €</span>
+                    </div>
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{% url 'reservation_list' %}" class="btn btn-outline-dark">
+                            <i class="bi bi-arrow-left"></i> Retour
+                        </a>
+                        <button type="reset" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Annuler les modifications
+                        </button>
+                        <button type="submit" class="btn btn-dark">
+                            <i class="bi bi-save"></i> Enregistrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Recalcul dynamique après changement de représentation
+const apiUrl = "{% url 'get_prix' %}";
+let prixAdulte = 0;
+let prixEnfant = 0;
+
+async function chargerPrix(repId) {
+    if (!repId) return;
+    const res = await fetch(`${apiUrl}?rep_id=${repId}`);
+    const data = await res.json();
+    prixAdulte = data.prix_adulte || 0;
+    prixEnfant = data.prix_enfant || 0;
+    calculerPrix();
+}
+
+function calculerPrix() {
+    const nbA = parseInt(document.getElementById('id_nb_adultes').value) || 0;
+    const nbE = parseInt(document.getElementById('id_nb_enfants').value) || 0;
+    const total = nbA * prixAdulte + nbE * prixEnfant;
+    document.getElementById('prixTotal').textContent = total.toFixed(2).replace('.', ',') + ' €';
+}
+
+const selectRep = document.getElementById('id_representation');
+selectRep.addEventListener('change', () => chargerPrix(selectRep.value));
+document.getElementById('id_nb_adultes').addEventListener('input', calculerPrix);
+document.getElementById('id_nb_enfants').addEventListener('input', calculerPrix);
+
+// Chargement initial
+chargerPrix(selectRep.value);
+</script>
+{% endblock %}

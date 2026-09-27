@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Calendrier — Activités & réservations{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <h1>Calendrier</h1>
+        <p class="page-header__intro">
+            Consultez les activités de l'ASBL et les disponibilités de la salle.
+            {% if user.is_authenticated %}
+                Cliquez sur le <strong>+</strong> d'une case pour ajouter une activité, ou sur une activité existante pour la consulter, la modifier ou la supprimer.
+            {% else %}
+                Cliquez sur le <strong>+</strong> d'une case pour demander la réservation de la salle.
+            {% endif %}
+        </p>
+    </div>
+</section>
+
+<section class="calendrier wrap">
+
+    {# ---------- Messages (succès / erreurs) ---------- #}
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="message message--{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {# ---------- Barre de navigation mois / année ---------- #}
+    <div class="calendrier__nav">
+        <a class="calendrier__nav-btn" href="{% url 'calendrier:mois' annee_precedente mois_precedent %}" aria-label="Mois précédent">&larr;</a>
+
+        <form action="{% url 'calendrier:aller_a_mois' %}" method="post" class="calendrier__nav-form">
+            {% csrf_token %}
+            <select name="mois" aria-label="Choisir le mois">
+                {% for numero, nom in liste_mois.items %}
+                    <option value="{{ numero }}" {% if numero == mois %}selected{% endif %}>{{ nom|capfirst }}</option>
+                {% endfor %}
+            </select>
+            <select name="annee" aria-label="Choisir l'année">
+                {% for a in liste_annees %}
+                    <option value="{{ a }}" {% if a == annee %}selected{% endif %}>{{ a }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn--secondary">Afficher</button>
+        </form>
+
+        <a class="calendrier__nav-btn" href="{% url 'calendrier:mois' annee_suivante mois_suivant %}" aria-label="Mois suivant">&rarr;</a>
+    </div>
+
+    <h2 class="calendrier__titre">{{ nom_mois|capfirst }} {{ annee }}</h2>
+
+    {# ---------- Légende ---------- #}
+    <div class="calendrier__legende">
+        <span><i class="pastille" style="background:#2e7d32;"></i> Activité publique</span>
+        {% if user.is_authenticated %}
+            <span><i class="pastille" style="background:#e67e22;"></i> Activité privée</span>
+        {% endif %}
+        <span><i class="pastille" style="background:#7a1f2b;"></i> Salle réservée</span>
+        {% if est_administrateur %}
+            <span><i class="pastille pastille--attente"></i> Demande en attente</span>
+        {% endif %}
+    </div>
+
+    {% if est_administrateur and nb_demandes_en_attente %}
+        <p class="calendrier__alerte">
+            <a href="{% url 'calendrier:reservation_liste' %}?statut=attente">
+                {{ nb_demandes_en_attente }} demande{{ nb_demandes_en_attente|pluralize }} de réservation en attente de traitement →
+            </a>
+        </p>
+    {% endif %}
+
+    {# ---------- Grille du calendrier ---------- #}
+    <table class="calendrier__grille">
+        <thead>
+            <tr>
+                {% for jour in jours_semaine %}
+                    <th>{{ jour|capfirst }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for semaine in semaines %}
+                <tr>
+                    {% for jour in semaine %}
+                        {% if jour is None %}
+                            <td class="calendrier__case calendrier__case--vide"></td>
+                        {% else %}
+                            <td class="calendrier__case {% if jour.est_aujourdhui %}calendrier__case--aujourdhui{% endif %} {% if jour.salle_reservee %}calendrier__case--reservee{% endif %}">
+                                <span class="calendrier__numero">{{ jour.numero }}</span>
+
+                                {% if jour.salle_reservee %}
+                                    <span class="etiquette etiquette--reservee">Salle réservée</span>
+                                {% endif %}
+
+                                {% for activite in jour.activites %}
+                                    <a href="{% url 'calendrier:activite_detail' activite.pk %}"
+                                       class="etiquette etiquette--lien"
+                                       style="background:{{ activite.couleur }};"
+                                       title="{{ activite.nom }} — du {{ activite.date_debut|date:'d/m/Y' }} au {{ activite.date_fin|date:'d/m/Y' }}">
+                                        {{ activite.nom }}
+                                    </a>
+                                {% endfor %}
+
+                                {% if est_administrateur %}
+                                    {% for reservation in jour.reservations %}
+                                        <a href="{% url 'calendrier:reservation_detail' reservation.pk %}"
+                                           class="etiquette etiquette--lien etiquette--{{ reservation.statut }}">
+                                            {{ reservation.prenom }} {{ reservation.nom }} ({{ reservation.get_statut_display }})
+                                        </a>
+                                    {% endfor %}
+                                {% endif %}
+
+                                <a class="calendrier__case-ajouter"
+                                   href="{% url 'calendrier:jour_action' annee mois jour.numero %}"
+                                   title="{% if user.is_authenticated %}Ajouter une activité ce jour{% else %}Demander la réservation de la salle ce jour{% endif %}"
+                                   aria-label="{% if user.is_authenticated %}Ajouter une activité le {{ jour.date|date:'d/m/Y' }}{% else %}Demander une réservation le {{ jour.date|date:'d/m/Y' }}{% endif %}">+</a>
+                            </td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="calendrier__actions">
+        {% if user.is_authenticated %}
+            <a class="btn btn--primary" href="{% url 'calendrier:activite_ajouter' %}">+ Ajouter une activité</a>
+        {% else %}
+            <a class="btn btn--primary" href="{% url 'calendrier:reservation_demander' %}">Demander la réservation de la salle</a>
+        {% endif %}
+        {% if est_administrateur %}
+            <a class="btn btn--secondary" href="{% url 'calendrier:reservation_liste' %}">Gérer les demandes de réservation</a>
+        {% endif %}
+    </div>
+
+</section>
+{% endblock %}

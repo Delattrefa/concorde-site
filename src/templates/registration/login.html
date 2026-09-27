@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Connexion{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <h1>Connexion</h1>
+        <p class="page-header__intro">Connectez-vous pour ajouter une activité au calendrier.</p>
+    </div>
+</section>
+
+<section class="calendrier-form wrap" style="max-width: 420px;">
+    {% if form.errors %}
+        <p class="message message--error">Identifiant ou mot de passe incorrect.</p>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-field">
+            {{ form.username.label_tag }}
+            {{ form.username }}
+        </div>
+        <div class="form-field">
+            {{ form.password.label_tag }}
+            {{ form.password }}
+        </div>
+        <input type="hidden" name="next" value="{{ next }}">
+        <button type="submit" class="btn btn--primary">Se connecter</button>
+    </form>
+</section>
+{% endblock %}

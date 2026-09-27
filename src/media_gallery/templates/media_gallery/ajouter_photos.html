@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags %}
+
+{% block title %}Ajouter des photos — {{ album.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'media_gallery/css/media_gallery.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <p class="breadcrumb"><a href="{% pageurl album %}">← Retour à l'album</a></p>
+        <h1>Ajouter des photos</h1>
+        <p class="page-header__intro">
+            Album : <strong>{{ album.title }}</strong> — {{ album.gallery_images.count }} photo{{ album.gallery_images.count|pluralize }} actuellement.
+        </p>
+    </div>
+</section>
+
+<section class="galerie-form wrap">
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="message message--{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-field">
+            {{ form.images.label_tag }}
+            {{ form.images }}
+            <p class="form-field__help">{{ form.images.help_text }}</p>
+            {{ form.images.errors }}
+        </div>
+
+        <button type="submit" class="btn btn--primary">Ajouter ces photos</button>
+    </form>
+
+    <p class="galerie-form__note">
+        Les légendes de chaque photo (facultatives) peuvent être ajoutées
+        ensuite depuis l'admin Wagtail, sur la fiche de l'album.
+    </p>
+</section>
+{% endblock %}

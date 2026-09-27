@@ -1,0 +1,30 @@
+/* =========================================================
+   Application 'media_gallery' — ajout de plusieurs photos à la fois
+   (chargée en plus de static/css/main.css du site)
+   ========================================================= */
+
+.galerie-form { padding: 20px 24px 90px; max-width: 640px; margin: 0 auto; }
+
+.galerie-form .messages { list-style: none; padding: 0; margin: 0 0 24px; }
+.galerie-form .message {
+    padding: 12px 18px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-size: .92rem;
+}
+.galerie-form .message--success { background: #e6f4ea; color: #1e6b32; border: 1px solid #b6e0c2; }
+.galerie-form .message--error   { background: #fbeaea; color: #7a1f2b; border: 1px solid #f1c3c3; }
+
+.galerie-form .form-field { margin-bottom: 20px; }
+.galerie-form label { display: block; margin-bottom: 8px; font-weight: 600; }
+.galerie-form input[type="file"] {
+    width: 100%;
+    padding: 24px 16px;
+    border: 2px dashed #ddd;
+    border-radius: 4px;
+    background: #faf7f2;
+    font-family: inherit;
+}
+.galerie-form .form-field__help { font-size: .85rem; color: #8a7a7a; margin: 8px 0 0; }
+
+.galerie-form__note { margin-top: 24px; font-size: .85rem; color: #8a7a7a; }

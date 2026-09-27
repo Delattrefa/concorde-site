@@ -1,0 +1,22 @@
+wagtail>=6.2,<7.0
+django>=5.0,<5.3
+Pillow>=10.0
+whitenoise>=6.6
+
+# Base de données de production (o2switch propose PostgreSQL et MySQL)
+psycopg2-binary>=2.9   # PostgreSQL
+PyMySQL>=1.1           # MySQL/MariaDB (seulement si DB_ENGINE=mysql)
+
+# Lecture du fichier src/.env en production
+python-dotenv>=1.0
+
+# Serveur d'application hors cPanel (inutile sur o2switch, Passenger s'en charge)
+gunicorn>=22.0
+
+# Référencement (SEO) : balises meta, Open Graph, Twitter Card, données
+# structurées Schema.org
+wagtail-seo>=3.0
+
+# Génération du contrat de location en PDF (app 'calendrier')
+reportlab>=4.0
+pypdf>=5.0

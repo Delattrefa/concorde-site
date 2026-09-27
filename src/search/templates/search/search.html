@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+{% block title %}Résultats de recherche{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <h1>Recherche</h1>
+        {% if search_query %}
+            <p>Résultats pour « {{ search_query }} »</p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="search-results wrap fade-target">
+    {% if search_results %}
+        <ul>
+            {% for result in search_results %}
+                <li class="search-results__item fade-up">
+                    <a href="{% pageurl result %}"><h2>{{ result }}</h2></a>
+                    {% if result.search_description %}<p>{{ result.search_description }}</p>{% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+
+        {% if search_results.has_previous %}
+            <a href="?query={{ search_query|urlencode }}&amp;page={{ search_results.previous_page_number }}">Page précédente</a>
+        {% endif %}
+        {% if search_results.has_next %}
+            <a href="?query={{ search_query|urlencode }}&amp;page={{ search_results.next_page_number }}">Page suivante</a>
+        {% endif %}
+    {% elif search_query %}
+        <p>Aucun résultat trouvé pour votre recherche.</p>
+    {% else %}
+        <p>Saisissez un mot-clé dans la barre de recherche du menu.</p>
+    {% endif %}
+</section>
+{% endblock %}

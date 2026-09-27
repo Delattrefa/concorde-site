@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Modifier la réservation{% else %}Demander la réservation de la salle{% endif %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        {% if object %}
+            <p class="breadcrumb"><a href="{% url 'calendrier:reservation_detail' object.pk %}">← Retour à la réservation</a></p>
+            <h1>Modifier la réservation</h1>
+        {% else %}
+            <p class="breadcrumb"><a href="{% url 'calendrier:mois_courant' %}">← Retour au calendrier</a></p>
+            <h1>Demander la réservation de la salle</h1>
+            <p class="page-header__intro">
+                Remplissez ce formulaire pour demander la location de la salle. Votre
+                demande sera examinée par un administrateur, qui la validera ou la
+                refusera. Vous n'avez pas besoin de créer de compte.
+            </p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="calendrier-form wrap">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-field-row">
+            <div class="form-field">
+                {{ form.nom.label_tag }}
+                {{ form.nom }}
+                {{ form.nom.errors }}
+            </div>
+            <div class="form-field">
+                {{ form.prenom.label_tag }}
+                {{ form.prenom }}
+                {{ form.prenom.errors }}
+            </div>
+        </div>
+
+        <div class="form-field">
+            {{ form.adresse.label_tag }}
+            {{ form.adresse }}
+            {{ form.adresse.errors }}
+        </div>
+
+        <div class="form-field-row">
+            <div class="form-field">
+                {{ form.email.label_tag }}
+                {{ form.email }}
+                {{ form.email.errors }}
+            </div>
+            <div class="form-field">
+                {{ form.telephone.label_tag }}
+                {{ form.telephone }}
+                {{ form.telephone.errors }}
+            </div>
+        </div>
+
+        <div class="form-field-row">
+            <div class="form-field">
+                {{ form.date_debut.label_tag }}
+                {{ form.date_debut }}
+                {{ form.date_debut.errors }}
+            </div>
+            <div class="form-field">
+                {{ form.date_fin.label_tag }}
+                {{ form.date_fin }}
+                <p class="form-field__help">Identique à la date de début pour une réservation d'un seul jour.</p>
+                {{ form.date_fin.errors }}
+            </div>
+        </div>
+
+        <div class="form-field">
+            {{ form.message.label_tag }}
+            {{ form.message }}
+            {{ form.message.errors }}
+        </div>
+
+        <button type="submit" class="btn btn--primary">
+            {% if object %}Enregistrer les modifications{% else %}Envoyer la demande{% endif %}
+        </button>
+        {% if object %}
+            <a class="btn btn--danger" href="{% url 'calendrier:reservation_supprimer' object.pk %}">Supprimer cette réservation</a>
+        {% endif %}
+    </form>
+</section>
+{% endblock %}

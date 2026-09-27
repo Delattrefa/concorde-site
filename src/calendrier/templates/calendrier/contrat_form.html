@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Contrat de location — {{ reservation.prenom }} {{ reservation.nom }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <p class="breadcrumb"><a href="{% url 'calendrier:reservation_detail' reservation.pk %}">← Retour à la réservation</a></p>
+        <h1>{% if contrat %}Modifier le contrat de location{% else %}Rédiger le contrat de location{% endif %}</h1>
+        <p class="page-header__intro">
+            Locataire : <strong>{{ reservation.prenom }} {{ reservation.nom }}</strong> —
+            {% if reservation.date_fin != reservation.date_debut %}
+                du {{ reservation.date_debut|date:"d F Y" }} au {{ reservation.date_fin|date:"d F Y" }}
+            {% else %}
+                le {{ reservation.date_debut|date:"d F Y" }}
+            {% endif %}
+        </p>
+    </div>
+</section>
+
+<section class="calendrier-form wrap">
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="message message--{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-field-row">
+            <div class="form-field">
+                {{ form.delegue_prenom.label_tag }}
+                {{ form.delegue_prenom }}
+                {{ form.delegue_prenom.errors }}
+            </div>
+            <div class="form-field">
+                {{ form.delegue_nom.label_tag }}
+                {{ form.delegue_nom }}
+                {{ form.delegue_nom.errors }}
+            </div>
+        </div>
+        <p class="form-field__help">Personne qui gère la location pour le compte de l'ASBL (mentionnée comme "Délégué" sur le contrat).</p>
+
+        <div class="form-field">
+            <span class="form-field__label">Locaux pris en charge par la location</span>
+            <label>{{ form.local_salle }} {{ form.local_salle.label }}</label><br>
+            <label>{{ form.local_cafe }} {{ form.local_cafe.label }}</label><br>
+            <label>{{ form.local_cuisine }} {{ form.local_cuisine.label }}</label><br>
+            <label>{{ form.local_toilettes }} {{ form.local_toilettes.label }}</label>
+        </div>
+
+        <div class="form-field-row">
+            <div class="form-field">
+                {{ form.montant_location.label_tag }}
+                {{ form.montant_location }}
+                {{ form.montant_location.errors }}
+            </div>
+            <div class="form-field">
+                {{ form.montant_caution.label_tag }}
+                {{ form.montant_caution }}
+                {{ form.montant_caution.errors }}
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn--primary">
+            {% if contrat %}Régénérer le contrat (PDF){% else %}Générer le contrat (PDF){% endif %}
+        </button>
+    </form>
+</section>
+{% endblock %}

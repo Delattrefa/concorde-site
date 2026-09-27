@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <h1>Merci !</h1>
+        <div class="page-header__intro fade-up">
+            {{ page.thank_you_text|richtext }}
+        </div>
+        <a class="btn btn--secondary fade-up delay-1" href="/">Retour à l'accueil</a>
+    </div>
+</section>
+{% endblock %}

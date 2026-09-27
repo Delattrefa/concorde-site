@@ -1,0 +1,894 @@
+{% extends 'theatre/base.html' %}
+{% block title %}Contrôle entrée — {{ representation.nom }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+
+    <!-- ══════════════════════════════════════
+         Panneau latéral gauche
+    ══════════════════════════════════════ -->
+    <div class="col-xl-3 col-lg-4">
+        <div class="sticky-top" style="top:75px">
+
+            <!-- Infos représentation -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0"><i class="bi bi-door-open"></i> Contrôle entrée</h6>
+                </div>
+                <div class="card-body pb-2">
+                    <div class="fw-bold">{{ representation.nom }}</div>
+                    <div class="text-muted small mb-2">{{ representation.date|date:"d/m/Y" }}</div>
+
+                    <!-- Légende -->
+                    <div class="legende-grille mb-2">
+                        <div class="legende-item"><span class="legende-box lib"></span>Libre</div>
+                        <div class="legende-item"><span class="legende-box sel"></span>Sélectionnée</div>
+                        <div class="legende-item"><span class="legende-box val"></span>Ticket valide</div>
+                        <div class="legende-item"><span class="legende-box ann"></span>Annulée</div>
+                        <div class="legende-item"><span class="legende-box flash"></span>Vente flash</div>
+                        <div class="legende-item"><span class="legende-box dep"></span>En déplacement</div>
+                    </div>
+                    <hr class="my-2">
+
+                    <!-- Mode actif -->
+                    <div class="mb-2">
+                        <div class="text-muted small mb-1">Mode</div>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="mode"
+                                   id="modeEntree" value="entree" checked>
+                            <label class="btn btn-outline-dark btn-sm" for="modeEntree">
+                                <i class="bi bi-check2-circle"></i> Entrée
+                            </label>
+                            <input type="radio" class="btn-check" name="mode"
+                                   id="modeFlash" value="flash">
+                            <label class="btn btn-outline-warning btn-sm" for="modeFlash">
+                                <i class="bi bi-lightning-charge"></i> Flash
+                            </label>
+                            <input type="radio" class="btn-check" name="mode"
+                                   id="modeDeplacement" value="deplacement">
+                            <label class="btn btn-outline-info btn-sm" for="modeDeplacement">
+                                <i class="bi bi-arrows-move"></i> Déplacer
+                            </label>
+                        </div>
+                    </div>
+                    <hr class="my-2">
+
+                    <!-- Sélection en cours -->
+                    <div id="panneauEntree">
+                        <div class="text-muted small">Sélection en cours</div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span id="nbSelectionne" class="badge bg-secondary">0 place(s)</span>
+                            <span id="prixSelection" class="fw-bold fs-5">0,00 €</span>
+                        </div>
+                        <button id="btnValider" class="btn btn-dark w-100 mb-1" disabled
+                                onclick="validerSelection()">
+                            <i class="bi bi-check2-circle"></i> Valider et imprimer
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm w-100"
+                                onclick="toutDeselectionner()">
+                            <i class="bi bi-x-circle"></i> Tout désélectionner
+                        </button>
+                    </div>
+
+                    <!-- Panneau vente flash (caché par défaut) -->
+                    <div id="panneauFlash" class="d-none">
+                        <div class="text-muted small mb-1">Vente flash — place sélectionnée</div>
+                        <div id="infoPlaceFlash" class="text-muted small fst-italic mb-2">
+                            Cliquez sur une place libre
+                        </div>
+                        <input type="text" id="flashNom" class="form-control form-control-sm mb-1"
+                               placeholder="Nom">
+                        <input type="text" id="flashPrenom" class="form-control form-control-sm mb-1"
+                               placeholder="Prénom">
+                        <select id="flashTarif" class="form-select form-select-sm mb-2">
+                            <option value="adulte">Adulte — {{ representation.prix_adulte }} €</option>
+                            <option value="enfant">Enfant — {{ representation.prix_enfant }} €</option>
+                        </select>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Prix :</span>
+                            <span id="flashPrix" class="fw-bold">
+                                {{ representation.prix_adulte }} €
+                            </span>
+                        </div>
+                        <button id="btnFlash" class="btn btn-warning w-100 btn-sm" disabled
+                                onclick="confirmerVenteFlash()">
+                            <i class="bi bi-lightning-charge"></i> Vendre cette place
+                        </button>
+                    </div>
+
+                    <!-- Panneau déplacement (caché par défaut) -->
+                    <div id="panneauDeplacement" class="d-none">
+                        <div class="text-muted small mb-1">
+                            Cliquez sur une réservation pour la mettre en zone tampon,
+                            puis sélectionnez les nouvelles places.
+                        </div>
+                    </div>
+
+                    <hr class="my-2">
+
+                    <!-- CA total -->
+                    <div class="text-muted small">Chiffre d'affaires total</div>
+                    <div class="fw-bold fs-4" id="caTotal">
+                        {{ ca_total }} €
+                    </div>
+                </div>
+                <div class="card-footer p-2">
+                    <a href="{% url 'liste_tickets' representation.pk %}"
+                       class="btn btn-outline-dark btn-sm w-100 mb-1" target="_blank">
+                        <i class="bi bi-list-check"></i> Historique tickets
+                    </a>
+                    <a href="{% url 'plan_salle_afficher' representation.pk %}"
+                       class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="bi bi-arrow-left"></i> Retour au plan
+                    </a>
+                </div>
+            </div>
+
+            <!-- Zone tampon -->
+            <div class="card shadow-sm border-info">
+                <div class="card-header bg-info text-dark d-flex justify-content-between">
+                    <span>
+                        <i class="bi bi-inbox"></i> Zone tampon
+                    </span>
+                    <span class="badge bg-dark" id="compteurTampon">
+                        {{ nb_tampon }}/5
+                    </span>
+                </div>
+                <div class="card-body p-2" id="zoneTampon">
+                    {% if tampons %}
+                        {% for t in tampons %}
+                        <div class="tampon-item" id="tampon-{{ t.id }}"
+                             data-tampon-id="{{ t.id }}"
+                             data-reservation-id="{{ t.reservation.id }}"
+                             data-nb-places="{{ t.reservation.total_places }}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-bold small">
+                                        {{ t.reservation.nom }} {{ t.reservation.prenom }}
+                                    </span><br>
+                                    <span class="text-muted" style="font-size:0.7rem">
+                                        {{ t.reservation.total_places }} place(s)
+                                    </span>
+                                </div>
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-xs btn-info"
+                                            onclick="activerPlacement({{ t.id }}, {{ t.reservation.total_places }}, '{{ t.reservation.nom }} {{ t.reservation.prenom }}')"
+                                            title="Placer sur le plan">
+                                        <i class="bi bi-pin-map"></i>
+                                    </button>
+                                    <button class="btn btn-xs btn-outline-danger"
+                                            onclick="retirerDuTampon({{ t.id }})"
+                                            title="Retirer du tampon">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-muted small text-center py-2" id="tamponVide">
+                            Zone tampon vide
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         Plan de salle
+    ══════════════════════════════════════ -->
+    <div class="col-xl-9 col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white d-flex justify-content-between">
+                <span>
+                    <i class="bi bi-grid-3x3"></i>
+                    Plan de salle — {{ plan.nb_total_places }} places
+                </span>
+                <span class="badge bg-secondary">{{ plan.nb_rangees }} rangées</span>
+            </div>
+            <div class="card-body p-2">
+
+                <div class="scene-label-lg">🎭 SCÈNE</div>
+
+                <div class="plan-grand-container">
+                    {% for rangee in lignes %}
+                    <div class="rangee-grand">
+                        <span class="num-rangee-grand">R{{ forloop.counter }}</span>
+
+                        {% for cellule in rangee %}
+                            {% if cellule.type == 'reservee' %}
+                                {% with p=cellule.place %}
+                                <div class="place-grand
+                                    {% if p.ticket and p.ticket.statut == 'valide' %}validee
+                                    {% elif p.ticket and p.ticket.statut == 'annule' %}annulee
+                                    {% else %}libre-res{% endif %}"
+                                     id="place-res-{{ p.id }}"
+                                     data-type="reservee"
+                                     data-place-id="{{ p.id }}"
+                                     data-numero="{{ p.numero_place }}"
+                                     data-rangee="{{ p.rangee|add:1 }}"
+                                     data-nom="{{ p.reservation.nom }}"
+                                     data-prenom="{{ p.reservation.prenom }}"
+                                     data-reservation-id="{{ p.reservation.id }}"
+                                     data-ticket-id="{% if p.ticket %}{{ p.ticket.id }}{% endif %}"
+                                     data-statut="{% if p.ticket %}{{ p.ticket.statut }}{% else %}libre{% endif %}">
+                                    <div class="place-numero">{{ p.numero_place }}</div>
+                                    <div class="place-nom">{{ p.reservation.nom|truncatechars:8 }}</div>
+                                    <div class="place-prenom">{{ p.reservation.prenom|truncatechars:8 }}</div>
+                                </div>
+                                {% endwith %}
+
+                            {% elif cellule.type == 'libre' %}
+                                {% with p=cellule.place %}
+                                <div class="place-grand
+                                    {% if p.statut == 'vendue' %}flash-vendue{% else %}place-libre-vide{% endif %}"
+                                     id="place-lib-{{ p.id }}"
+                                     data-type="libre"
+                                     data-place-libre-id="{{ p.id }}"
+                                     data-numero="{{ p.numero_place }}"
+                                     data-rangee="{{ p.rangee|add:1 }}"
+                                     data-statut="{{ p.statut }}"
+                                     data-vente-id="{% if p.statut == 'vendue' and p.vente_flash %}{{ p.vente_flash.id }}{% endif %}"
+                                     data-nom="{% if p.statut == 'vendue' and p.vente_flash %}{{ p.vente_flash.nom }}{% endif %}"
+                                     data-prenom="{% if p.statut == 'vendue' and p.vente_flash %}{{ p.vente_flash.prenom }}{% endif %}">
+                                    <div class="place-numero">{{ p.numero_place }}</div>
+                                    {% if p.statut == 'vendue' and p.vente_flash %}
+                                    <div class="place-nom">{{ p.vente_flash.nom|truncatechars:8 }}</div>
+                                    <div class="place-prenom">{{ p.vente_flash.prenom|truncatechars:8 }}</div>
+                                    {% else %}
+                                    <div class="place-libre-label">LIBRE</div>
+                                    {% endif %}
+                                </div>
+                                {% endwith %}
+
+                            {% else %}
+                            <!-- Case structurellement vide (hors config) -->
+                            <div class="place-grand vide"></div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     Modal tickets à imprimer
+══════════════════════════════════════ -->
+<div class="modal fade" id="modalTickets" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-ticket-perforated"></i> Tickets à imprimer
+                </h5>
+                <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="zoneTickets"></div>
+            <div class="modal-footer">
+                <button class="btn btn-dark" onclick="window.print()">
+                    <i class="bi bi-printer"></i> Imprimer
+                </button>
+                <button type="button" class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal vente flash -->
+<div class="modal fade" id="modalFlash" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h6 class="modal-title">
+                    <i class="bi bi-lightning-charge"></i>
+                    Vente flash — Place <span id="flashNumeroModal"></span>
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <label class="form-label small fw-bold">Nom</label>
+                    <input type="text" id="flashNomModal" class="form-control form-control-sm"
+                           placeholder="Nom">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small fw-bold">Prénom</label>
+                    <input type="text" id="flashPrenomModal" class="form-control form-control-sm"
+                           placeholder="Prénom">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label small fw-bold">Tarif</label>
+                    <select id="flashTarifModal" class="form-select form-select-sm">
+                        <option value="adulte">Adulte — {{ representation.prix_adulte }} €</option>
+                        <option value="enfant">Enfant — {{ representation.prix_enfant }} €</option>
+                    </select>
+                </div>
+                <div class="d-flex justify-content-between fw-bold">
+                    <span>Prix :</span>
+                    <span id="flashPrixModal">{{ representation.prix_adulte }} €</span>
+                </div>
+            </div>
+            <div class="modal-footer p-2">
+                <button class="btn btn-warning w-100" onclick="soumettrVenteFlash()">
+                    <i class="bi bi-lightning-charge"></i> Confirmer la vente
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ══════════════════════════════════════════════════════════
+   Contrôle d'entrée — JavaScript complet
+══════════════════════════════════════════════════════════ */
+
+// ── URLs Django ──
+const URL_VALIDER          = "{% url 'valider_entree' representation.pk %}";
+const URL_ANNULER_TICKET   = (id) => `/ticket/${id}/annuler/`;
+const URL_VENTE_FLASH      = "{% url 'vente_flash' plan.pk %}";
+const URL_ANNULER_FLASH    = (id) => `/vente-flash/${id}/annuler/`;
+const URL_METTRE_TAMPON    = "{% url 'mettre_en_tampon' plan.pk %}";
+const URL_PLACER_TAMPON    = "{% url 'placer_depuis_tampon' plan.pk %}";
+const URL_RETIRER_TAMPON   = (id) => `/tampon/${id}/retirer/`;
+
+const CSRF              = "{{ csrf_token }}";
+const PRIX_ADULTE       = parseFloat("{{ representation.prix_adulte|stringformat:"f" }}");
+const PRIX_ENFANT       = parseFloat("{{ representation.prix_enfant|stringformat:"f" }}");
+const REP_NOM           = "{{ representation.nom|escapejs }}";
+const REP_DATE          = "{{ representation.date|date:'d/m/Y' }}";
+
+// ── État global ──
+let modeActif           = 'entree';   // 'entree' | 'flash' | 'deplacement'
+let selection           = {};         // { place_id: {...} }  (mode entrée)
+let placeFlashCourante  = null;       // PlaceLibre sélectionnée en mode flash
+let placementActif      = null;       // { tampon_id, nb_places, nom, selection[] }
+
+/* ════════════════════════════════════════
+   INITIALISATION
+════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+
+    // Attachement des clics sur toutes les places
+    document.querySelectorAll('.place-grand:not(.vide)').forEach(el => {
+        el.addEventListener('click', () => gererClicPlace(el));
+    });
+
+    // Changement de mode
+    document.querySelectorAll('input[name="mode"]').forEach(radio => {
+        radio.addEventListener('change', e => changerMode(e.target.value));
+    });
+
+    // Mise à jour prix flash selon tarif
+    document.getElementById('flashTarifModal').addEventListener('change', e => {
+        const prix = e.target.value === 'adulte' ? PRIX_ADULTE : PRIX_ENFANT;
+        document.getElementById('flashPrixModal').textContent =
+            prix.toFixed(2).replace('.', ',') + ' €';
+    });
+});
+
+/* ════════════════════════════════════════
+   GESTION DU MODE
+════════════════════════════════════════ */
+function changerMode(nouveau) {
+    modeActif = nouveau;
+    toutDeselectionner();
+    placeFlashCourante = null;
+    placementActif     = null;
+
+    document.getElementById('panneauEntree').classList.toggle('d-none',     nouveau !== 'entree');
+    document.getElementById('panneauFlash').classList.toggle('d-none',      nouveau !== 'flash');
+    document.getElementById('panneauDeplacement').classList.toggle('d-none',nouveau !== 'deplacement');
+
+    // Retire l'indicateur de placement actif
+    document.querySelectorAll('.tampon-item').forEach(el => el.classList.remove('tampon-actif'));
+    document.querySelectorAll('.place-grand').forEach(el => el.classList.remove('cible-placement'));
+}
+
+/* ════════════════════════════════════════
+   DISPATCH DES CLICS SUR LES PLACES
+════════════════════════════════════════ */
+function gererClicPlace(el) {
+    switch (modeActif) {
+        case 'entree':      gererClicEntree(el);     break;
+        case 'flash':       gererClicFlash(el);      break;
+        case 'deplacement': gererClicDeplacement(el);break;
+    }
+}
+
+/* ════════════════════════════════════════
+   MODE ENTRÉE
+════════════════════════════════════════ */
+function gererClicEntree(el) {
+    const type   = el.dataset.type;
+    const statut = el.dataset.statut;
+
+    if (type === 'reservee') {
+        if (statut === 'valide') {
+            afficherConfirmAnnulation(el);
+        } else if (statut === 'libre') {
+            toggleSelectionEntree(el);
+        }
+    } else if (type === 'libre' && statut === 'vendue') {
+        // Annulation d'une vente flash depuis le plan
+        const venteId = el.dataset.venteId;
+        if (venteId && confirm(`Annuler la vente flash place ${el.dataset.numero} ?`)) {
+            annulerVenteFlashDirect(venteId, el);
+        }
+    }
+}
+
+function toggleSelectionEntree(el) {
+    const placeId = el.dataset.placeId;
+
+    if (el.classList.contains('selectionnee')) {
+        el.classList.remove('selectionnee');
+        el.classList.add('libre-res');
+        delete selection[placeId];
+    } else {
+        el.classList.remove('libre-res', 'annulee');
+        el.classList.add('selectionnee');
+        selection[placeId] = {
+            element : el,
+            prix    : PRIX_ADULTE,
+            numero  : el.dataset.numero,
+            rangee  : el.dataset.rangee,
+            nom     : el.dataset.nom,
+            prenom  : el.dataset.prenom,
+        };
+    }
+    mettreAJourPanneauEntree();
+}
+
+function toutDeselectionner() {
+    Object.values(selection).forEach(s => {
+        s.element.classList.remove('selectionnee');
+        s.element.classList.add('libre-res');
+    });
+    selection = {};
+    mettreAJourPanneauEntree();
+}
+
+function mettreAJourPanneauEntree() {
+    const nb    = Object.keys(selection).length;
+    const total = nb * PRIX_ADULTE;
+    document.getElementById('nbSelectionne').textContent = nb + ' place(s)';
+    document.getElementById('prixSelection').textContent =
+        total.toFixed(2).replace('.', ',') + ' €';
+    document.getElementById('btnValider').disabled = (nb === 0);
+}
+
+async function validerSelection() {
+    const placeIds = Object.keys(selection).map(Number);
+    if (!placeIds.length) return;
+
+    const btn = document.getElementById('btnValider');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>…';
+
+    try {
+        const data = await postJSON(URL_VALIDER, { place_ids: placeIds });
+        if (data.erreur) { alert(data.erreur); return; }
+
+        data.tickets.forEach(t => {
+            const el = document.getElementById('place-res-' + t.place_id);
+            if (el) {
+                el.classList.remove('selectionnee', 'libre-res', 'annulee');
+                el.classList.add('validee');
+                el.dataset.statut   = 'valide';
+                el.dataset.ticketId = t.ticket_id;
+            }
+            delete selection[t.place_id];
+        });
+
+        mettreAJourCA(data.ca_total);
+        mettreAJourPanneauEntree();
+        afficherTickets(data.tickets);
+
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check2-circle"></i> Valider et imprimer';
+    }
+}
+
+function afficherConfirmAnnulation(el) {
+    const ticketId = el.dataset.ticketId;
+    const nom      = el.dataset.nom + ' ' + el.dataset.prenom;
+    if (!ticketId) return;
+    if (confirm(`Annuler le ticket de ${nom} (place ${el.dataset.numero}) ?`)) {
+        annulerTicket(ticketId, el.dataset.placeId);
+    }
+}
+
+async function annulerTicket(ticketId, placeId) {
+    const data = await postJSON(URL_ANNULER_TICKET(ticketId), {});
+    if (data.succes) {
+        const el = document.getElementById('place-res-' + placeId);
+        if (el) { el.classList.remove('validee'); el.classList.add('annulee'); el.dataset.statut = 'annule'; }
+        mettreAJourCA(data.ca_total);
+    }
+}
+
+/* ════════════════════════════════════════
+   MODE VENTE FLASH
+════════════════════════════════════════ */
+function gererClicFlash(el) {
+    if (el.dataset.type !== 'libre') {
+        alert('Le mode Vente flash ne s\'applique qu\'aux places libres (sans réservation).');
+        return;
+    }
+    if (el.dataset.statut === 'vendue') {
+        const venteId = el.dataset.venteId;
+        if (venteId && confirm(`Annuler la vente flash place ${el.dataset.numero} ?`)) {
+            annulerVenteFlashDirect(venteId, el);
+        }
+        return;
+    }
+
+    // Ouvre le modal de saisie
+    placeFlashCourante = el;
+    document.getElementById('flashNumeroModal').textContent = el.dataset.numero;
+    document.getElementById('flashNomModal').value    = '';
+    document.getElementById('flashPrenomModal').value = '';
+    document.getElementById('flashTarifModal').value  = 'adulte';
+    document.getElementById('flashPrixModal').textContent =
+        PRIX_ADULTE.toFixed(2).replace('.', ',') + ' €';
+
+    new bootstrap.Modal(document.getElementById('modalFlash')).show();
+}
+
+async function soumettrVenteFlash() {
+    if (!placeFlashCourante) return;
+
+    const nom    = document.getElementById('flashNomModal').value.trim();
+    const prenom = document.getElementById('flashPrenomModal').value.trim();
+    const tarif  = document.getElementById('flashTarifModal').value;
+
+    if (!nom || !prenom) { alert('Nom et prénom obligatoires.'); return; }
+
+    const placeLibreId = placeFlashCourante.dataset.placeLibreId;
+
+    bootstrap.Modal.getInstance(document.getElementById('modalFlash')).hide();
+
+    const data = await postJSON(URL_VENTE_FLASH, {
+        place_libre_id: parseInt(placeLibreId),
+        nom, prenom, tarif
+    });
+
+    if (data.erreur) { alert(data.erreur); return; }
+
+    // Mise à jour visuelle
+    const el = placeFlashCourante;
+    el.classList.remove('place-libre-vide');
+    el.classList.add('flash-vendue');
+    el.dataset.statut   = 'vendue';
+    el.dataset.venteId  = data.vente_id;
+    el.dataset.nom      = nom;
+    el.dataset.prenom   = prenom;
+    el.querySelector('.place-libre-label') &&
+        (el.querySelector('.place-libre-label').textContent = '');
+    el.querySelector('.place-nom')    && (el.querySelector('.place-nom').textContent    = nom.substring(0,8));
+    el.querySelector('.place-prenom') && (el.querySelector('.place-prenom').textContent = prenom.substring(0,8));
+
+    placeFlashCourante = null;
+    mettreAJourCA(data.ca_total);
+
+    // Impression du ticket flash
+    afficherTickets([data.ticket_data]);
+}
+
+async function annulerVenteFlashDirect(venteId, el) {
+    const data = await postJSON(URL_ANNULER_FLASH(venteId), {});
+    if (data.succes) {
+        el.classList.remove('flash-vendue');
+        el.classList.add('place-libre-vide');
+        el.dataset.statut  = 'libre';
+        el.dataset.venteId = '';
+        el.dataset.nom     = '';
+        el.dataset.prenom  = '';
+        // Rétablit le label LIBRE
+        const nomEl = el.querySelector('.place-nom');
+        const prenomEl = el.querySelector('.place-prenom');
+        if (nomEl)    nomEl.textContent    = '';
+        if (prenomEl) prenomEl.textContent = '';
+        if (!el.querySelector('.place-libre-label')) {
+            el.insertAdjacentHTML('beforeend',
+                '<div class="place-libre-label">LIBRE</div>');
+        } else {
+            el.querySelector('.place-libre-label').textContent = 'LIBRE';
+        }
+        mettreAJourCA(data.ca_total);
+    }
+}
+
+/* ════════════════════════════════════════
+   MODE DÉPLACEMENT
+════════════════════════════════════════ */
+function gererClicDeplacement(el) {
+    if (placementActif) {
+        // On est en train de choisir les nouvelles places
+        gererSelectionNouvellePlaces(el);
+        return;
+    }
+
+    // Clic sur une réservation → mise en tampon
+    if (el.dataset.type === 'reservee' && el.dataset.statut !== 'valide') {
+        const resId = el.dataset.reservationId;
+        const nom   = el.dataset.nom + ' ' + el.dataset.prenom;
+        if (confirm(`Mettre ${nom} en zone tampon pour déplacement ?`)) {
+            mettreEnTampon(resId, el);
+        }
+    } else if (el.dataset.type === 'reservee' && el.dataset.statut === 'valide') {
+        alert('Annulez d\'abord le ticket de cette place avant de déplacer la réservation.');
+    }
+}
+
+async function mettreEnTampon(resId, elDeclencheur) {
+    const data = await postJSON(URL_METTRE_TAMPON, { reservation_id: parseInt(resId) });
+    if (data.erreur) { alert(data.erreur); return; }
+
+    // Retire les places de cette réservation du plan visuellement
+    document.querySelectorAll(`[data-reservation-id="${resId}"]`).forEach(el => {
+        el.classList.remove('libre-res', 'validee', 'annulee');
+        el.classList.add('en-deplacement');
+        el.dataset.type   = 'libre';
+        el.dataset.statut = 'libre';
+    });
+
+    // Ajoute au panneau tampon
+    ajouterItemTampon(data.tampon_id, data.reservation);
+    mettreAJourCA(data.ca_total);
+}
+
+function ajouterItemTampon(tamponId, res) {
+    document.getElementById('tamponVide') &&
+        document.getElementById('tamponVide').remove();
+
+    const zone = document.getElementById('zoneTampon');
+    zone.insertAdjacentHTML('beforeend', `
+        <div class="tampon-item" id="tampon-${tamponId}"
+             data-tampon-id="${tamponId}"
+             data-reservation-id="${res.id}"
+             data-nb-places="${res.nb_places}">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="fw-bold small">${res.nom} ${res.prenom}</span><br>
+                    <span class="text-muted" style="font-size:0.7rem">${res.nb_places} place(s)</span>
+                </div>
+                <div class="d-flex gap-1">
+                    <button class="btn btn-xs btn-info"
+                            onclick="activerPlacement(${tamponId}, ${res.nb_places}, '${res.nom} ${res.prenom}')"
+                            title="Placer">
+                        <i class="bi bi-pin-map"></i>
+                    </button>
+                    <button class="btn btn-xs btn-outline-danger"
+                            onclick="retirerDuTampon(${tamponId})"
+                            title="Retirer">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `);
+
+    const compteur = document.getElementById('compteurTampon');
+    const [n, max] = compteur.textContent.split('/');
+    compteur.textContent = (parseInt(n) + 1) + '/' + max;
+
+    // Forcer le mode déplacement
+    document.getElementById('modeDeplacement').checked = true;
+    changerMode('deplacement');
+}
+
+function activerPlacement(tamponId, nbPlaces, nomRes) {
+    placementActif = { tampon_id: tamponId, nb_places: nbPlaces, selection: [] };
+
+    // Mettre en évidence l'item tampon actif
+    document.querySelectorAll('.tampon-item').forEach(el => el.classList.remove('tampon-actif'));
+    document.getElementById('tampon-' + tamponId)?.classList.add('tampon-actif');
+
+    // Surligner les places libres disponibles
+    document.querySelectorAll('.place-grand').forEach(el => {
+        if ((el.dataset.type === 'libre' && el.dataset.statut === 'libre') ||
+             el.classList.contains('en-deplacement')) {
+            el.classList.add('cible-placement');
+        }
+    });
+
+    document.getElementById('panneauDeplacement').innerHTML = `
+        <div class="alert alert-info p-2 small">
+            <i class="bi bi-pin-map"></i>
+            Placement de <strong>${nomRes}</strong><br>
+            Sélectionnez <strong>${nbPlaces}</strong> place(s) libre(s).
+            <br>
+            <span id="comptePlacesChoisies" class="fw-bold">0</span>/${nbPlaces} choisies
+        </div>
+        <button class="btn btn-info btn-sm w-100" id="btnConfirmerPlacement" disabled
+                onclick="confirmerPlacement()">
+            <i class="bi bi-check2"></i> Confirmer le placement
+        </button>
+        <button class="btn btn-outline-secondary btn-sm w-100 mt-1"
+                onclick="annulerPlacement()">
+            Annuler
+        </button>`;
+}
+
+function gererSelectionNouvellePlaces(el) {
+    if (!placementActif) return;
+
+    const estLibre = (el.dataset.type === 'libre' && el.dataset.statut === 'libre') ||
+                      el.classList.contains('en-deplacement');
+    if (!estLibre) return;
+
+    const placeLibreId = el.dataset.placeLibreId;
+    if (!placeLibreId) return;
+
+    const idx = placementActif.selection.indexOf(parseInt(placeLibreId));
+
+    if (idx >= 0) {
+        // Désélection
+        placementActif.selection.splice(idx, 1);
+        el.classList.remove('selectionnee');
+        el.classList.add('cible-placement');
+    } else {
+        if (placementActif.selection.length >= placementActif.nb_places) return;
+        placementActif.selection.push(parseInt(placeLibreId));
+        el.classList.remove('cible-placement');
+        el.classList.add('selectionnee');
+    }
+
+    const nb = placementActif.selection.length;
+    document.getElementById('comptePlacesChoisies').textContent = nb;
+    document.getElementById('btnConfirmerPlacement').disabled =
+        (nb !== placementActif.nb_places);
+}
+
+async function confirmerPlacement() {
+    if (!placementActif) return;
+
+    const data = await postJSON(URL_PLACER_TAMPON, {
+        tampon_id : placementActif.tampon_id,
+        place_ids : placementActif.selection,
+    });
+
+    if (data.erreur) { alert(data.erreur); return; }
+
+    // Supprime les anciennes places en-deplacement
+    document.querySelectorAll('.en-deplacement').forEach(el => el.remove());
+
+    // Retire du tampon visuellement
+    document.getElementById('tampon-' + placementActif.tampon_id)?.remove();
+    const compteur = document.getElementById('compteurTampon');
+    const [n, max] = compteur.textContent.split('/');
+    compteur.textContent = Math.max(0, parseInt(n) - 1) + '/' + max;
+
+    mettreAJourCA(data.ca_total);
+    annulerPlacement();
+
+    // Rechargement partiel : on recharge la page pour afficher les nouvelles places
+    // (solution robuste pour éviter de reconstruire la grille en JS)
+    window.location.reload();
+}
+
+function annulerPlacement() {
+    placementActif = null;
+    document.querySelectorAll('.cible-placement').forEach(el =>
+        el.classList.remove('cible-placement'));
+    document.querySelectorAll('.selectionnee').forEach(el => {
+        el.classList.remove('selectionnee');
+        if (el.dataset.type === 'libre') el.classList.add('place-libre-vide');
+    });
+    document.querySelectorAll('.tampon-item').forEach(el =>
+        el.classList.remove('tampon-actif'));
+    document.getElementById('panneauDeplacement').innerHTML =
+        '<div class="text-muted small">Cliquez sur une réservation pour la déplacer.</div>';
+}
+
+async function retirerDuTampon(tamponId) {
+    if (!confirm('Retirer cette réservation du tampon ?')) return;
+    const data = await postJSON(URL_RETIRER_TAMPON(tamponId), {});
+    if (data.succes) {
+        document.getElementById('tampon-' + tamponId)?.remove();
+        const compteur = document.getElementById('compteurTampon');
+        const [n, max] = compteur.textContent.split('/');
+        const nouveau = Math.max(0, parseInt(n) - 1);
+        compteur.textContent = nouveau + '/' + max;
+        if (nouveau === 0) {
+            document.getElementById('zoneTampon').innerHTML =
+                '<div class="text-muted small text-center py-2" id="tamponVide">Zone tampon vide</div>';
+        }
+    }
+}
+
+/* ════════════════════════════════════════
+   TICKETS & IMPRESSION
+════════════════════════════════════════ */
+function afficherTickets(tickets) {
+    const zone = document.getElementById('zoneTickets');
+    zone.innerHTML = '';
+    tickets.forEach(t => zone.insertAdjacentHTML('beforeend', genererHtmlTicket(t)));
+    new bootstrap.Modal(document.getElementById('modalTickets')).show();
+}
+
+function genererHtmlTicket(t) {
+    const tarif   = t.est_adulte ? 'Adulte' : 'Enfant';
+    const prix    = parseFloat(t.prix).toFixed(2).replace('.', ',');
+    const typeTag = t.type === 'flash'
+        ? '<div class="ticket-flash-badge">⚡ VENTE FLASH</div>' : '';
+    const annulBtn = t.type === 'flash'
+        ? `<button class="btn btn-sm btn-outline-danger w-100"
+               onclick="annulerVenteFlashDirect(${t.ticket_id}, document.getElementById('place-lib-${t.place_id}'))">
+               <i class="bi bi-x-circle"></i> Annuler
+           </button>`
+        : `<button class="btn btn-sm btn-outline-danger w-100"
+               onclick="annulerTicket(${t.ticket_id}, ${t.place_id})">
+               <i class="bi bi-x-circle"></i> Annuler
+           </button>`;
+
+    return `
+    <div class="ticket-80mm" id="ticket-${t.ticket_id}">
+        ${typeTag}
+        <div class="ticket-header">
+            <div class="ticket-theatre">🎭 THÉÂTRE</div>
+            <div class="ticket-representation">${t.representation}</div>
+            <div class="ticket-date">${t.date}</div>
+        </div>
+        <div class="ticket-separateur">- - - - - - - - - - - - - - - -</div>
+        <div class="ticket-body">
+            <div class="ticket-label">TITULAIRE</div>
+            <div class="ticket-valeur-grande">${t.nom.toUpperCase()} ${t.prenom}</div>
+            <div class="ticket-ligne">
+                <div><div class="ticket-label">PLACE</div>
+                     <div class="ticket-numero-place">${t.numero_place}</div></div>
+                <div><div class="ticket-label">RANGÉE</div>
+                     <div class="ticket-numero-place">${t.rangee}</div></div>
+                <div><div class="ticket-label">TARIF</div>
+                     <div class="ticket-numero-place">${tarif}</div></div>
+            </div>
+        </div>
+        <div class="ticket-separateur">- - - - - - - - - - - - - - - -</div>
+        <div class="ticket-footer">
+            <div class="ticket-label">PRIX</div>
+            <div class="ticket-prix">${prix} €</div>
+            <div class="ticket-id">Ticket #${t.ticket_id}</div>
+        </div>
+        <div class="ticket-actions no-print mt-2">${annulBtn}</div>
+    </div>`;
+}
+
+/* ════════════════════════════════════════
+   UTILITAIRES
+════════════════════════════════════════ */
+function mettreAJourCA(ca) {
+    document.getElementById('caTotal').textContent =
+        parseFloat(ca).toFixed(2).replace('.', ',') + ' €';
+}
+
+async function postJSON(url, body) {
+    const resp = await fetch(url, {
+        method  : 'POST',
+        headers : {
+            'Content-Type'     : 'application/json',
+            'X-CSRFToken'      : CSRF,
+            'X-Requested-With' : 'XMLHttpRequest',
+        },
+        body: JSON.stringify(body),
+    });
+    if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ erreur: 'Erreur serveur ' + resp.status }));
+        throw new Error(err.erreur || 'Erreur serveur');
+    }
+    return resp.json();
+}
+</script>
+{% endblock %}

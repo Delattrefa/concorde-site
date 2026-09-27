@@ -1,0 +1,44 @@
+{% extends 'theatre/base.html' %}
+{% block title %}Générer le plan de salle{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-grid-3x3"></i> Générer le plan de salle</h5>
+            </div>
+            <div class="card-body text-center">
+                <h4>{{ representation.nom }}</h4>
+                <p class="text-muted">{{ representation.date|date:"d/m/Y" }}</p>
+                <div class="alert alert-info">
+                    <i class="bi bi-people-fill"></i>
+                    <strong>{{ nb_inscrits }}</strong> places réservées
+                </div>
+                {% if representation.plan_salle %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Un plan de salle existe déjà. Cliquez sur "Voir le plan actuel" ou "Générer le plan" pour <strong>le remplacer</strong>.
+                </div>
+                <div class="mb-4">
+                    <a href="{% url 'plan_salle_afficher' representation.pk %}" class="btn btn-primary">
+                        <i class="bi bi-eye"></i> Voir le plan actuel
+                    </a>
+                </div>
+                {% endif %}
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a href="{% url 'representation_list' %}" class="btn btn-outline-dark">
+                            <i class="bi bi-arrow-left"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-dark">
+                            <i class="bi bi-grid-3x3"></i> Générer le plan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

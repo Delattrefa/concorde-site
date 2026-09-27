@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Réservation de {{ reservation.prenom }} {{ reservation.nom }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <p class="breadcrumb"><a href="{% url 'calendrier:reservation_liste' %}">← Retour à la liste des demandes</a></p>
+        <h1>Réservation de {{ reservation.prenom }} {{ reservation.nom }}</h1>
+        <span class="etiquette etiquette--{{ reservation.statut }}">{{ reservation.get_statut_display }}</span>
+    </div>
+</section>
+
+<section class="calendrier-detail wrap">
+    <h2>Coordonnées</h2>
+    <p><strong>Nom :</strong> {{ reservation.nom }}</p>
+    <p><strong>Prénom :</strong> {{ reservation.prenom }}</p>
+    <p><strong>Adresse :</strong> {{ reservation.adresse }}</p>
+    <p><strong>E-mail :</strong> <a href="mailto:{{ reservation.email }}">{{ reservation.email }}</a></p>
+    <p><strong>Téléphone / GSM :</strong> {{ reservation.telephone }}</p>
+
+    <h2>Demande</h2>
+    {% if reservation.date_fin != reservation.date_debut %}
+        <p><strong>Dates souhaitées :</strong> du {{ reservation.date_debut|date:"l d F Y" }} au {{ reservation.date_fin|date:"l d F Y" }}</p>
+    {% else %}
+        <p><strong>Date souhaitée :</strong> {{ reservation.date_debut|date:"l d F Y" }}</p>
+    {% endif %}
+    {% if reservation.message %}
+        <p><strong>Message :</strong> {{ reservation.message|linebreaks }}</p>
+    {% endif %}
+    <p><strong>Demande reçue le :</strong> {{ reservation.date_demande|date:"d/m/Y H:i" }}</p>
+
+    {% if reservation.traite_par %}
+        <p><strong>Traitée par :</strong> {{ reservation.traite_par.get_full_name|default:reservation.traite_par.username }}
+            le {{ reservation.date_traitement|date:"d/m/Y H:i" }}</p>
+    {% endif %}
+
+    {% if reservation.statut == "validee" %}
+        <h2>Contrat de location</h2>
+        {% if reservation.contrat %}
+            <p>
+                Un contrat a été généré le {{ reservation.contrat.date_creation|date:"d/m/Y H:i" }}
+                {% if reservation.contrat.genere_par %}par {{ reservation.contrat.genere_par.get_full_name|default:reservation.contrat.genere_par.username }}{% endif %}.
+            </p>
+            <div class="calendrier-detail__actions">
+                {% if reservation.contrat.fichier_pdf %}
+                    <a class="btn btn--secondary" href="{% url 'calendrier:reservation_contrat_pdf' reservation.pk %}">Télécharger le contrat (PDF)</a>
+                {% endif %}
+                <a class="btn btn--secondary" href="{% url 'calendrier:reservation_contrat' reservation.pk %}">Modifier et régénérer le contrat</a>
+            </div>
+        {% else %}
+            <p>Aucun contrat n'a encore été rédigé pour cette réservation.</p>
+            <div class="calendrier-detail__actions">
+                <a class="btn btn--primary" href="{% url 'calendrier:reservation_contrat' reservation.pk %}">Rédiger le contrat de location</a>
+            </div>
+        {% endif %}
+    {% endif %}
+
+    <div class="calendrier-detail__actions">
+        {% if reservation.statut == "attente" %}
+            <form method="post" action="{% url 'calendrier:reservation_traiter' reservation.pk %}" class="calendrier-liste__form-action">
+                {% csrf_token %}
+                <button type="submit" name="action" value="valider" class="btn btn--primary">Valider la réservation</button>
+                <button type="submit" name="action" value="refuser" class="btn btn--danger">Refuser la réservation</button>
+            </form>
+        {% endif %}
+        <a class="btn btn--secondary" href="{% url 'calendrier:reservation_modifier' reservation.pk %}">Modifier cette réservation</a>
+        <a class="btn btn--danger" href="{% url 'calendrier:reservation_supprimer' reservation.pk %}">Supprimer cette demande</a>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <h1>{{ page.title }}</h1>
+        {% if page.intro %}<div class="page-header__intro">{{ page.intro|richtext }}</div>{% endif %}
+    </div>
+</section>
+
+<section class="contact wrap fade-target">
+    <div class="contact__grid">
+        <div class="contact__form fade-up">
+            <form action="{% pageurl page %}" method="POST" novalidate>
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                {% for field in form %}
+                    <div class="form-field {% if field.errors %}form-field--error{% endif %}">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.help_text %}<p class="form-field__help">{{ field.help_text }}</p>{% endif %}
+                        {{ field.errors }}
+                    </div>
+                {% endfor %}
+                <button type="submit" class="btn btn--primary">Envoyer</button>
+            </form>
+        </div>
+
+        <div class="contact__info fade-up delay-1">
+            {% if page.address %}<p>📍 {{ page.address }}</p>{% endif %}
+            {% if page.phone %}<p>📞 {{ page.phone }}</p>{% endif %}
+            {% if page.email_display %}<p>✉️ <a href="mailto:{{ page.email_display }}">{{ page.email_display }}</a></p>{% endif %}
+
+            {% if page.map_embed_url %}
+                <div class="contact__map">
+                    <iframe src="{{ page.map_embed_url }}" width="100%" height="300" style="border:0;" loading="lazy" title="Carte d'accès"></iframe>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,5 @@
+{% load wagtailcore_tags %}
+<div class="callout fade-up">
+    {% if value.title %}<h3>{{ value.title }}</h3>{% endif %}
+    {{ value.text|richtext }}
+</div>
