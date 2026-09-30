@@ -30,4 +30,14 @@ urlpatterns = [
     path("reservation/<int:pk>/supprimer/", views.ReservationDeleteView.as_view(), name="reservation_supprimer"),
     path("reservation/<int:reservation_pk>/contrat/", views.rediger_contrat, name="reservation_contrat"),
     path("reservation/<int:reservation_pk>/contrat/pdf/", views.telecharger_contrat, name="reservation_contrat_pdf"),
+
+    # --- Contrat-type : articles et annexes (administrateurs) ---------------
+    path("contrat-type/", views.modele_contrat, name="modele_contrat"),
+    path("contrat-type/apercu/", views.apercu_modele_contrat, name="modele_contrat_apercu"),
+    path("contrat-type/article/ajouter/", views.ArticleContratCreateView.as_view(), name="article_contrat_ajouter"),
+    path("contrat-type/article/<int:pk>/modifier/", views.ArticleContratUpdateView.as_view(), name="article_contrat_modifier"),
+    path("contrat-type/article/<int:pk>/supprimer/", views.ArticleContratDeleteView.as_view(), name="article_contrat_supprimer"),
+    path("contrat-type/annexe/ajouter/", views.AnnexeContratCreateView.as_view(), name="annexe_contrat_ajouter"),
+    path("contrat-type/annexe/<int:pk>/modifier/", views.AnnexeContratUpdateView.as_view(), name="annexe_contrat_modifier"),
+    path("contrat-type/annexe/<int:pk>/supprimer/", views.AnnexeContratDeleteView.as_view(), name="annexe_contrat_supprimer"),
 ]

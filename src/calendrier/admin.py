@@ -6,7 +6,7 @@ from django.contrib import admin
 from django.utils import timezone
 from django.utils.html import format_html
 
-from .models import Activite, ContratLocation, Reservation
+from .models import Activite, AnnexeContrat, ArticleContrat, ContratLocation, Reservation
 
 
 @admin.register(Activite)
@@ -99,3 +99,21 @@ class ContratLocationAdmin(admin.ModelAdmin):
     search_fields = ("reservation__nom", "reservation__prenom", "delegue_nom", "delegue_prenom")
     readonly_fields = ("date_creation", "genere_par")
     autocomplete_fields = ["reservation"]
+
+
+@admin.register(ArticleContrat)
+class ArticleContratAdmin(admin.ModelAdmin):
+    """Articles du contrat-type (également modifiables sur le site :
+    /calendrier/contrat-type/)."""
+
+    list_display = ("titre", "ordre", "actif", "date_modification")
+    list_editable = ("ordre", "actif")
+    search_fields = ("titre", "texte")
+
+
+@admin.register(AnnexeContrat)
+class AnnexeContratAdmin(admin.ModelAdmin):
+    """Annexes PDF du contrat-type."""
+
+    list_display = ("titre", "ordre", "actif", "fichier", "date_modification")
+    list_editable = ("ordre", "actif")

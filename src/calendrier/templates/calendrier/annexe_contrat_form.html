@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Modifier {{ object.titre }}{% else %}Ajouter une annexe{% endif %} — Contrat-type{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <p class="breadcrumb"><a href="{{ url_retour }}">← Retour au contrat-type</a></p>
+        <h1>{% if object %}Modifier « {{ object.titre }} »{% else %}Ajouter une annexe{% endif %}</h1>
+    </div>
+</section>
+
+<section class="calendrier-form wrap">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-field">
+            {{ form.titre.label_tag }}
+            {{ form.titre }}
+            {{ form.titre.errors }}
+            <p class="form-field__help">{{ form.titre.help_text }}</p>
+        </div>
+
+        <div class="form-field">
+            {{ form.fichier.label_tag }}
+            {% if object and object.fichier %}
+                <p class="form-field__help">Fichier actuel : <a href="{{ object.fichier.url }}" target="_blank">voir le PDF</a>. Choisissez un nouveau fichier pour le remplacer.</p>
+                <input type="file" name="{{ form.fichier.html_name }}" id="{{ form.fichier.id_for_label }}" accept="application/pdf,.pdf">
+            {% else %}
+                {{ form.fichier }}
+            {% endif %}
+            {{ form.fichier.errors }}
+            <p class="form-field__help">Format PDF uniquement. Le document est ajouté tel quel à la fin du contrat.</p>
+        </div>
+
+        <div class="form-field">
+            {{ form.ordre.label_tag }}
+            {{ form.ordre }}
+            {{ form.ordre.errors }}
+            <p class="form-field__help">{{ form.ordre.help_text }}</p>
+        </div>
+
+        <div class="form-field">
+            <label>{{ form.actif }} {{ form.actif.label }}</label>
+            <p class="form-field__help">{{ form.actif.help_text }}</p>
+        </div>
+
+        <button type="submit" class="btn btn--primary">Enregistrer</button>
+        <a class="btn btn--secondary" href="{{ url_retour }}">Annuler</a>
+    </form>
+</section>
+{% endblock %}

@@ -7,7 +7,7 @@ PROJET="$HOME/concorde"
 APP="$PROJET/src"
 # Chemin affiché par cPanel > Setup Python App ("Enter to the virtual environment")
 # Adapter la version de Python si besoin (ex : 3.12).
-VENV="$HOME/virtualenv/concorde/src/3.12/bin/activate"
+VENV="$HOME/virtualenv/concorde/src/3.11/bin/activate"
 
 export DJANGO_SETTINGS_MODULE=concorde_site.settings.production
 

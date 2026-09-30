@@ -3,7 +3,11 @@ Formulaires de l'application 'calendrier'.
 """
 from django import forms
 
-from .models import Activite, ContratLocation, Reservation
+from pypdf import PdfReader
+from pypdf.errors import PdfReadError
+
+from .contrats import AIDE_MISE_EN_FORME, VARIABLES_DISPONIBLES, variables_inconnues
+from .models import Activite, AnnexeContrat, ArticleContrat, ContratLocation, Reservation
 
 
 class ActiviteForm(forms.ModelForm):
@@ -117,3 +121,57 @@ class ContratLocationForm(forms.ModelForm):
             "montant_location": "Montant de la location (€)",
             "montant_caution": "Montant de la caution (€)",
         }
+
+
+class ArticleContratForm(forms.ModelForm):
+    """Modification d'un article du contrat-type."""
+
+    class Meta:
+        model = ArticleContrat
+        fields = ["titre", "texte", "ordre", "actif"]
+        widgets = {
+            "titre": forms.TextInput(attrs={"class": "champ-texte"}),
+            "texte": forms.Textarea(attrs={"class": "champ-texte", "rows": 16}),
+            "ordre": forms.NumberInput(attrs={"class": "champ-texte", "min": "0", "step": "1"}),
+        }
+        help_texts = {"texte": AIDE_MISE_EN_FORME}
+
+    def clean_texte(self):
+        texte = self.cleaned_data["texte"]
+        inconnues = variables_inconnues(texte)
+        if inconnues:
+            noms = ", ".join("{%s}" % nom for nom in inconnues)
+            disponibles = ", ".join("{%s}" % nom for nom in VARIABLES_DISPONIBLES)
+            raise forms.ValidationError(
+                f"Variable(s) inconnue(s) : {noms}. Variables disponibles : {disponibles}."
+            )
+        return texte
+
+
+class AnnexeContratForm(forms.ModelForm):
+    """Ajout ou remplacement d'une annexe PDF du contrat-type."""
+
+    class Meta:
+        model = AnnexeContrat
+        fields = ["titre", "fichier", "ordre", "actif"]
+        widgets = {
+            "titre": forms.TextInput(attrs={"class": "champ-texte"}),
+            "fichier": forms.ClearableFileInput(attrs={"accept": "application/pdf,.pdf"}),
+            "ordre": forms.NumberInput(attrs={"class": "champ-texte", "min": "0", "step": "1"}),
+        }
+
+    def clean_fichier(self):
+        fichier = self.cleaned_data.get("fichier")
+        # Nouveau fichier envoyé : vérifier que c'est un PDF lisible, pour
+        # ne pas bloquer ensuite la génération des contrats.
+        if fichier and hasattr(fichier, "content_type"):
+            try:
+                fichier.seek(0)
+                nb_pages = len(PdfReader(fichier).pages)
+            except (PdfReadError, ValueError, OSError):
+                raise forms.ValidationError("Ce fichier n'est pas un PDF valide.")
+            finally:
+                fichier.seek(0)
+            if nb_pages == 0:
+                raise forms.ValidationError("Ce PDF ne contient aucune page.")
+        return fichier

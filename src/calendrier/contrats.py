@@ -4,22 +4,23 @@ réservation validée et des informations complémentaires saisies dans
 ContratLocationForm (délégué de l'ASBL, locaux pris en charge, montants).
 
 Le PDF final est composé de deux parties :
-1. Les pages "variables" du contrat (identité des parties, dates, locaux,
-   montants, articles 1 à 12) : régénérées à chaque fois avec reportlab,
-   à partir du texte du contrat-type fourni par l'ASBL.
-2. Les annexes fixes (Annexe I : mobilier, Annexe II : vaisselle,
-   Annexe III : conditions particulières bruit) : reprises telles quelles
-   depuis le PDF modèle d'origine (calendrier/data/CONTRAT_DE_LOCATION_template.pdf),
-   qui ne contient pas de champs de formulaire remplissables — seul son
-   contenu fixe (les annexes) est donc réutilisé, la partie variable étant
-   entièrement redessinée.
+1. Les pages du contrat, régénérées à chaque fois avec reportlab :
+   identité des parties, puis les articles du contrat-type
+   (modèle ArticleContrat, modifiables sur le site par les
+   administrateurs), puis les signatures.
+2. Les annexes PDF (modèle AnnexeContrat : mobilier, vaisselle,
+   conditions particulières...), ajoutées telles quelles à la suite.
+   Elles peuvent être remplacées par de nouveaux PDF sur le site.
 
-Le texte des articles 5 à 12 (clauses juridiques fixes) est repris mot
-pour mot du contrat-type fourni par l'ASBL La Concorde.
+Tant qu'aucune annexe n'a été enregistrée, les annexes d'origine sont
+reprises du PDF modèle (calendrier/data/CONTRAT_DE_LOCATION_template.pdf).
 """
 import io
 import os
+import re
 from datetime import date
+
+from xml.sax.saxutils import escape
 
 from pypdf import PdfReader, PdfWriter
 from reportlab.lib.pagesizes import A4
@@ -49,10 +50,124 @@ def _mise_en_forme_date(une_date):
     return f"{une_date.day} {mois_fr[une_date.month]} {une_date.year}"
 
 
-def _construire_pages_variables(reservation, contrat):
+
+# ---------------------------------------------------------------------------
+# Texte des articles : variables et mise en forme simple
+# ---------------------------------------------------------------------------
+VARIABLES_DISPONIBLES = {
+    "locaux": "liste à puces des locaux cochés (à écrire seule sur sa ligne)",
+    "date_debut": "premier jour de la location (ex : 7 octobre 2026)",
+    "date_fin": "dernier jour de la location",
+    "montant_location": "montant de la location, ex : 350,00",
+    "montant_caution": "montant de la caution, ex : 150,00",
+    "locataire": "prénom et nom du locataire",
+    "delegue": "prénom et nom du délégué de l'ASBL",
+}
+
+AIDE_MISE_EN_FORME = (
+    "Une ligne vide sépare deux paragraphes ; un simple retour à la ligne "
+    "reste dans le même paragraphe. Une ligne commençant par « - » devient "
+    "une puce. Entourer un passage de deux astérisques le met en gras : "
+    "**texte**."
+)
+
+_RE_VARIABLE = re.compile(r"\{(\w+)\}")
+_RE_GRAS = re.compile(r"\*\*(.+?)\*\*")
+
+
+def variables_inconnues(texte):
+    """Renvoie les noms entre accolades qui ne correspondent à aucune
+    variable disponible (fautes de frappe), pour les signaler à la saisie."""
+    return sorted({nom for nom in _RE_VARIABLE.findall(texte) if nom not in VARIABLES_DISPONIBLES})
+
+
+def _montant(valeur):
+    """150 → '150,00' (format belge)."""
+    try:
+        return f"{float(valeur):,.2f}".replace(",", " ").replace(".", ",")
+    except (TypeError, ValueError):
+        return str(valeur)
+
+
+def _valeurs_variables(reservation, contrat):
+    return {
+        "date_debut": _mise_en_forme_date(reservation.date_debut),
+        "date_fin": _mise_en_forme_date(reservation.date_fin),
+        "montant_location": _montant(contrat.montant_location),
+        "montant_caution": _montant(contrat.montant_caution),
+        "locataire": f"{reservation.prenom} {reservation.nom}",
+        "delegue": f"{contrat.delegue_prenom} {contrat.delegue_nom}",
+    }
+
+
+def _ligne_en_balisage(ligne, valeurs):
+    """Convertit une ligne de texte saisi en balisage reportlab : caractères
+    spéciaux échappés, variables remplacées, **gras** converti."""
+    ligne = escape(ligne)
+
+    def remplacer(correspondance):
+        nom = correspondance.group(1)
+        if nom in valeurs:
+            return escape(str(valeurs[nom]))
+        return correspondance.group(0)
+
+    ligne = _RE_VARIABLE.sub(remplacer, ligne)
+    return _RE_GRAS.sub(r"<b>\1</b>", ligne)
+
+
+def _texte_vers_elements(texte, valeurs, locaux, style):
+    """Transforme le texte d'un article en éléments reportlab
+    (paragraphes et listes à puces)."""
+    elements = []
+    texte = (texte or "").replace("\r\n", "\n").strip()
+
+    for bloc in re.split(r"\n\s*\n", texte):
+        lignes = []
+        puces = []
+
+        def vider_lignes():
+            if lignes:
+                elements.append(Paragraph("<br/>".join(lignes), style))
+                lignes.clear()
+
+        def vider_puces():
+            if puces:
+                elements.append(ListFlowable(
+                    [ListItem(Paragraph(p, style)) for p in puces], bulletType="bullet",
+                ))
+                puces.clear()
+
+        for ligne in bloc.split("\n"):
+            propre = ligne.strip()
+            if not propre:
+                continue
+            if propre == "{locaux}":
+                vider_lignes()
+                vider_puces()
+                if locaux:
+                    elements.append(ListFlowable(
+                        [ListItem(Paragraph(escape(libelle), style)) for libelle in locaux],
+                        bulletType="bullet",
+                    ))
+                else:
+                    elements.append(Paragraph("(aucun local spécifiquement listé)", style))
+            elif propre[:2] in ("- ", "• "):
+                vider_lignes()
+                puces.append(_ligne_en_balisage(propre[2:].strip(), valeurs))
+            else:
+                vider_puces()
+                lignes.append(_ligne_en_balisage(propre, valeurs))
+
+        vider_lignes()
+        vider_puces()
+
+    return elements
+
+
+def _construire_pages_variables(reservation, contrat, articles):
     """Construit, avec reportlab, les pages variables du contrat (identité
-    des parties, dates, locaux, montants, articles 1 à 12) et renvoie le
-    résultat sous forme d'octets PDF (en mémoire, sans fichier temporaire)."""
+    des parties, puis chaque article actif du contrat-type, signatures) et
+    renvoie le résultat en mémoire, sans fichier temporaire."""
 
     tampon = io.BytesIO()
     doc = SimpleDocTemplate(
@@ -93,17 +208,17 @@ def _construire_pages_variables(reservation, contrat):
     # --- Parties -------------------------------------------------------------
     elements.append(Paragraph("<b>Entre les soussignés :</b>", style_normal))
     elements.append(Paragraph(
-        f"{reservation.prenom} {reservation.nom}<br/>"
-        f"Adresse : {reservation.adresse}<br/>"
-        f"Téléphone : {reservation.telephone}<br/>"
-        f"Mail : {reservation.email}<br/>"
+        f"{escape(reservation.prenom)} {escape(reservation.nom)}<br/>"
+        f"Adresse : {escape(reservation.adresse)}<br/>"
+        f"Téléphone : {escape(reservation.telephone)}<br/>"
+        f"Mail : {escape(reservation.email)}<br/>"
         f"Ci-après dénommé(e) <b>client</b>,<br/>"
         f"D'UNE PART,",
         style_normal,
     ))
     elements.append(Paragraph("Et", style_normal))
     elements.append(Paragraph(
-        f"Monsieur/Madame <b>{contrat.delegue_prenom} {contrat.delegue_nom}</b><br/>"
+        f"Monsieur/Madame <b>{escape(contrat.delegue_prenom)} {escape(contrat.delegue_nom)}</b><br/>"
         f"agissant en qualité de représentant de l'association sans but lucratif "
         f"« La Concorde » sise, 11 rue Émile Cornez à 7387 Angre/Honnelles, "
         f"ci-après dénommée <b>Propriétaire</b><br/>"
@@ -112,218 +227,12 @@ def _construire_pages_variables(reservation, contrat):
     ))
     elements.append(Paragraph("il est convenu ce qui suit :", style_normal))
 
-    # --- Article 1 : locaux --------------------------------------------------
-    elements.append(Paragraph("ARTICLE 1", style_article))
-    elements.append(Paragraph(
-        "Le propriétaire donne en location au client un ensemble de locaux "
-        "ci-après définis et de mobiliers situés au 11 rue Émile Cornez à "
-        "7387 Angre/Honnelles (décrits aux annexes I et II ci-jointes).<br/>"
-        "Les locaux mis à disposition se composent de :",
-        style_normal,
-    ))
+    # --- Articles du contrat-type (modifiables sur le site) ---------------
+    valeurs = _valeurs_variables(reservation, contrat)
     locaux = contrat.locaux_selectionnes()
-    if locaux:
-        elements.append(ListFlowable(
-            [ListItem(Paragraph(libelle, style_normal)) for libelle in locaux],
-            bulletType="bullet",
-        ))
-    else:
-        elements.append(Paragraph("(aucun local spécifiquement listé)", style_normal))
-
-    # --- Article 2 : dates ----------------------------------------------------
-    elements.append(Paragraph("ARTICLE 2", style_article))
-    elements.append(Paragraph(
-        f"Les locaux et mobiliers sont loués du <b>{_mise_en_forme_date(reservation.date_debut)}</b> "
-        f"au <b>{_mise_en_forme_date(reservation.date_fin)}</b>.<br/>"
-        "La prise en charge prenant cours le premier jour à 10h00*.<br/>"
-        "La restitution se faisant le lendemain du dernier jour à 9h00*.",
-        style_normal,
-    ))
-
-    # --- Article 3 : caution ---------------------------------------------------
-    elements.append(Paragraph("ARTICLE 3", style_article))
-    elements.append(Paragraph(
-        "Le présent contrat est consenti et accepté moyennant le paiement du "
-        "montant de la location repris à l'article 4, réglé par virement sur "
-        "le numéro de compte repris en bas de page à la signature du présent "
-        f"contrat. Une caution de <b>{contrat.montant_caution} €</b> sera "
-        "demandée à la prise en charge des locaux et remboursable à la "
-        "restitution, sous déduction des frais résultant de dommages "
-        "éventuels définis à l'article 6 ci-après.<br/>"
-        "En cas d'annulation moins d'un mois avant la date de location, le "
-        "montant de celle-ci ne sera pas restitué.",
-        style_normal,
-    ))
-
-    # --- Article 4 : coût -------------------------------------------------------
-    elements.append(Paragraph("ARTICLE 4", style_article))
-    elements.append(Paragraph(
-        f"Le coût de location pour les locaux repris à l'article 1 est fixé à "
-        f"<b>{contrat.montant_location} €</b>, TVA de 21 % et charges comprises "
-        "(**), exigible en totalité à la restitution des locaux.<br/>"
-        "(*) Heures et jours de prise en charge et remise des clés à confirmer "
-        "quelques jours avant l'événement.<br/>"
-        "(**) Par charges comprises on entend eau et électricité. Le gaz, en "
-        "cas de chauffage de la salle avec consommation anormale, pourra être "
-        "facturé au Locataire. L'index de consommation sera repris au présent "
-        "contrat à la mise à disposition des locaux.<br/>"
-        "Les prix ci-dessus sont valables pour autant que la date de location "
-        "ne soit pas antérieure à la date de signature du présent contrat, "
-        "auquel cas l'association se réserve le droit de réajuster ses coûts "
-        "en fonction de l'index des prix.",
-        style_normal,
-    ))
-
-    # --- Article 5 -----------------------------------------------------------
-    elements.append(Paragraph("ARTICLE 5", style_article))
-    elements.append(Paragraph(
-        "Le bien est loué à destination de : Événement privé.<br/>"
-        "Le Locataire ne pourra changer cette destination sans l'accord "
-        "express et écrit de l'association ci-dessus, Propriétaire.<br/>"
-        "Le Locataire ne pourra céder ou sous-louer les locaux et mobiliers "
-        "mis à sa disposition, sous peine d'annulation immédiate du présent "
-        "contrat.<br/>"
-        "L'association ne peut être tenue pour responsable de négligence, "
-        "vols, incendies, accidents ou autres torts ou faits nuisibles à des "
-        "tiers et survenant du fait du locataire ; celui-ci, par la signature "
-        "du présent contrat, s'engage à assumer toutes les responsabilités "
-        "qu'elles soient civiles, morales ou pénales, de tout événement quel "
-        "qu'il soit, survenant pendant la durée du présent contrat, à charge "
-        "pour lui de se couvrir par une assurance ou par tout autre moyen "
-        "qu'il juge nécessaire.<br/>"
-        "En cas d'utilisation des pompes et en ce qui concerne les fûts de "
-        "bière, le locataire devra obligatoirement s'approvisionner auprès de "
-        "l'association. Il devra prévenir, au moins quinze jours au préalable, "
-        "l'association pour la commande. La commande sera payable le jour de "
-        "la restitution des clefs. Pour toutes les autres consommations, le "
-        "Locataire est libre d'approvisionnement.",
-        style_normal,
-    ))
-
-    elements.append(Paragraph("ARTICLE 5 bis", style_article))
-    elements.append(Paragraph(
-        "En cas d'utilisation de la salle pour des manifestations ouvertes au "
-        "public, le locataire doit s'acquitter avant la date de location des "
-        "droits (SACD, SABAM, Rémunération équitable). L'ASBL ne sera pas "
-        "responsable des amendes éventuelles encourues en cas de non "
-        "déclaration aux droits d'auteurs.",
-        style_normal,
-    ))
-
-    # --- Article 6 -----------------------------------------------------------
-    elements.append(Paragraph("ARTICLE 6", style_article))
-    elements.append(Paragraph(
-        "Le Locataire s'engage à tenir les locaux et mobiliers loués dans "
-        "l'état de conservation et de propreté parfaite où ils lui ont été "
-        "cédés et dont il assure s'être rendu compte à la signature du "
-        "présent contrat ; si tel n'était pas le cas, tous les manquements, "
-        "bris ou dégradations constatés dans le mobilier lui seront facturés "
-        "au tarif défini aux annexes I et II ci-après, sans préjuger du coût "
-        "des dommages constatés dans les biens, mobiliers et locaux mis à sa "
-        "disposition.",
-        style_normal,
-    ))
-
-    # --- Article 7 -----------------------------------------------------------
-    elements.append(Paragraph("ARTICLE 7", style_article))
-    elements.append(Paragraph(
-        "Le Locataire s'engage à avoir procédé, à la date de restitution des "
-        "locaux et mobiliers, au nettoyage complet de ceux-ci. Si tel n'était "
-        "pas le cas, l'association se verrait dans l'obligation de procéder à "
-        "leur remise en état, auquel cas l'intégralité de la caution "
-        "resterait propriété de l'association qui délivrerait quittance et "
-        "exigerait le paiement immédiat du coût de la location additionné "
-        "des frais éventuels de recouvrement ainsi que de ceux dus au titre "
-        "de l'article 6.",
-        style_normal,
-    ))
-
-    # --- Article 8 -----------------------------------------------------------
-    elements.append(Paragraph("ARTICLE 8", style_article))
-    elements.append(Paragraph(
-        "Le locataire ne pourra faire aux locaux et mobiliers loués aucun "
-        "changement ; il lui est interdit de prendre possession de locaux "
-        "autres que ceux définis à l'article 1, de déménager hors de ces "
-        "locaux tout ou partie du mobilier ou vaisselle mis à sa disposition, "
-        "d'afficher, de clouer, de décorer ou d'entreprendre — sans que "
-        "cette liste soit limitative — tout aménagement susceptible de "
-        "modifier ou détériorer tout ou partie des biens mis à sa "
-        "disposition.",
-        style_normal,
-    ))
-
-    # --- Article 9 -----------------------------------------------------------
-    elements.append(Paragraph("ARTICLE 9", style_article))
-    elements.append(Paragraph(
-        "La caution, garantie de la bonne exécution des obligations du "
-        "locataire, sera remboursée à ce dernier à la restitution, après "
-        "qu'il aura justifié de tous ses engagements envers le délégué de "
-        "l'association.",
-        style_normal,
-    ))
-
-    # --- Article 10 ----------------------------------------------------------
-    elements.append(Paragraph("ARTICLE 10", style_article))
-    elements.append(ListFlowable(
-        [
-            ListItem(Paragraph(
-                "Lorsque la date de location est un samedi, le locataire "
-                "s'engage à avoir remis en état et procédé au nettoyage des "
-                "sanitaires, ainsi que du local dénommé « Café » et de son "
-                "annexe, pour le lendemain 9h00 du matin.",
-                style_normal,
-            )),
-            ListItem(Paragraph(
-                "Lorsque la date de location est un dimanche, l'association "
-                "ne sera tenue de mettre à disposition du locataire les "
-                "sanitaires et le local dénommé « Café », ainsi que le "
-                "matériel de débit de boisson, qu'à partir de 14h30.",
-                style_normal,
-            )),
-            ListItem(Paragraph(
-                "Le présent contrat ne pouvant être conclu avec des mineurs "
-                "d'âge, tout mouvement ou association de jeunes désireux de "
-                "louer les locaux devra obligatoirement être représenté par "
-                "un adulte, qui sera le seul habilité à signer le présent "
-                "contrat et à en assumer toutes les responsabilités. Sa "
-                "signature implique qu'il a pris connaissance de cette "
-                "clause et qu'il s'engage à être présent le jour et pendant "
-                "la durée de la location.",
-                style_normal,
-            )),
-            ListItem(Paragraph(
-                "Le locataire est tenu d'évacuer ses déchets ménagers et "
-                "autres dans des sacs agréés (sacs blancs Honnelles pour "
-                "déchets ménagers, sacs bleus pour PMC, papiers et cartons "
-                "triés à part).",
-                style_normal,
-            )),
-        ],
-        bulletType="bullet",
-    ))
-
-    # --- Article 11 ----------------------------------------------------------
-    elements.append(Paragraph("ARTICLE 11", style_article))
-    elements.append(Paragraph(
-        "Les annexes I et II, jointes au présent contrat, font partie "
-        "intégrante de ce dernier. Le locataire déclare en avoir pris "
-        "connaissance.",
-        style_normal,
-    ))
-
-    # --- Article 12 ----------------------------------------------------------
-    elements.append(Paragraph("ARTICLE 12", style_article))
-    elements.append(Paragraph(
-        "En cas de litige, seuls les tribunaux de la justice de Mons sont "
-        "compétents.<br/>"
-        "Le soussigné de seconde part déclare avoir pris connaissance des "
-        "annexes I et II, qui font partie intégrante du présent contrat de "
-        "location.<br/>"
-        "Le soussigné de seconde part déclare avoir reçu un exemplaire du "
-        "présent contrat de location et des annexes I et II jointes à ce "
-        "dernier.",
-        style_normal,
-    ))
+    for article in articles:
+        elements.append(Paragraph(escape(article.titre), style_article))
+        elements.extend(_texte_vers_elements(article.texte, valeurs, locaux, style_normal))
 
     # --- Signatures ------------------------------------------------------------
     elements.append(Spacer(1, 6 * mm))
@@ -334,9 +243,9 @@ def _construire_pages_variables(reservation, contrat):
     elements.append(Paragraph("Pour accord, précédé de la mention « Lu et approuvé »", style_normal))
     elements.append(Spacer(1, 14 * mm))
     elements.append(Paragraph(
-        f"Le Délégué ASBL LA CONCORDE : {contrat.delegue_prenom} {contrat.delegue_nom}"
+        f"Le Délégué ASBL LA CONCORDE : {escape(contrat.delegue_prenom)} {escape(contrat.delegue_nom)}"
         "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-        f"Le Locataire : {reservation.prenom} {reservation.nom}",
+        f"Le Locataire : {escape(reservation.prenom)} {escape(reservation.nom)}",
         style_normal,
     ))
 
@@ -354,22 +263,48 @@ def _construire_pages_variables(reservation, contrat):
     return tampon
 
 
-def generer_pdf_contrat(reservation, contrat):
-    """Génère le PDF complet du contrat (pages variables régénérées +
-    annexes fixes reprises du document modèle) et renvoie son contenu en
-    octets, prêt à être enregistré dans un fichier ou renvoyé au navigateur."""
+def _octets_annexe(annexe):
+    """Lit le contenu PDF d'une annexe enregistrée."""
+    annexe.fichier.open("rb")
+    try:
+        return annexe.fichier.read()
+    finally:
+        annexe.fichier.close()
 
-    pages_variables = _construire_pages_variables(reservation, contrat)
+
+def generer_pdf_contrat(reservation, contrat, articles=None, annexes=None):
+    """Génère le PDF complet du contrat (articles actifs du contrat-type +
+    annexes actives) et renvoie son contenu en octets, prêt à être
+    enregistré dans un fichier ou renvoyé au navigateur.
+
+    articles / annexes : par défaut, ceux enregistrés en base (actifs
+    uniquement) ; on peut les fournir directement, par exemple pour un
+    aperçu ou des tests."""
+
+    annexes_modele_origine = False
+    if articles is None or annexes is None:
+        from .models import AnnexeContrat, ArticleContrat
+
+        if articles is None:
+            articles = list(ArticleContrat.objects.filter(actif=True))
+        if annexes is None:
+            # Tant qu'aucune annexe n'a été enregistrée, on reprend celles
+            # du PDF modèle d'origine.
+            annexes_modele_origine = not AnnexeContrat.objects.exists()
+            annexes = list(AnnexeContrat.objects.filter(actif=True))
+
+    pages_variables = _construire_pages_variables(reservation, contrat, articles)
 
     ecrivain = PdfWriter()
-
-    # Pages variables (régénérées).
-    lecteur_variables = PdfReader(pages_variables)
-    for page in lecteur_variables.pages:
+    for page in PdfReader(pages_variables).pages:
         ecrivain.add_page(page)
 
-    # Annexes fixes, reprises telles quelles du document modèle d'origine.
-    if os.path.exists(CHEMIN_MODELE):
+    for annexe in annexes:
+        lecteur = PdfReader(io.BytesIO(_octets_annexe(annexe)))
+        for page in lecteur.pages:
+            ecrivain.add_page(page)
+
+    if annexes_modele_origine and os.path.exists(CHEMIN_MODELE):
         lecteur_modele = PdfReader(CHEMIN_MODELE)
         for page in lecteur_modele.pages[PREMIERE_PAGE_ANNEXES:]:
             ecrivain.add_page(page)

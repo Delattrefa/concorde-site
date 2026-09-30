@@ -17,6 +17,7 @@ consécutifs.
 """
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.urls import reverse
 
@@ -252,3 +253,65 @@ class ContratLocation(models.Model):
         if self.local_toilettes:
             libelles.append("Un ensemble sanitaire")
         return libelles
+
+
+# ---------------------------------------------------------------------------
+# CONTRAT-TYPE : articles et annexes modifiables par les administrateurs
+# ---------------------------------------------------------------------------
+class ArticleContrat(models.Model):
+    """Article du contrat de location type.
+
+    Le texte est saisi en texte simple, avec quelques conventions de mise
+    en forme (voir contrats.AIDE_MISE_EN_FORME) et des variables entre
+    accolades, remplacées à la génération par les données de la
+    réservation : {date_debut}, {montant_caution}, {locaux}..."""
+
+    ordre = models.PositiveIntegerField(
+        "Ordre d'affichage", default=0,
+        help_text="Les articles sont imprimés du plus petit au plus grand numéro d'ordre.",
+    )
+    titre = models.CharField("Titre", max_length=100, help_text="Ex : ARTICLE 5 bis")
+    texte = models.TextField("Texte de l'article")
+    actif = models.BooleanField(
+        "Inclure dans le contrat", default=True,
+        help_text="Décocher pour retirer l'article des prochains contrats sans le supprimer.",
+    )
+    date_modification = models.DateTimeField("Dernière modification", auto_now=True)
+
+    class Meta:
+        ordering = ["ordre", "pk"]
+        verbose_name = "Article du contrat-type"
+        verbose_name_plural = "Articles du contrat-type"
+
+    def __str__(self):
+        return self.titre
+
+
+class AnnexeContrat(models.Model):
+    """Annexe (PDF) ajoutée à la suite des articles dans chaque contrat
+    généré : inventaire du mobilier, de la vaisselle, conditions
+    particulières... Remplaçable à tout moment par un nouveau PDF."""
+
+    ordre = models.PositiveIntegerField(
+        "Ordre d'affichage", default=0,
+        help_text="Les annexes sont ajoutées au contrat dans cet ordre.",
+    )
+    titre = models.CharField("Titre", max_length=150, help_text="Ex : Annexe III — Conditions particulières")
+    fichier = models.FileField(
+        "Fichier PDF",
+        upload_to="annexes_contrat/",
+        validators=[FileExtensionValidator(["pdf"])],
+    )
+    actif = models.BooleanField(
+        "Joindre au contrat", default=True,
+        help_text="Décocher pour ne plus joindre cette annexe aux prochains contrats.",
+    )
+    date_modification = models.DateTimeField("Dernière modification", auto_now=True)
+
+    class Meta:
+        ordering = ["ordre", "pk"]
+        verbose_name = "Annexe du contrat-type"
+        verbose_name_plural = "Annexes du contrat-type"
+
+    def __str__(self):
+        return self.titre

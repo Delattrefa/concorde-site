@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Contrat-type de location{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <p class="breadcrumb">
+            {% if reservation_retour %}
+                <a href="{% url 'calendrier:reservation_contrat' reservation_retour.pk %}">← Retour au contrat de {{ reservation_retour.prenom }} {{ reservation_retour.nom }}</a>
+            {% else %}
+                <a href="{% url 'calendrier:reservation_liste' %}">← Retour aux réservations</a>
+            {% endif %}
+        </p>
+        <h1>Contrat-type de location</h1>
+        <p class="page-header__intro">
+            Articles et annexes utilisés pour chaque nouveau contrat. Les contrats
+            déjà générés ne changent pas : pour appliquer une modification à un
+            contrat existant, il faut le régénérer depuis la réservation.
+        </p>
+    </div>
+</section>
+
+<section class="calendrier-liste wrap">
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="message message--{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <p>
+        <a class="btn btn--secondary" href="{% url 'calendrier:modele_contrat_apercu' %}" target="_blank">Aperçu du contrat-type (PDF)</a>
+    </p>
+
+    <h2>Articles</h2>
+    <table class="calendrier-liste__table">
+        <thead>
+            <tr>
+                <th>Ordre</th>
+                <th>Titre</th>
+                <th>Début du texte</th>
+                <th>Dans le contrat</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for article in articles %}
+                <tr>
+                    <td>{{ article.ordre }}</td>
+                    <td><strong>{{ article.titre }}</strong></td>
+                    <td>{{ article.texte|truncatechars:110 }}</td>
+                    <td>{% if article.actif %}Oui{% else %}Non{% endif %}</td>
+                    <td class="calendrier-liste__actions">
+                        <a class="btn btn--secondary btn--small" href="{% url 'calendrier:article_contrat_modifier' article.pk %}{% if reservation_retour %}?reservation={{ reservation_retour.pk }}{% endif %}">Modifier</a>
+                        <a class="btn btn--danger btn--small" href="{% url 'calendrier:article_contrat_supprimer' article.pk %}{% if reservation_retour %}?reservation={{ reservation_retour.pk }}{% endif %}">Supprimer</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5">Aucun article.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p>
+        <a class="btn btn--primary" href="{% url 'calendrier:article_contrat_ajouter' %}{% if reservation_retour %}?reservation={{ reservation_retour.pk }}{% endif %}">Ajouter un article</a>
+    </p>
+
+    <h2>Annexes</h2>
+    <p class="form-field__help">Les annexes sont des fichiers PDF ajoutés tels quels à la fin de chaque contrat.</p>
+    <table class="calendrier-liste__table">
+        <thead>
+            <tr>
+                <th>Ordre</th>
+                <th>Titre</th>
+                <th>Fichier</th>
+                <th>Jointe au contrat</th>
+                <th>Mise à jour</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for annexe in annexes %}
+                <tr>
+                    <td>{{ annexe.ordre }}</td>
+                    <td><strong>{{ annexe.titre }}</strong></td>
+                    <td>{% if annexe.fichier %}<a href="{{ annexe.fichier.url }}" target="_blank">Voir le PDF</a>{% endif %}</td>
+                    <td>{% if annexe.actif %}Oui{% else %}Non{% endif %}</td>
+                    <td>{{ annexe.date_modification|date:"d/m/Y" }}</td>
+                    <td class="calendrier-liste__actions">
+                        <a class="btn btn--secondary btn--small" href="{% url 'calendrier:annexe_contrat_modifier' annexe.pk %}{% if reservation_retour %}?reservation={{ reservation_retour.pk }}{% endif %}">Modifier / remplacer</a>
+                        <a class="btn btn--danger btn--small" href="{% url 'calendrier:annexe_contrat_supprimer' annexe.pk %}{% if reservation_retour %}?reservation={{ reservation_retour.pk }}{% endif %}">Supprimer</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6">Aucune annexe enregistrée : les annexes d'origine du contrat sont utilisées.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p>
+        <a class="btn btn--primary" href="{% url 'calendrier:annexe_contrat_ajouter' %}{% if reservation_retour %}?reservation={{ reservation_retour.pk }}{% endif %}">Ajouter une annexe (PDF)</a>
+    </p>
+</section>
+{% endblock %}

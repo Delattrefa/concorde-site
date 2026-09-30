@@ -27,9 +27,9 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from django.utils.dates import MONTHS, WEEKDAYS
 from django.utils import timezone
 
-from .contrats import generer_pdf_contrat, nom_fichier_contrat
-from .forms import ActiviteForm, ContratLocationForm, ReservationForm
-from .models import Activite, ContratLocation, Reservation
+from .contrats import VARIABLES_DISPONIBLES, AIDE_MISE_EN_FORME, generer_pdf_contrat, nom_fichier_contrat
+from .forms import ActiviteForm, AnnexeContratForm, ArticleContratForm, ContratLocationForm, ReservationForm
+from .models import Activite, AnnexeContrat, ArticleContrat, ContratLocation, Reservation
 from .utils import construire_semaines_du_mois, mois_adjacent
 
 
@@ -460,3 +460,150 @@ def telecharger_contrat(request, reservation_pk):
 
     nom = contrat.fichier_pdf.name.rsplit("/", 1)[-1]
     return FileResponse(fichier, as_attachment=True, filename=nom, content_type="application/pdf")
+
+
+# ---------------------------------------------------------------------------
+# CONTRAT-TYPE : modification des articles et des annexes (administrateurs)
+# ---------------------------------------------------------------------------
+# Le paramètre ?reservation=<pk> permet de revenir au contrat en cours de
+# rédaction après les modifications.
+
+def _reservation_de_retour(request):
+    pk = request.GET.get("reservation") or request.POST.get("reservation")
+    if pk and str(pk).isdigit():
+        return Reservation.objects.filter(pk=pk).first()
+    return None
+
+
+def _url_modele_contrat(request):
+    url = reverse("calendrier:modele_contrat")
+    reservation = _reservation_de_retour(request)
+    return f"{url}?reservation={reservation.pk}" if reservation else url
+
+
+@user_passes_test(_est_administrateur, login_url="login")
+def modele_contrat(request):
+    """Vue d'ensemble du contrat-type : articles et annexes."""
+    return render(request, "calendrier/modele_contrat.html", {
+        "articles": ArticleContrat.objects.all(),
+        "annexes": AnnexeContrat.objects.all(),
+        "reservation_retour": _reservation_de_retour(request),
+    })
+
+
+@user_passes_test(_est_administrateur, login_url="login")
+def apercu_modele_contrat(request):
+    """PDF d'exemple du contrat-type avec des données fictives, pour
+    vérifier les modifications avant de générer un vrai contrat."""
+    from types import SimpleNamespace
+
+    aujourd_hui = timezone.localdate()
+    reservation = SimpleNamespace(
+        prenom="Prénom", nom="NOM DU LOCATAIRE", adresse="Adresse du locataire",
+        telephone="0000 00 00 00", email="locataire@exemple.be",
+        date_debut=aujourd_hui, date_fin=aujourd_hui,
+    )
+    contrat = SimpleNamespace(
+        delegue_prenom="Prénom", delegue_nom="NOM DU DÉLÉGUÉ",
+        montant_location=0, montant_caution=150,
+        locaux_selectionnes=lambda: ["Une salle des fêtes et une scène", "Cuisine équipée"],
+    )
+    contenu_pdf = generer_pdf_contrat(reservation, contrat)
+    reponse = HttpResponse(contenu_pdf, content_type="application/pdf")
+    reponse["Content-Disposition"] = 'inline; filename="Apercu contrat-type.pdf"'
+    return reponse
+
+
+class _ContratTypeMixin(UserPassesTestMixin):
+    """Accès administrateurs, retour vers la page du contrat-type."""
+
+    raise_exception = True
+
+    def test_func(self):
+        return _est_administrateur(self.request.user)
+
+    def get_success_url(self):
+        return _url_modele_contrat(self.request)
+
+    def get_context_data(self, **kwargs):
+        contexte = super().get_context_data(**kwargs)
+        contexte["reservation_retour"] = _reservation_de_retour(self.request)
+        contexte["url_retour"] = _url_modele_contrat(self.request)
+        return contexte
+
+
+class _ArticleMixin(_ContratTypeMixin):
+    model = ArticleContrat
+    form_class = ArticleContratForm
+    template_name = "calendrier/article_contrat_form.html"
+
+    def get_context_data(self, **kwargs):
+        contexte = super().get_context_data(**kwargs)
+        contexte["variables"] = VARIABLES_DISPONIBLES
+        contexte["aide_mise_en_forme"] = AIDE_MISE_EN_FORME
+        return contexte
+
+    def form_valid(self, form):
+        messages.success(self.request, f"L'article « {form.instance.titre} » a été enregistré.")
+        return super().form_valid(form)
+
+
+class ArticleContratCreateView(_ArticleMixin, CreateView):
+    def get_initial(self):
+        dernier = ArticleContrat.objects.order_by("-ordre").first()
+        return {"ordre": (dernier.ordre + 10) if dernier else 10}
+
+
+class ArticleContratUpdateView(_ArticleMixin, UpdateView):
+    pass
+
+
+class ArticleContratDeleteView(_ContratTypeMixin, DeleteView):
+    model = ArticleContrat
+    template_name = "calendrier/modele_contrat_confirm_delete.html"
+
+    def form_valid(self, form):
+        messages.success(self.request, f"L'article « {self.object.titre} » a été supprimé.")
+        return super().form_valid(form)
+
+
+class _AnnexeMixin(_ContratTypeMixin):
+    model = AnnexeContrat
+    form_class = AnnexeContratForm
+    template_name = "calendrier/annexe_contrat_form.html"
+
+    def form_valid(self, form):
+        # En cas de remplacement du PDF, supprimer l'ancien fichier.
+        ancien_nom = None
+        if form.instance.pk and "fichier" in form.changed_data:
+            ancien_nom = AnnexeContrat.objects.get(pk=form.instance.pk).fichier.name
+        reponse = super().form_valid(form)
+        if ancien_nom and ancien_nom != self.object.fichier.name:
+            self.object.fichier.storage.delete(ancien_nom)
+        messages.success(self.request, f"L'annexe « {self.object.titre} » a été enregistrée.")
+        return reponse
+
+
+class AnnexeContratCreateView(_AnnexeMixin, CreateView):
+    def get_initial(self):
+        derniere = AnnexeContrat.objects.order_by("-ordre").first()
+        return {"ordre": (derniere.ordre + 10) if derniere else 10}
+
+
+class AnnexeContratUpdateView(_AnnexeMixin, UpdateView):
+    pass
+
+
+class AnnexeContratDeleteView(_ContratTypeMixin, DeleteView):
+    model = AnnexeContrat
+    template_name = "calendrier/modele_contrat_confirm_delete.html"
+
+    def form_valid(self, form):
+        nom_fichier = self.object.fichier.name
+        stockage = self.object.fichier.storage
+        titre = self.object.titre
+        reponse = super().form_valid(form)
+        if nom_fichier:
+            stockage.delete(nom_fichier)
+        messages.success(self.request, f"L'annexe « {titre} » a été supprimée.")
+        return reponse

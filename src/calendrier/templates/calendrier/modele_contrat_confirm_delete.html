@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Supprimer « {{ object.titre }} »{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <h1>Supprimer « {{ object.titre }} »</h1>
+    </div>
+</section>
+
+<section class="calendrier-form wrap">
+    <p>Cet élément sera retiré de tous les <strong>prochains</strong> contrats.
+        Les contrats déjà générés ne sont pas modifiés.</p>
+    <p class="form-field__help">Pour le retirer temporairement sans le perdre, utilisez plutôt « Modifier » et décochez la case d'inclusion.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn--danger">Oui, supprimer définitivement</button>
+        <a class="btn btn--secondary" href="{{ url_retour }}">Annuler</a>
+    </form>
+</section>
+{% endblock %}

@@ -32,6 +32,11 @@
         </ul>
     {% endif %}
 
+    <p class="form-field__help">
+        Le texte des articles et les annexes jointes au contrat se modifient dans le contrat-type :
+        <a href="{% url 'calendrier:modele_contrat' %}?reservation={{ reservation.pk }}">modifier les articles et les annexes du contrat</a>.
+    </p>
+
     <form method="post">
         {% csrf_token %}
         {{ form.non_field_errors }}
