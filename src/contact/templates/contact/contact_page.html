@@ -33,8 +33,8 @@
             {% if page.email_display %}<p>✉️ <a href="mailto:{{ page.email_display }}">{{ page.email_display }}</a></p>{% endif %}
 
             {% if page.map_embed_url %}
-                <div class="contact__map">
-                    <iframe src="{{ page.map_embed_url }}" width="100%" height="300" style="border:0;" loading="lazy" title="Carte d'accès"></iframe>
+                <div class="contact__map carte-google__cadre" style="height: 320px;">
+                    <iframe src="{{ page.map_embed_url }}" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade" title="Carte d'accès"></iframe>
                 </div>
             {% endif %}
         </div>

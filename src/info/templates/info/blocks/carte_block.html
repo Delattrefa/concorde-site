@@ -1,0 +1,13 @@
+{% if url_carte %}
+<figure class="carte-google fade-up">
+    {% if value.title %}<figcaption><h3>{{ value.title }}</h3></figcaption>{% endif %}
+    <div class="carte-google__cadre" style="height: {{ value.height|default:400 }}px;">
+        <iframe
+            src="{{ url_carte }}"
+            title="{{ value.title|default:'Carte Google Maps' }}"
+            loading="lazy"
+            allowfullscreen
+            referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+</figure>
+{% endif %}

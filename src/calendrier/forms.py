@@ -10,6 +10,12 @@ from .contrats import AIDE_MISE_EN_FORME, VARIABLES_DISPONIBLES, variables_incon
 from .models import Activite, AnnexeContrat, ArticleContrat, ContratLocation, Reservation
 
 
+# Un champ <input type="date"> n'accepte qu'une valeur au format ISO
+# (AAAA-MM-JJ). Sans ce format explicite, Django affiche la date selon
+# DATE_INPUT_FORMATS (JJ/MM/AAAA) et le navigateur laisse le champ vide.
+FORMAT_DATE_HTML = "%Y-%m-%d"
+
+
 class ActiviteForm(forms.ModelForm):
     """Formulaire d'ajout / modification d'une activité.
     Réservé aux utilisateurs connectés (voir vues avec LoginRequiredMixin)."""
@@ -27,8 +33,8 @@ class ActiviteForm(forms.ModelForm):
         widgets = {
             "nom": forms.TextInput(attrs={"class": "champ-texte", "placeholder": "Ex : Répétition théâtre"}),
             "description": forms.Textarea(attrs={"class": "champ-texte", "rows": 4}),
-            "date_debut": forms.DateInput(attrs={"class": "champ-texte", "type": "date"}),
-            "date_fin": forms.DateInput(attrs={"class": "champ-texte", "type": "date"}),
+            "date_debut": forms.DateInput(attrs={"class": "champ-texte", "type": "date"}, format=FORMAT_DATE_HTML),
+            "date_fin": forms.DateInput(attrs={"class": "champ-texte", "type": "date"}, format=FORMAT_DATE_HTML),
             "visibilite": forms.RadioSelect,
             "couleur": forms.TextInput(attrs={"class": "champ-texte", "type": "color"}),
         }
@@ -70,8 +76,8 @@ class ReservationForm(forms.ModelForm):
             "adresse": forms.TextInput(attrs={"class": "champ-texte"}),
             "email": forms.EmailInput(attrs={"class": "champ-texte", "placeholder": "Ex : nom@exemple.be"}),
             "telephone": forms.TextInput(attrs={"class": "champ-texte", "placeholder": "Ex : 0470 12 34 56"}),
-            "date_debut": forms.DateInput(attrs={"class": "champ-texte", "type": "date"}),
-            "date_fin": forms.DateInput(attrs={"class": "champ-texte", "type": "date"}),
+            "date_debut": forms.DateInput(attrs={"class": "champ-texte", "type": "date"}, format=FORMAT_DATE_HTML),
+            "date_fin": forms.DateInput(attrs={"class": "champ-texte", "type": "date"}, format=FORMAT_DATE_HTML),
             "message": forms.Textarea(attrs={"class": "champ-texte", "rows": 4}),
         }
 

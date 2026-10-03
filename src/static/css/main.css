@@ -487,3 +487,12 @@ a { color: var(--color-primary); }
 .footer-bottom { text-align: center; font-size: .8rem; margin-top: 40px; opacity: .6; }
 
 @media (max-width: 780px) { .site-footer__inner { grid-template-columns: 1fr; } }
+
+/* --- Carte Google Maps (bloc « Carte » des pages d'informations) --- */
+.carte-google { margin: 24px 0; }
+.carte-google figcaption h3 { margin-bottom: 12px; }
+.carte-google__cadre { position: relative; width: 100%; border-radius: 4px; overflow: hidden; background: #eee; }
+.carte-google__cadre iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+@media (max-width: 600px) {
+    .carte-google__cadre { max-height: 320px; }
+}
