@@ -109,9 +109,11 @@
         {# Données structurées Schema.org (JSON-LD) de la page courante #}
         {% include "wagtailseo/struct_data.html" %}
         {% if page.depth == 2 %}
-            {# Page racine du site (page d'accueil) : données structurées de
-               l'organisation (coordonnées, logo, réseaux sociaux...), à
-               n'inclure qu'une fois, pas sur chaque page. #}
+	{% comment %} 
+		Page racine du site (page d'accueil) : données structurées de
+             	l'organisation (coordonnées, logo, réseaux sociaux...), à
+             	n'inclure qu'une fois, pas sur chaque page.
+	{% endcomment %}
             {% include "wagtailseo/struct_org_data.html" %}
         {% endif %}
     {% endif %}
