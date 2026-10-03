@@ -91,8 +91,8 @@ WAGTAILIMAGES_MAX_UPLOAD_SIZE = 20 * 1024 * 1024  # 20 Mo par photo
 # redirection HTTPS rend le site inaccessible.
 # -----------------------------------------------------------------------
 SECURE_SSL_REDIRECT = os.environ.get("SECURE_SSL_REDIRECT", "1") == "1"
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = SECURE_SSL_REDIRECT
+CSRF_COOKIE_SECURE = SECURE_SSL_REDIRECT
 # HSTS : commencer court (1 heure), puis passer à 31536000 une fois le
 # site validé en HTTPS sur tous les sous-domaines.
 SECURE_HSTS_SECONDS = int(os.environ.get("SECURE_HSTS_SECONDS", "3600"))
