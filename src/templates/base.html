@@ -23,17 +23,24 @@
         <div class="site-header__inner">
             <a href="/" class="site-logo">La Concorde<span>asbl</span></a>
 
-            <nav class="main-nav" aria-label="Navigation principale">
-                <ul>
-                    {% for item in main_menu.items.all %}
-                        <li><a href="{{ item.url }}">{{ item.link_title }}</a></li>
-                    {% endfor %}
-                    <li><a href="{% url 'calendrier:mois_courant' %}">Réservations</a></li>
-                    {% if perms.theatre.acces_application %}
-                        <li><a href="/theatre/">Théâtre</a></li>
-                    {% endif %}
-                </ul>
-            </nav>
+            <div class="site-menu" id="site-menu">
+                <nav class="main-nav" aria-label="Navigation principale">
+                    <ul>
+                        {% for item in main_menu.items.all %}
+                            <li><a href="{{ item.url }}">{{ item.link_title }}</a></li>
+                        {% endfor %}
+                        <li><a href="{% url 'calendrier:mois_courant' %}">Réservations</a></li>
+                        {% if perms.theatre.acces_application %}
+                            <li><a href="/theatre/">Théâtre</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+
+                <form class="site-search" action="{% url 'search' %}" method="get" role="search">
+                    <input type="search" name="query" placeholder="Rechercher…" aria-label="Rechercher sur le site" {% if search_query %}value="{{ search_query }}"{% endif %}>
+                    <button type="submit" aria-label="Lancer la recherche">🔍</button>
+                </form>
+            </div>
 
             <div class="auth-nav">
                 {% if user.is_authenticated %}
@@ -47,12 +54,7 @@
                 {% endif %}
             </div>
 
-            <form class="site-search" action="{% url 'search' %}" method="get" role="search">
-                <input type="text" name="query" placeholder="Rechercher…" aria-label="Rechercher sur le site" {% if search_query %}value="{{ search_query }}"{% endif %}>
-                <button type="submit" aria-label="Lancer la recherche">🔍</button>
-            </form>
-
-            <button class="nav-toggle" aria-label="Ouvrir le menu" aria-expanded="false">
+            <button class="nav-toggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="site-menu">
                 <span></span><span></span><span></span>
             </button>
         </div>

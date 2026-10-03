@@ -34,13 +34,41 @@
         });
     }
 
-    // Menu mobile
+    // Menu mobile : ouverture / fermeture du panneau (navigation + recherche)
     var toggle = document.querySelector(".nav-toggle");
-    var nav = document.querySelector(".main-nav");
-    if (toggle && nav) {
+    var menu = document.querySelector(".site-menu");
+    if (toggle && menu) {
+        var fermerMenu = function () {
+            menu.classList.remove("is-open");
+            toggle.setAttribute("aria-expanded", "false");
+            toggle.setAttribute("aria-label", "Ouvrir le menu");
+        };
+
         toggle.addEventListener("click", function () {
-            var isOpen = nav.classList.toggle("is-open");
+            var isOpen = menu.classList.toggle("is-open");
             toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            toggle.setAttribute("aria-label", isOpen ? "Fermer le menu" : "Ouvrir le menu");
+        });
+
+        // Fermer après le choix d'un lien, avec la touche Échap, ou en
+        // touchant la page en dehors du menu.
+        menu.addEventListener("click", function (e) {
+            if (e.target.closest("a")) { fermerMenu(); }
+        });
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && menu.classList.contains("is-open")) {
+                fermerMenu();
+                toggle.focus();
+            }
+        });
+        document.addEventListener("click", function (e) {
+            if (menu.classList.contains("is-open") && !menu.contains(e.target) && !toggle.contains(e.target)) {
+                fermerMenu();
+            }
+        });
+        // Revenu en grand écran : on réinitialise l'état du menu.
+        window.addEventListener("resize", function () {
+            if (window.innerWidth > 1100) { fermerMenu(); }
         });
     }
 })();
