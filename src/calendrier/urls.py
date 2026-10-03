@@ -23,6 +23,7 @@ urlpatterns = [
 
     # --- CRUD Réservations ---------------------------------------------------
     path("reservation/demander/", views.ReservationCreateView.as_view(), name="reservation_demander"),
+    path("reservation/ajouter/", views.ReservationAdminCreateView.as_view(), name="reservation_ajouter"),
     path("reservations/", views.ReservationListView.as_view(), name="reservation_liste"),
     path("reservation/<int:pk>/", views.ReservationDetailView.as_view(), name="reservation_detail"),
     path("reservation/<int:pk>/modifier/", views.ReservationUpdateView.as_view(), name="reservation_modifier"),

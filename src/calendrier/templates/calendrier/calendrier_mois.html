@@ -13,7 +13,9 @@
         <h1>Calendrier</h1>
         <p class="page-header__intro">
             Consultez les activités de l'ASBL et les disponibilités de la salle.
-            {% if user.is_authenticated %}
+            {% if est_administrateur %}
+                Cliquez sur le <strong>+</strong> d'une case pour ajouter une activité ou une réservation de salle à cette date, ou sur un élément existant pour le consulter ou le modifier.
+            {% elif user.is_authenticated %}
                 Cliquez sur le <strong>+</strong> d'une case pour ajouter une activité, ou sur une activité existante pour la consulter, la modifier ou la supprimer.
             {% else %}
                 Cliquez sur le <strong>+</strong> d'une case pour demander la réservation de la salle.
@@ -120,7 +122,7 @@
 
                                 <a class="calendrier__case-ajouter"
                                    href="{% url 'calendrier:jour_action' annee mois jour.numero %}"
-                                   title="{% if user.is_authenticated %}Ajouter une activité ce jour{% else %}Demander la réservation de la salle ce jour{% endif %}"
+                                   title="{% if est_administrateur %}Ajouter une activité ou une réservation ce jour{% elif user.is_authenticated %}Ajouter une activité ce jour{% else %}Demander la réservation de la salle ce jour{% endif %}"
                                    aria-label="{% if user.is_authenticated %}Ajouter une activité le {{ jour.date|date:'d/m/Y' }}{% else %}Demander une réservation le {{ jour.date|date:'d/m/Y' }}{% endif %}">+</a>
                             </td>
                         {% endif %}
@@ -137,6 +139,7 @@
             <a class="btn btn--primary" href="{% url 'calendrier:reservation_demander' %}">Demander la réservation de la salle</a>
         {% endif %}
         {% if est_administrateur %}
+            <a class="btn btn--primary" href="{% url 'calendrier:reservation_ajouter' %}">+ Ajouter une réservation de salle</a>
             <a class="btn btn--secondary" href="{% url 'calendrier:reservation_liste' %}">Gérer les demandes de réservation</a>
         {% endif %}
     </div>

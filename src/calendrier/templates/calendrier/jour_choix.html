@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Ajouter le {{ date_cible|date:"j F Y" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <p class="breadcrumb"><a href="{% url 'calendrier:mois' date_cible.year date_cible.month %}">← Retour au calendrier</a></p>
+        <h1>{{ date_cible|date:"l j F Y"|capfirst }}</h1>
+        <p class="page-header__intro">Que souhaitez-vous ajouter à cette date ?</p>
+    </div>
+</section>
+
+<section class="calendrier-form wrap">
+    <div class="jour-choix">
+        <a class="jour-choix__option" href="{{ url_activite }}">
+            <strong>Une activité</strong>
+            <span>Événement de l'ASBL affiché dans le calendrier (répétition, fête, assemblée…).</span>
+        </a>
+        <a class="jour-choix__option" href="{{ url_reservation }}">
+            <strong>Une réservation de salle</strong>
+            <span>Location de la salle à une personne ou une association, avec contrat de location.</span>
+        </a>
+    </div>
+</section>
+{% endblock %}

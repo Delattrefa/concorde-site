@@ -90,6 +90,44 @@ class ReservationForm(forms.ModelForm):
         return cleaned_data
 
 
+class ReservationAdminForm(ReservationForm):
+    """Réservation encodée directement par un administrateur (demande reçue
+    par téléphone, location à un membre...). Même champs que la demande
+    publique, plus le statut, validée par défaut."""
+
+    class Meta(ReservationForm.Meta):
+        fields = ReservationForm.Meta.fields + ["statut"]
+        widgets = {
+            **ReservationForm.Meta.widgets,
+            "statut": forms.Select(attrs={"class": "champ-texte"}),
+        }
+        labels = {"date_debut": "Date de début", "date_fin": "Date de fin"}
+
+    def clean(self):
+        cleaned_data = super().clean()
+        debut = cleaned_data.get("date_debut")
+        fin = cleaned_data.get("date_fin")
+        statut = cleaned_data.get("statut")
+
+        # Empêche une double location : une réservation validée ne peut pas
+        # chevaucher une autre réservation déjà validée.
+        if debut and fin and fin >= debut and statut == Reservation.STATUT_VALIDEE:
+            conflits = Reservation.objects.filter(
+                statut=Reservation.STATUT_VALIDEE,
+                date_debut__lte=fin,
+                date_fin__gte=debut,
+            )
+            if self.instance.pk:
+                conflits = conflits.exclude(pk=self.instance.pk)
+            conflit = conflits.first()
+            if conflit:
+                raise forms.ValidationError(
+                    f"La salle est déjà réservée sur cette période : {conflit}. "
+                    "Modifiez les dates, ou enregistrez la réservation « en attente »."
+                )
+        return cleaned_data
+
+
 class ReservationTraitementForm(forms.ModelForm):
     """Formulaire technique utilisé côté administration pour changer le
     statut d'une demande (validation / refus)."""

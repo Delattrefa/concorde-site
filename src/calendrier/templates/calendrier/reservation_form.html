@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{% if object %}Modifier la réservation{% else %}Demander la réservation de la salle{% endif %}{% endblock %}
+{% block title %}{% if object %}Modifier la réservation{% elif ajout_admin %}Ajouter une réservation de salle{% else %}Demander la réservation de la salle{% endif %}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
@@ -13,6 +13,14 @@
         {% if object %}
             <p class="breadcrumb"><a href="{% url 'calendrier:reservation_detail' object.pk %}">← Retour à la réservation</a></p>
             <h1>Modifier la réservation</h1>
+        {% elif ajout_admin %}
+            <p class="breadcrumb"><a href="{% url 'calendrier:mois_courant' %}">← Retour au calendrier</a></p>
+            <h1>Ajouter une réservation de salle</h1>
+            <p class="page-header__intro">
+                Encodez une location (demande reçue par téléphone, sur place…).
+                Validée, elle apparaît aussitôt comme « salle réservée » dans le
+                calendrier et le contrat de location peut être rédigé.
+            </p>
         {% else %}
             <p class="breadcrumb"><a href="{% url 'calendrier:mois_courant' %}">← Retour au calendrier</a></p>
             <h1>Demander la réservation de la salle</h1>
@@ -82,8 +90,17 @@
             {{ form.message.errors }}
         </div>
 
+        {% if form.statut %}
+            <div class="form-field">
+                {{ form.statut.label_tag }}
+                {{ form.statut }}
+                {{ form.statut.errors }}
+                <p class="form-field__help">« Validée » bloque la salle dans le calendrier. Une période déjà réservée est refusée.</p>
+            </div>
+        {% endif %}
+
         <button type="submit" class="btn btn--primary">
-            {% if object %}Enregistrer les modifications{% else %}Envoyer la demande{% endif %}
+            {% if object %}Enregistrer les modifications{% elif ajout_admin %}Enregistrer la réservation{% else %}Envoyer la demande{% endif %}
         </button>
         {% if object %}
             <a class="btn btn--danger" href="{% url 'calendrier:reservation_supprimer' object.pk %}">Supprimer cette réservation</a>

@@ -28,7 +28,7 @@ from django.utils.dates import MONTHS, WEEKDAYS
 from django.utils import timezone
 
 from .contrats import VARIABLES_DISPONIBLES, AIDE_MISE_EN_FORME, generer_pdf_contrat, nom_fichier_contrat
-from .forms import ActiviteForm, AnnexeContratForm, ArticleContratForm, ContratLocationForm, ReservationForm
+from .forms import ActiviteForm, AnnexeContratForm, ReservationAdminForm, ArticleContratForm, ContratLocationForm, ReservationForm
 from .models import Activite, AnnexeContrat, ArticleContrat, ContratLocation, Reservation
 from .utils import construire_semaines_du_mois, mois_adjacent
 
@@ -107,6 +107,8 @@ def aller_a_mois(request):
 def jour_action(request, annee, mois, jour):
     """Point d'entrée appelé lors du clic sur une case du calendrier.
 
+    - Administrateur        -> choix : ajouter une activité ou une
+                                réservation de salle (date pré-remplie).
     - Utilisateur connecté  -> formulaire d'ajout d'activité (date pré-remplie).
     - Visiteur non connecté -> formulaire de demande de réservation de salle
                                 (date pré-remplie).
@@ -117,6 +119,15 @@ def jour_action(request, annee, mois, jour):
         raise PermissionDenied("Date invalide.")
 
     date_str = date_cible.isoformat()
+
+    # Administrateur : choix entre une activité et une réservation de salle.
+    if _est_administrateur(request.user):
+        return render(request, "calendrier/jour_choix.html", {
+            "date_cible": date_cible,
+            "url_activite": f"{reverse('calendrier:activite_ajouter')}?date={date_str}",
+            "url_reservation": f"{reverse('calendrier:reservation_ajouter')}?date={date_str}",
+        })
+
     if request.user.is_authenticated:
         url = reverse("calendrier:activite_ajouter")
     else:
@@ -272,6 +283,54 @@ class ReservationCreateView(CreateView):
             "calendrier:mois",
             kwargs={"annee": self.object.date_debut.year, "mois": self.object.date_debut.month},
         )
+
+
+class ReservationAdminCreateView(UserPassesTestMixin, CreateView):
+    """CREATE — Réservation de salle encodée directement par un
+    administrateur. Validée par défaut : elle apparaît aussitôt comme
+    « salle réservée » dans le calendrier, et le contrat peut être rédigé."""
+
+    model = Reservation
+    form_class = ReservationAdminForm
+    template_name = "calendrier/reservation_form.html"
+    raise_exception = True
+
+    def test_func(self):
+        return _est_administrateur(self.request.user)
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial["statut"] = Reservation.STATUT_VALIDEE
+        date_str = self.request.GET.get("date")
+        if date_str:
+            try:
+                date_cible = datetime.strptime(date_str, "%Y-%m-%d").date()
+                initial["date_debut"] = date_cible
+                initial["date_fin"] = date_cible
+            except ValueError:
+                pass
+        return initial
+
+    def get_context_data(self, **kwargs):
+        contexte = super().get_context_data(**kwargs)
+        contexte["ajout_admin"] = True
+        return contexte
+
+    def form_valid(self, form):
+        if form.instance.statut != Reservation.STATUT_ATTENTE:
+            form.instance.traite_par = self.request.user
+            form.instance.date_traitement = timezone.now()
+        reponse = super().form_valid(form)
+        messages.success(
+            self.request,
+            f"La réservation de {self.object.prenom} {self.object.nom} a été enregistrée "
+            f"({self.object.get_statut_display().lower()}).",
+        )
+        return reponse
+
+    def get_success_url(self):
+        # Page de la réservation : accès direct à la rédaction du contrat.
+        return reverse("calendrier:reservation_detail", kwargs={"pk": self.object.pk})
 
 
 class ReservationUpdateView(UserPassesTestMixin, UpdateView):
