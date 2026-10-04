@@ -57,12 +57,33 @@ class SectionDefilementAbstraite(Orderable):
 
     NOMBRE_COLONNES_CHOICES = [(1, "1 colonne"), (2, "2 colonnes"), (3, "3 colonnes")]
 
+    TAILLE_PETITE = "petit"
+    TAILLE_MOYENNE = "moyen"
+    TAILLE_GRANDE = "grand"
+    TAILLE_IMAGE_CHOICES = [
+        (TAILLE_PETITE, "Petite"),
+        (TAILLE_MOYENNE, "Moyenne"),
+        (TAILLE_GRANDE, "Grande"),
+    ]
+
     type_section = models.CharField(
         "Type de section",
         max_length=10,
         choices=TYPE_CHOICES,
         default=TYPE_NORMAL,
         help_text="Détermine quels champs ci-dessous sont utilisés à l'affichage.",
+    )
+
+    taille_image = models.CharField(
+        "Taille des images",
+        max_length=6,
+        choices=TAILLE_IMAGE_CHOICES,
+        default=TAILLE_MOYENNE,
+        help_text=(
+            "S'applique à l'image (à gauche ou à droite) ou aux images des colonnes. "
+            "Sans effet pour une image en pleine largeur (fond). Une image n'est "
+            "jamais agrandie au-delà de sa taille d'origine."
+        ),
     )
 
     # --- Champs utilisés si type_section == 'normal' ----------------------
@@ -123,6 +144,7 @@ class SectionDefilementAbstraite(Orderable):
 
     panels = [
         FieldPanel("type_section"),
+        FieldPanel("taille_image"),
         MultiFieldPanel(
             [
                 FieldPanel("title"),

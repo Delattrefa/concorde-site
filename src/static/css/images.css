@@ -1,0 +1,92 @@
+/* =========================================================
+   IMAGES : affichage responsive et choix de taille
+   (petite / moyenne / grande). Chargé après main.css.
+   ========================================================= */
+
+/* Règle générale : une image ne déborde jamais de son conteneur et garde
+   ses proportions, quelle que soit la largeur de l'écran. */
+img { max-width: 100%; height: auto; }
+
+/* ---------------------------------------------------------
+   Sections « Défilement normal » (image à gauche ou à droite)
+   --------------------------------------------------------- */
+.scroll-section__image { min-width: 0; text-align: center; }
+.scroll-section__image img {
+    display: inline-block;
+    width: auto;            /* jamais agrandie au-delà de sa taille d'origine */
+    max-width: 100%;
+    height: auto;
+    max-height: 80vh;       /* une affiche en hauteur reste visible en entier */
+    vertical-align: middle;
+}
+
+.scroll-section--taille-petit .scroll-section__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+.scroll-section--taille-petit .scroll-section__image img { max-width: min(100%, 320px); }
+
+.scroll-section--taille-moyen .scroll-section__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+
+.scroll-section--taille-grand .scroll-section__grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+
+/* Section sans image : le texte occupe toute la largeur utile */
+.scroll-section--sans-image .scroll-section__grid { grid-template-columns: minmax(0, 1fr); max-width: 820px; }
+
+.scroll-section__text { min-width: 0; display: flow-root; }
+
+/* ---------------------------------------------------------
+   Sections « Colonnes »
+   --------------------------------------------------------- */
+.cols-section__col { min-width: 0; display: flow-root; text-align: left; }
+.cols-section__col img.cols-section__image {
+    display: block;
+    width: auto;
+    height: auto;           /* annule l'ancien recadrage à 200 px de haut */
+    object-fit: initial;
+    max-height: 70vh;
+    margin: 0 0 18px;
+}
+.cols-section--taille-petit .cols-section__col img.cols-section__image { max-width: 45%; }
+.cols-section--taille-moyen .cols-section__col img.cols-section__image { max-width: 75%; }
+.cols-section--taille-grand .cols-section__col img.cols-section__image { max-width: 100%; }
+
+/* ---------------------------------------------------------
+   Smartphones et tablettes
+   --------------------------------------------------------- */
+@media (max-width: 780px) {
+    .scroll-section__grid,
+    .scroll-section--taille-petit .scroll-section__grid,
+    .scroll-section--taille-moyen .scroll-section__grid,
+    .scroll-section--taille-grand .scroll-section__grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+
+    .scroll-section--taille-petit .scroll-section__image img { max-width: min(100%, 240px); }
+    .scroll-section--taille-moyen .scroll-section__image img { max-width: min(100%, 480px); }
+}
+@media (max-width: 620px) {
+    .cols-section--taille-petit .cols-section__col img.cols-section__image { max-width: 50%; }
+    .cols-section--taille-moyen .cols-section__col img.cols-section__image { max-width: 80%; }
+}
+
+/* ---------------------------------------------------------
+   Images insérées dans un texte (éditeur de texte riche)
+   --------------------------------------------------------- */
+.richtext-image { display: block; height: auto; max-width: 100%; border-radius: 4px; }
+
+.richtext-image--petite { width: 100%; max-width: 280px; margin: 6px 0 16px; }
+.richtext-image--gauche { float: left; margin-right: 24px; }
+.richtext-image--droite { float: right; margin-left: 24px; }
+.richtext-image--moyenne { width: auto; max-width: min(100%, 560px); margin: 20px auto; }
+.richtext-image--grande { width: 100%; margin: 24px 0; }
+
+/* Formats d'origine de Wagtail (contenu déjà saisi) */
+.richtext-image.left { float: left; max-width: 50%; margin: 6px 24px 16px 0; }
+.richtext-image.right { float: right; max-width: 50%; margin: 6px 0 16px 24px; }
+.richtext-image.full-width { width: 100%; margin: 24px 0; }
+
+/* Sur petit écran, les images flottantes passent au-dessus du texte */
+@media (max-width: 600px) {
+    .richtext-image--gauche, .richtext-image--droite,
+    .richtext-image.left, .richtext-image.right {
+        float: none;
+        margin: 10px auto 18px;
+    }
+    .richtext-image.left, .richtext-image.right { max-width: 100%; }
+}
