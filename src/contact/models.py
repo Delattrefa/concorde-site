@@ -6,6 +6,7 @@ from modelcluster.fields import ParentalKey
 from wagtail.admin.panels import FieldPanel, FieldRowPanel, InlinePanel, MultiFieldPanel
 from wagtail.contrib.forms.models import AbstractEmailForm, AbstractFormField
 from wagtail.fields import RichTextField
+from wagtail.search import index
 from wagtailseo.models import SeoMixin
 
 from info.models import extraire_url_google_maps
@@ -40,6 +41,11 @@ class ContactPage(SeoMixin, AbstractEmailForm):
             "Un lien de partage (maps.app.goo.gl) ne fonctionne pas."
         ),
     )
+
+    search_fields = AbstractEmailForm.search_fields + [
+        index.SearchField("intro"),
+        index.SearchField("address"),
+    ]
 
     content_panels = AbstractEmailForm.content_panels + [
         FieldPanel("intro"),

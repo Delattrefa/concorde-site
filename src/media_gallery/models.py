@@ -5,6 +5,7 @@ from modelcluster.fields import ParentalKey
 from wagtail.admin.panels import FieldPanel, InlinePanel
 from wagtail.fields import RichTextField
 from wagtail.models import Orderable, Page
+from wagtail.search import index
 from wagtailseo.models import SeoMixin
 
 
@@ -15,6 +16,10 @@ class MediaPage(SeoMixin, Page):
     intro = RichTextField(blank=True)
 
     subpage_types = ["media_gallery.GalleryAlbum"]
+
+    search_fields = Page.search_fields + [
+        index.SearchField("intro"),
+    ]
 
     content_panels = Page.content_panels + [
         FieldPanel("intro"),
@@ -49,6 +54,11 @@ class GalleryAlbum(SeoMixin, Page):
         related_name="+",
         help_text="Photo de couverture affichée dans la liste des albums.",
     )
+
+    search_fields = Page.search_fields + [
+        index.SearchField("description"),
+        index.RelatedFields("gallery_images", [index.SearchField("caption")]),
+    ]
 
     content_panels = Page.content_panels + [
         FieldPanel("date"),

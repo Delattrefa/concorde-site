@@ -16,6 +16,7 @@ from wagtail.blocks import (
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.models import Page
+from wagtail.search import index
 from wagtailseo.models import SeoMixin
 
 
@@ -138,6 +139,10 @@ class InfoPage(SeoMixin, Page):
         ],
         blank=True,
     )
+
+    search_fields = Page.search_fields + [
+        index.SearchField("body"),
+    ]
 
     content_panels = Page.content_panels + [
         FieldPanel("body"),

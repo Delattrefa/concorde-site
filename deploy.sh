@@ -24,6 +24,9 @@ cd "$APP"
 python manage.py migrate --noinput
 python manage.py collectstatic --noinput
 
+echo "→ Index de la recherche du site"
+python manage.py update_index > /dev/null
+
 echo "→ Protection des contrats de location"
 MEDIA_ROOT=$(python -c "from django.conf import settings; import django; django.setup(); print(settings.MEDIA_ROOT)")
 mkdir -p "$MEDIA_ROOT/contrats_location"

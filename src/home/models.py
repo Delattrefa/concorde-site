@@ -6,6 +6,7 @@ from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
 from wagtail.blocks import CharBlock, StructBlock, URLBlock
 from wagtail.fields import RichTextField, StreamField
 from wagtail.models import Orderable, Page
+from wagtail.search import index
 from wagtailseo.models import SeoMixin
 
 
@@ -209,6 +210,21 @@ class SectionDefilementAbstraite(Orderable):
         return toutes_les_colonnes[: self.nombre_colonnes]
 
 
+# Champs des sections (accueil et pages libres) pris en compte par la
+# recherche du site.
+CHAMPS_RECHERCHE_SECTIONS = [
+    index.SearchField("title"),
+    index.SearchField("text"),
+    index.SearchField("titre_colonnes"),
+    index.SearchField("colonne_1_titre"),
+    index.SearchField("colonne_1_texte"),
+    index.SearchField("colonne_2_titre"),
+    index.SearchField("colonne_2_texte"),
+    index.SearchField("colonne_3_titre"),
+    index.SearchField("colonne_3_texte"),
+]
+
+
 class HomePage(SeoMixin, Page):
     """Page d'accueil : bandeau d'ouverture + suite de sections qui
     apparaissent en fondu au fil du défilement (voir static/js/scroll-effects.js)."""
@@ -265,6 +281,13 @@ class HomePage(SeoMixin, Page):
         verbose_name="Image de fond de la section 'Prochaines activités'",
         help_text="Idéalement une image évoquant un calendrier/agenda.",
     )
+
+    search_fields = Page.search_fields + [
+        index.SearchField("hero_title"),
+        index.SearchField("hero_subtitle"),
+        index.SearchField("intro"),
+        index.RelatedFields("sections", CHAMPS_RECHERCHE_SECTIONS),
+    ]
 
     content_panels = Page.content_panels + [
         FieldPanel("hero_title"),

@@ -21,9 +21,10 @@ from modelcluster.fields import ParentalKey
 
 from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
 from wagtail.models import Orderable, Page
+from wagtail.search import index
 from wagtailseo.models import SeoMixin
 
-from home.models import SectionDefilementAbstraite
+from home.models import CHAMPS_RECHERCHE_SECTIONS, SectionDefilementAbstraite
 
 
 class PageLibre(SeoMixin, Page):
@@ -54,6 +55,13 @@ class PageLibre(SeoMixin, Page):
         blank=True,
         help_text="Facultatif : laissez vide pour n'afficher aucune galerie.",
     )
+
+    search_fields = Page.search_fields + [
+        index.SearchField("titre_affiche"),
+        index.SearchField("sous_titre"),
+        index.RelatedFields("sections", CHAMPS_RECHERCHE_SECTIONS),
+        index.RelatedFields("galerie_images", [index.SearchField("legende")]),
+    ]
 
     content_panels = Page.content_panels + [
         MultiFieldPanel(
