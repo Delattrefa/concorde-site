@@ -329,3 +329,21 @@
     .paiements__table td { grid-template-columns: minmax(0, 1fr); gap: 4px; }
 }
 .calendrier-liste__liens { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Recherche dans le suivi des paiements */
+.paiements__recherche {
+    display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px;
+    background: #fff; border: 1px solid #ece2d8; border-radius: 8px;
+    padding: 16px; margin-bottom: 18px;
+}
+.paiements__recherche-champ { display: flex; flex-direction: column; gap: 4px; font-size: .82rem; color: #8a7a7a; }
+.paiements__recherche-champ input { padding: 8px 10px; font-size: .95rem; min-width: 0; }
+.paiements__recherche-champ--nom { flex: 1 1 220px; }
+.paiements__recherche-boutons { display: flex; align-items: center; gap: 14px; }
+.paiements__effacer { font-size: .88rem; color: var(--color-primary, #7a1f2b); }
+.paiements__resume { margin: -6px 0 16px; font-size: .92rem; color: #5a4a4a; }
+
+@media (max-width: 620px) {
+    .paiements__recherche-champ { flex: 1 1 100%; }
+    .paiements__recherche-boutons { flex: 1 1 100%; justify-content: space-between; }
+}

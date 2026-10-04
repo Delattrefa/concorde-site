@@ -29,6 +29,37 @@
         </ul>
     {% endif %}
 
+    <form method="get" class="paiements__recherche" role="search">
+        {% if filtre %}<input type="hidden" name="filtre" value="{{ filtre }}">{% endif %}
+        <label class="paiements__recherche-champ paiements__recherche-champ--nom">
+            <span>Nom ou prénom</span>
+            <input type="search" name="nom" value="{{ nom }}" class="champ-texte" placeholder="Ex : Dupont">
+        </label>
+        <label class="paiements__recherche-champ">
+            <span>Location du</span>
+            <input type="date" name="du" value="{{ date_du|date:'Y-m-d' }}" class="champ-texte">
+        </label>
+        <label class="paiements__recherche-champ">
+            <span>au</span>
+            <input type="date" name="au" value="{{ date_au|date:'Y-m-d' }}" class="champ-texte">
+        </label>
+        <div class="paiements__recherche-boutons">
+            <button type="submit" class="btn btn--secondary">Rechercher</button>
+            {% if recherche_active %}
+                <a class="paiements__effacer" href="{% url 'calendrier:suivi_paiements' %}{% if filtre %}?filtre={{ filtre }}{% endif %}">Effacer la recherche</a>
+            {% endif %}
+        </div>
+    </form>
+
+    {% if recherche_active %}
+        <p class="paiements__resume">
+            {{ nb_resultats }} location{{ nb_resultats|pluralize }} trouvée{{ nb_resultats|pluralize }}
+            {% if nom %} pour « {{ nom }} »{% endif %}
+            {% if date_du and date_au %} entre le {{ date_du|date:"d/m/Y" }} et le {{ date_au|date:"d/m/Y" }}{% elif date_du %} à partir du {{ date_du|date:"d/m/Y" }}{% elif date_au %} jusqu'au {{ date_au|date:"d/m/Y" }}{% endif %}.
+            Les totaux ci-dessous portent sur cette recherche.
+        </p>
+    {% endif %}
+
     <div class="paiements__totaux">
         <div><span>Locations encaissées</span><strong>{{ totaux.locations_encaissees|floatformat:2 }} €</strong></div>
         <div><span>Locations à encaisser</span><strong>{{ totaux.locations_attendues|floatformat:2 }} €</strong></div>
@@ -37,7 +68,7 @@
 
     <div class="calendrier-liste__filtres">
         {% for valeur, libelle in filtres %}
-            <a href="{% url 'calendrier:suivi_paiements' %}{% if valeur %}?filtre={{ valeur }}{% endif %}" class="tag {% if filtre == valeur %}tag--active{% endif %}">{{ libelle }}</a>
+            <a href="{% url 'calendrier:suivi_paiements' %}?{% if valeur %}filtre={{ valeur }}{% if params_recherche %}&amp;{% endif %}{% endif %}{{ params_recherche }}" class="tag {% if filtre == valeur %}tag--active{% endif %}">{{ libelle }}</a>
         {% endfor %}
     </div>
 
@@ -105,7 +136,11 @@
         </div>
     </form>
     {% else %}
-        <p>Aucune location dans cette catégorie. Une location apparaît ici dès que son contrat a été généré.</p>
+        {% if recherche_active %}
+            <p>Aucune location ne correspond à cette recherche.</p>
+        {% else %}
+            <p>Aucune location dans cette catégorie. Une location apparaît ici dès que son contrat a été généré.</p>
+        {% endif %}
     {% endif %}
 </section>
 {% endblock %}
