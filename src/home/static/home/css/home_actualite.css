@@ -1,0 +1,91 @@
+/* =========================================================
+   Page d'accueil — « Dernière actualité » et « Prochaines
+   activités » côte à côte, sur deux colonnes.
+   Une seule des deux présente : elle occupe toute la largeur.
+   ========================================================= */
+.home-duo { padding: 70px 0; background: #f1e9e2; }
+
+.home-duo__grille {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+    align-items: stretch;
+    max-width: 900px;
+}
+.home-duo__grille--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 1200px;
+}
+
+.home-duo__carte {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, .10);
+    min-width: 0;
+}
+
+/* ---------- Colonne « Dernière actualité » ---------- */
+.home-duo__actualite { background: #fff; display: flex; flex-direction: column; }
+
+.home-duo__label {
+    display: block;
+    padding: 22px 32px 0;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.home-duo__image { display: block; margin-top: 16px; background: #f6f1ec; text-align: center; }
+.home-duo__image img {
+    display: block;
+    margin: 0 auto;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 300px;          /* image entière, sans recadrage */
+}
+
+.home-duo__texte { padding: 22px 32px 30px; display: flex; flex-direction: column; flex: 1; }
+.home-duo__texte .news-meta {
+    margin: 0;
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.home-duo__texte h2 { margin: 6px 0 12px; font-size: clamp(1.3rem, 2.4vw, 1.6rem); }
+.home-duo__texte h2 a { color: var(--color-primary-dark); text-decoration: none; }
+.home-duo__texte h2 a:hover { text-decoration: underline; }
+.home-duo__extrait { color: #5a4a4a; margin: 0 0 22px; }
+
+.home-duo__boutons {
+    margin-top: auto;            /* boutons alignés en bas de la carte */
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+}
+.home-duo__lien-discret { color: var(--color-primary); font-size: .92rem; }
+
+/* ---------- Colonne « Prochaines activités » ---------- */
+/* Reprend les styles .home-agenda de main.css, adaptés à une carte. */
+.home-duo__carte.home-agenda {
+    padding: 40px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.home-duo__carte.home-agenda h2 { margin-bottom: 26px; }
+.home-duo__carte .home-agenda__liste { margin-bottom: 28px; max-width: none; }
+
+/* ---------- Tablettes et smartphones : l'une sous l'autre ---------- */
+@media (max-width: 900px) {
+    .home-duo__grille--2 { grid-template-columns: minmax(0, 1fr); max-width: 680px; }
+}
+@media (max-width: 620px) {
+    .home-duo { padding: 44px 0; }
+    .home-duo__label { padding: 18px 20px 0; }
+    .home-duo__texte { padding: 18px 20px 24px; }
+    .home-duo__carte.home-agenda { padding: 30px 20px; }
+}

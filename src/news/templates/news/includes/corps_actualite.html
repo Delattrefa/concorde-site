@@ -1,0 +1,26 @@
+{% load wagtailcore_tags wagtailimages_tags %}
+{% comment %}
+Contenu d'une actualité (blocs du corps de l'article). Partagé entre la page
+de l'actualité (news/news_page.html) et la section « Dernière actualité » de
+la page d'accueil, pour un affichage identique aux deux endroits.
+Variable attendue : article (une NewsPage).
+{% endcomment %}
+{% for block in article.body %}
+    <div class="info-body__block fade-up">
+        {% if block.block_type == "heading" %}
+            <h2>{{ block.value }}</h2>
+        {% elif block.block_type == "paragraph" %}
+            {{ block.value|richtext }}
+        {% elif block.block_type == "image" %}
+            {% srcset_image block.value width-{400,800,1000} sizes="(max-width: 820px) 100vw, 780px" alt=block.value.title loading="lazy" %}
+        {% else %}
+            {% include_block block %}
+        {% endif %}
+    </div>
+{% endfor %}
+
+{% if article.lien_url %}
+    <p class="news-body__lien">
+        <a class="btn btn--primary" href="{{ article.lien_url }}" target="_blank" rel="noopener">{{ article.lien_texte|default:"En savoir plus" }}</a>
+    </p>
+{% endif %}

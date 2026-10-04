@@ -22,6 +22,25 @@ class LienBlock(StructBlock):
         label = "Lien"
 
 
+def extrait_actualite(actualite, nb_mots=45):
+    """Début d'une actualité, en texte simple, pour la page d'accueil :
+    le chapeau (intro) suivi des premiers paragraphes, coupé à nb_mots
+    mots (avec « … » si le texte est plus long)."""
+    import html
+
+    from django.utils.html import strip_tags
+    from django.utils.text import Truncator
+
+    morceaux = [actualite.intro] if actualite.intro else []
+    for bloc in actualite.body:
+        if bloc.block_type == "paragraph":
+            morceaux.append(strip_tags(bloc.value.source))
+        if len(" ".join(morceaux).split()) > nb_mots:
+            break
+    texte = " ".join(html.unescape(" ".join(morceaux)).split())
+    return Truncator(texte).words(nb_mots, truncate=" …")
+
+
 class SectionDefilementAbstraite(Orderable):
     """Classe abstraite : un bloc de contenu affiché en défilement continu
     avec effet de fondu/ouverture (voir static/js/scroll-effects.js).
@@ -294,6 +313,8 @@ class HomePage(SeoMixin, Page):
                 .order_by("-date")
                 .first()
             )
+            if context["derniere_actualite"]:
+                context["extrait_actualite"] = extrait_actualite(context["derniere_actualite"])
 
         # --- Section "Prochaines activités" (5 premières à partir d'aujourd'hui) ---
         context["prochaines_activites"] = []

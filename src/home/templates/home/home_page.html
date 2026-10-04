@@ -1,7 +1,11 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags wagtailimages_tags %}
+{% load static wagtailcore_tags wagtailimages_tags %}
 
 {% block body_class %}template-home{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'home/css/home_actualite.css' %}">
+{% endblock %}
 
 {% block content %}
 
@@ -34,50 +38,60 @@
 </section>
 {% endif %}
 
-{% if derniere_actualite %}
-<section class="home-actualite fade-target">
-    <div class="wrap">
-        <span class="home-actualite__label fade-up">Dernière actualité</span>
-        <div class="home-actualite__card fade-up">
-            {% if derniere_actualite.featured_image %}
-                {% image derniere_actualite.featured_image fill-500x500 as img_actualite %}
-                <a href="{% pageurl derniere_actualite %}" class="home-actualite__image">
-                    <img src="{{ img_actualite.url }}" alt="{{ derniere_actualite.title }}" loading="lazy">
-                </a>
+{% if derniere_actualite or prochaines_activites %}
+<section class="home-duo fade-target">
+    <div class="wrap home-duo__grille{% if derniere_actualite and prochaines_activites %} home-duo__grille--2{% endif %}">
+
+        {% if derniere_actualite %}
+            {% pageurl derniere_actualite as url_actualite %}
+            <article class="home-duo__carte home-duo__actualite fade-up">
+                <span class="home-duo__label">Dernière actualité</span>
+                {% if derniere_actualite.featured_image %}
+                    <a class="home-duo__image" href="{{ url_actualite }}" tabindex="-1" aria-hidden="true">
+                        {% srcset_image derniere_actualite.featured_image width-{400,700,1000} sizes="(max-width: 900px) 100vw, 560px" alt="" loading="lazy" %}
+                    </a>
+                {% endif %}
+                <div class="home-duo__texte">
+                    <p class="news-meta">
+                        <time datetime="{{ derniere_actualite.date|date:'Y-m-d' }}">{{ derniere_actualite.date|date:"d F Y" }}</time>
+                        {% if derniere_actualite.author %} · par {{ derniere_actualite.author }}{% endif %}
+                    </p>
+                    <h2><a href="{{ url_actualite }}">{{ derniere_actualite.title }}</a></h2>
+                    {% if extrait_actualite %}<p class="home-duo__extrait">{{ extrait_actualite }}</p>{% endif %}
+                    <div class="home-duo__boutons">
+                        <a class="btn btn--primary" href="{{ url_actualite }}">Lire la suite →</a>
+                        <a class="home-duo__lien-discret" href="{% pageurl derniere_actualite.get_parent %}">Toutes les actualités</a>
+                    </div>
+                </div>
+            </article>
+        {% endif %}
+
+        {% if prochaines_activites %}
+            {% if page.image_fond_calendrier %}
+                {% image page.image_fond_calendrier width-1200 as img_fond_calendrier %}
             {% endif %}
-            <div class="home-actualite__body">
-                <time>{{ derniere_actualite.date|date:"d F Y" }}</time>
-                <h2><a href="{% pageurl derniere_actualite %}">{{ derniere_actualite.title }}</a></h2>
-                {% if derniere_actualite.intro %}<p>{{ derniere_actualite.intro }}</p>{% endif %}
-                <a class="btn btn--secondary" href="{% pageurl derniere_actualite %}">Lire l'article →</a>
+            <div class="home-duo__carte home-agenda fade-up" {% if img_fond_calendrier %}style="background-image:url('{{ img_fond_calendrier.url }}');"{% endif %}>
+                <div class="home-agenda__overlay"></div>
+                <div class="home-agenda__content">
+                    <h2>Prochaines activités</h2>
+                    <ul class="home-agenda__liste">
+                        {% for activite in prochaines_activites %}
+                            <li style="border-left-color:{{ activite.couleur }};">
+                                <span class="home-agenda__date">{{ activite.date_debut|date:"d M" }}</span>
+                                <span class="home-agenda__nom">{{ activite.nom }}</span>
+                                {% if activite.date_fin != activite.date_debut %}
+                                    <span class="home-agenda__heure">→ {{ activite.date_fin|date:"d M" }}</span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <a class="btn btn--primary" href="{% url 'calendrier:mois_courant' %}">Voir le calendrier complet</a>
+                </div>
             </div>
-        </div>
+        {% endif %}
+
     </div>
 </section>
-{% endif %}
-
-{% if prochaines_activites %}
-    {% if page.image_fond_calendrier %}
-        {% image page.image_fond_calendrier width-1800 as img_fond_calendrier %}
-    {% endif %}
-    <section class="home-agenda fade-target" {% if img_fond_calendrier %}style="background-image:url('{{ img_fond_calendrier.url }}');"{% endif %}>
-        <div class="home-agenda__overlay"></div>
-        <div class="wrap home-agenda__content">
-            <h2 class="fade-up">Prochaines activités</h2>
-            <ul class="home-agenda__liste">
-                {% for activite in prochaines_activites %}
-                    <li class="fade-up delay-{{ forloop.counter|add:'-1' }}" style="border-left-color:{{ activite.couleur }};">
-                        <span class="home-agenda__date">{{ activite.date_debut|date:"d M" }}</span>
-                        <span class="home-agenda__nom">{{ activite.nom }}</span>
-                        {% if activite.date_fin != activite.date_debut %}
-                            <span class="home-agenda__heure">→ {{ activite.date_fin|date:"d M" }}</span>
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-            <a class="btn btn--primary fade-up" href="{% url 'calendrier:mois_courant' %}">Voir le calendrier complet</a>
-        </div>
-    </section>
 {% endif %}
 
 <div id="sections">

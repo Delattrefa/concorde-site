@@ -32,25 +32,7 @@
 
 <article class="news-body wrap fade-target">
     {% if page.intro %}<p class="news-body__intro fade-up">{{ page.intro }}</p>{% endif %}
-    {% for block in page.body %}
-        <div class="info-body__block fade-up">
-            {% if block.block_type == "heading" %}
-                <h2>{{ block.value }}</h2>
-            {% elif block.block_type == "paragraph" %}
-                {{ block.value|richtext }}
-            {% elif block.block_type == "image" %}
-                {% image block.value width-1000 %}
-            {% else %}
-                {% include_block block %}
-            {% endif %}
-        </div>
-    {% endfor %}
-
-    {% if page.lien_url %}
-        <p class="news-body__lien">
-            <a class="btn btn--primary" href="{{ page.lien_url }}" target="_blank" rel="noopener">{{ page.lien_texte|default:"En savoir plus" }}</a>
-        </p>
-    {% endif %}
+    {% include "news/includes/corps_actualite.html" with article=page %}
 
     {% if peut_modifier %}
         <div class="news-body__actions">
