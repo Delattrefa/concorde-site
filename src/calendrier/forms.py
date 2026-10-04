@@ -219,3 +219,48 @@ class AnnexeContratForm(forms.ModelForm):
             if nb_pages == 0:
                 raise forms.ValidationError("Ce PDF ne contient aucune page.")
         return fichier
+
+
+class SuiviPaiementForm(forms.ModelForm):
+    """Une ligne du tableau de suivi des paiements (un contrat de location).
+    Les montants ne sont pas modifiables ici : ils proviennent du contrat."""
+
+    class Meta:
+        model = ContratLocation
+        fields = [
+            "location_payee",
+            "caution_payee",
+            "caution_remboursee",
+            "date_paiement",
+            "extrait_paiement",
+            "date_remboursement_caution",
+            "extrait_remboursement",
+        ]
+        widgets = {
+            "date_paiement": forms.DateInput(attrs={"class": "champ-texte", "type": "date"}, format=FORMAT_DATE_HTML),
+            "date_remboursement_caution": forms.DateInput(attrs={"class": "champ-texte", "type": "date"}, format=FORMAT_DATE_HTML),
+            "extrait_paiement": forms.TextInput(attrs={"class": "champ-texte", "placeholder": "N° extrait"}),
+            "extrait_remboursement": forms.TextInput(attrs={"class": "champ-texte", "placeholder": "N° extrait"}),
+        }
+
+    def clean(self):
+        donnees = super().clean()
+        if donnees.get("caution_remboursee") and not donnees.get("caution_payee"):
+            self.add_error(
+                "caution_remboursee",
+                "Une caution ne peut être remboursée que si elle a été payée.",
+            )
+        if donnees.get("date_remboursement_caution") and not donnees.get("caution_remboursee"):
+            # Une date de remboursement saisie implique le remboursement.
+            donnees["caution_remboursee"] = True
+            if not donnees.get("caution_payee"):
+                self.add_error(
+                    "date_remboursement_caution",
+                    "Une caution ne peut être remboursée que si elle a été payée.",
+                )
+        return donnees
+
+
+SuiviPaiementFormSet = forms.modelformset_factory(
+    ContratLocation, form=SuiviPaiementForm, extra=0, can_delete=False,
+)

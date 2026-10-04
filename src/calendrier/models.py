@@ -233,12 +233,35 @@ class ContratLocation(models.Model):
         "Fichier PDF du contrat", upload_to="contrats_location/", blank=True
     )
 
+    # --- Suivi des paiements (page « Suivi des paiements ») ---------------
+    # Les montants ci-dessus sont fixés à la génération du contrat ; les
+    # champs suivants sont tenus à jour par les administrateurs. Régénérer
+    # le contrat ne les modifie pas.
+    location_payee = models.BooleanField("Location payée", default=False)
+    caution_payee = models.BooleanField("Caution payée", default=False)
+    caution_remboursee = models.BooleanField("Caution remboursée", default=False)
+    date_paiement = models.DateField("Date du paiement", null=True, blank=True)
+    extrait_paiement = models.CharField(
+        "N° d'extrait (paiement)", max_length=30, blank=True
+    )
+    date_remboursement_caution = models.DateField(
+        "Date du remboursement de la caution", null=True, blank=True
+    )
+    extrait_remboursement = models.CharField(
+        "N° d'extrait (remboursement)", max_length=30, blank=True
+    )
+
     class Meta:
         verbose_name = "Contrat de location"
         verbose_name_plural = "Contrats de location"
 
     def __str__(self):
         return f"Contrat — {self.reservation.prenom} {self.reservation.nom}"
+
+    @property
+    def est_solde(self):
+        """Location et caution payées, caution remboursée : dossier clôturé."""
+        return self.location_payee and self.caution_payee and self.caution_remboursee
 
     def locaux_selectionnes(self):
         """Liste des libellés des locaux cochés, dans l'ordre attendu par

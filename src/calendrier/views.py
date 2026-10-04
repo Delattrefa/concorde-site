@@ -19,6 +19,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.files.base import ContentFile
 from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.db.models import Q, Sum
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.decorators.http import require_POST
@@ -28,7 +29,7 @@ from django.utils.dates import MONTHS, WEEKDAYS
 from django.utils import timezone
 
 from .contrats import VARIABLES_DISPONIBLES, AIDE_MISE_EN_FORME, generer_pdf_contrat, nom_fichier_contrat
-from .forms import ActiviteForm, AnnexeContratForm, ReservationAdminForm, ArticleContratForm, ContratLocationForm, ReservationForm
+from .forms import ActiviteForm, AnnexeContratForm, ReservationAdminForm, SuiviPaiementFormSet, ArticleContratForm, ContratLocationForm, ReservationForm
 from .models import Activite, AnnexeContrat, ArticleContrat, ContratLocation, Reservation
 from .utils import construire_semaines_du_mois, mois_adjacent
 
@@ -666,3 +667,73 @@ class AnnexeContratDeleteView(_ContratTypeMixin, DeleteView):
             stockage.delete(nom_fichier)
         messages.success(self.request, f"L'annexe « {titre} » a été supprimée.")
         return reponse
+
+
+# ---------------------------------------------------------------------------
+# SUIVI DES PAIEMENTS : location, caution et remboursement (administrateurs)
+# ---------------------------------------------------------------------------
+FILTRES_PAIEMENTS = [
+    ("", "Toutes les locations"),
+    ("a_payer", "Paiement attendu"),
+    ("a_rembourser", "Caution à rembourser"),
+    ("soldees", "Dossiers clôturés"),
+]
+
+
+def _contrats_filtres(filtre):
+    contrats = ContratLocation.objects.select_related("reservation").order_by(
+        "-reservation__date_debut", "-pk"
+    )
+    if filtre == "a_payer":
+        contrats = contrats.filter(Q(location_payee=False) | Q(caution_payee=False))
+    elif filtre == "a_rembourser":
+        contrats = contrats.filter(caution_payee=True, caution_remboursee=False)
+    elif filtre == "soldees":
+        contrats = contrats.filter(location_payee=True, caution_payee=True, caution_remboursee=True)
+    return contrats
+
+
+@user_passes_test(_est_administrateur, login_url="login")
+def suivi_paiements(request):
+    """Tableau de suivi des paiements des locations de salle : une ligne
+    par contrat généré, avec le montant de la location et de la caution
+    (repris du contrat) et les informations de paiement à compléter.
+    Un seul bouton enregistre toutes les lignes modifiées."""
+
+    filtre = request.GET.get("filtre", "")
+    if filtre not in dict(FILTRES_PAIEMENTS):
+        filtre = ""
+    contrats = _contrats_filtres(filtre)
+
+    if request.method == "POST":
+        formset = SuiviPaiementFormSet(request.POST, queryset=contrats)
+        if formset.is_valid():
+            modifies = formset.save()
+            if modifies:
+                messages.success(
+                    request,
+                    f"{len(modifies)} ligne(s) enregistrée(s)."
+                    if len(modifies) > 1 else "1 ligne enregistrée.",
+                )
+            else:
+                messages.info(request, "Aucune modification à enregistrer.")
+            url = reverse("calendrier:suivi_paiements")
+            return redirect(f"{url}?filtre={filtre}" if filtre else url)
+        messages.error(request, "Certaines lignes contiennent des erreurs : rien n'a été enregistré.")
+    else:
+        formset = SuiviPaiementFormSet(queryset=contrats)
+
+    # Totaux sur l'ensemble des contrats (indépendamment du filtre)
+    tous = ContratLocation.objects.all()
+    totaux = {
+        "locations_encaissees": tous.filter(location_payee=True).aggregate(t=Sum("montant_location"))["t"] or 0,
+        "locations_attendues": tous.filter(location_payee=False).aggregate(t=Sum("montant_location"))["t"] or 0,
+        "cautions_detenues": tous.filter(caution_payee=True, caution_remboursee=False).aggregate(t=Sum("montant_caution"))["t"] or 0,
+    }
+
+    return render(request, "calendrier/suivi_paiements.html", {
+        "formset": formset,
+        "filtre": filtre,
+        "filtres": FILTRES_PAIEMENTS,
+        "totaux": totaux,
+    })

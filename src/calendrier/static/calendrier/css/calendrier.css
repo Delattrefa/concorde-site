@@ -276,3 +276,56 @@
     border-color: var(--color-primary, #7a1f2b); transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0,0,0,.08);
 }
+
+/* ---------------------------------------------------------
+   Suivi des paiements des locations
+   --------------------------------------------------------- */
+.paiements__totaux {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px; margin-bottom: 22px;
+}
+.paiements__totaux div {
+    background: #fff; border: 1px solid #ece2d8; border-radius: 6px; padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 4px;
+}
+.paiements__totaux span { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: #8a7a7a; }
+.paiements__totaux strong { font-size: 1.25rem; color: var(--color-primary-dark, #4a1018); }
+
+.paiements__barre { margin: 14px 0; display: flex; justify-content: flex-end; }
+
+.paiements__table td { vertical-align: top; }
+.paiements__montant { display: block; font-weight: 700; margin-bottom: 6px; white-space: nowrap; }
+.paiements__case { display: flex; align-items: center; gap: 6px; font-size: .88rem; cursor: pointer; white-space: nowrap; }
+.paiements__case input { width: 18px; height: 18px; margin: 0; }
+.paiements__champ { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: .85rem; }
+.paiements__champ span { min-width: 44px; color: #8a7a7a; }
+.paiements__champ input { padding: 6px 8px; font-size: .88rem; width: 100%; min-width: 0; max-width: 160px; }
+.paiements__erreur { color: #b3261e; font-size: .82rem; margin-top: 4px; }
+
+.paiements__ligne--soldee td { background: #eef6ee; }
+.paiements__ligne--erreur td { background: #fdecea; }
+
+/* Tablette et smartphone : chaque location devient une fiche */
+@media (max-width: 1000px) {
+    .paiements__table, .paiements__table tbody, .paiements__table tr, .paiements__table td { display: block; width: 100%; }
+    .paiements__table thead { display: none; }
+    .paiements__table tr {
+        border: 1px solid #ece2d8; border-radius: 8px; margin-bottom: 16px;
+        overflow: hidden; background: #fff;
+    }
+    .paiements__table td {
+        display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 10px;
+        border-bottom: 1px solid #f1e9e2;
+    }
+    .paiements__table td::before {
+        content: attr(data-label); font-weight: 700; font-size: .8rem;
+        text-transform: uppercase; letter-spacing: .03em; color: #8a7a7a;
+    }
+    .paiements__champ input { max-width: none; }
+    .paiements__barre { justify-content: stretch; }
+    .paiements__barre .btn { width: 100%; }
+}
+@media (max-width: 420px) {
+    .paiements__table td { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+}
+.calendrier-liste__liens { display: flex; gap: 10px; flex-wrap: wrap; }

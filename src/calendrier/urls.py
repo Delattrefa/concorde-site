@@ -32,6 +32,9 @@ urlpatterns = [
     path("reservation/<int:reservation_pk>/contrat/", views.rediger_contrat, name="reservation_contrat"),
     path("reservation/<int:reservation_pk>/contrat/pdf/", views.telecharger_contrat, name="reservation_contrat_pdf"),
 
+    # --- Suivi des paiements des locations (administrateurs) ---------------
+    path("reservation/paiements/", views.suivi_paiements, name="suivi_paiements"),
+
     # --- Contrat-type : articles et annexes (administrateurs) ---------------
     path("contrat-type/", views.modele_contrat, name="modele_contrat"),
     path("contrat-type/apercu/", views.apercu_modele_contrat, name="modele_contrat_apercu"),
