@@ -7,7 +7,7 @@
                 {% for colonne in section.colonnes %}
                     <div class="cols-section__col fade-up delay-{{ forloop.counter|add:'-1' }}">
                         {% if colonne.image %}
-                            {% srcset_image colonne.image width-{400,800,1200} sizes="(max-width: 620px) 100vw, (max-width: 900px) 50vw, 33vw" alt=colonne.titre loading="lazy" class="cols-section__image" %}
+                            {% srcset_image colonne.image fill-{400x300,800x600,1200x900} sizes="(max-width: 620px) 100vw, (max-width: 900px) 50vw, 33vw" alt=colonne.titre loading="lazy" class="cols-section__image" %}
                         {% endif %}
                         {% if colonne.titre %}<h3>{{ colonne.titre }}</h3>{% endif %}
                         {{ colonne.texte|richtext }}

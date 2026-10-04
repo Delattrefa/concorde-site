@@ -37,16 +37,19 @@ img { max-width: 100%; height: auto; }
    --------------------------------------------------------- */
 .cols-section__col { min-width: 0; display: flow-root; text-align: left; }
 .cols-section__col img.cols-section__image {
+    /* Toutes les images d'une section en colonnes ont exactement le même
+       format (4:3), recadrées autour du point d'intérêt défini dans Wagtail :
+       titres et textes restent alignés d'une colonne à l'autre. */
     display: block;
-    width: auto;
-    height: auto;           /* annule l'ancien recadrage à 200 px de haut */
-    object-fit: initial;
-    max-height: 70vh;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
     margin: 0 0 18px;
 }
-.cols-section--taille-petit .cols-section__col img.cols-section__image { max-width: 45%; }
-.cols-section--taille-moyen .cols-section__col img.cols-section__image { max-width: 75%; }
-.cols-section--taille-grand .cols-section__col img.cols-section__image { max-width: 100%; }
+.cols-section--taille-petit .cols-section__col img.cols-section__image { width: 50%; }
+.cols-section--taille-moyen .cols-section__col img.cols-section__image { width: 75%; }
+.cols-section--taille-grand .cols-section__col img.cols-section__image { width: 100%; }
 
 /* ---------------------------------------------------------
    Smartphones et tablettes
@@ -61,8 +64,8 @@ img { max-width: 100%; height: auto; }
     .scroll-section--taille-moyen .scroll-section__image img { max-width: min(100%, 480px); }
 }
 @media (max-width: 620px) {
-    .cols-section--taille-petit .cols-section__col img.cols-section__image { max-width: 50%; }
-    .cols-section--taille-moyen .cols-section__col img.cols-section__image { max-width: 80%; }
+    .cols-section--taille-petit .cols-section__col img.cols-section__image { width: 60%; }
+    .cols-section--taille-moyen .cols-section__col img.cols-section__image { width: 85%; }
 }
 
 /* ---------------------------------------------------------
