@@ -1,4 +1,4 @@
-{% load static wagtailcore_tags wagtailuserbar %}
+{% load static wagtailcore_tags wagtailuserbar consentement_tags %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -101,8 +101,15 @@
                 {% endwith %}
             </div>
         </div>
-        <p class="footer-bottom">&copy; {% now "Y" %} La Concorde asbl — Tous droits réservés</p>
+        <p class="footer-bottom">
+            &copy; {% now "Y" %} La Concorde asbl — Tous droits réservés
+            {% if settings.consentement.ConsentementCookies.actif %}
+                · <button type="button" class="lien-cookies" data-cookies-ouvrir>Gérer les cookies</button>
+            {% endif %}
+        </p>
     </footer>
+
+    {% banniere_consentement %}
 
     <script src="{% static 'js/scroll-effects.js' %}" defer></script>
     {% block extra_js %}{% endblock %}

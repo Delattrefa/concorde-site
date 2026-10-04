@@ -1,0 +1,39 @@
+{% load static wagtailcore_tags %}
+{% if reglages and reglages.actif %}
+<link rel="stylesheet" href="{% static 'consentement/consentement.css' %}">
+<div class="cookies" id="cookies-banniere" role="dialog" aria-modal="false" aria-labelledby="cookies-titre" hidden
+     data-cookie-nom="{{ nom_cookie }}" data-cookie-version="{{ version_cookie }}" data-cookie-duree="{{ reglages.duree_jours }}">
+    <div class="cookies__contenu">
+        <h2 id="cookies-titre" class="cookies__titre">{{ reglages.titre }}</h2>
+        <div class="cookies__texte">{{ reglages.texte|richtext }}</div>
+        {% if reglages.page_politique %}
+            <p class="cookies__politique"><a href="{% pageurl reglages.page_politique %}">Politique de confidentialité</a></p>
+        {% endif %}
+
+        <div class="cookies__details" id="cookies-details" hidden>
+            <div class="cookies__categorie">
+                <div>
+                    <strong>Cookies nécessaires</strong>
+                    <p>Connexion des membres, sécurité des formulaires et mémorisation de votre choix. Indispensables au fonctionnement du site.</p>
+                </div>
+                <span class="cookies__toujours">Toujours actifs</span>
+            </div>
+            <label class="cookies__categorie" for="cookies-externes">
+                <div>
+                    <strong>Contenus externes</strong>
+                    <p>Cartes Google Maps et vidéos intégrées (YouTube, Vimeo, Facebook…). Ces services peuvent déposer leurs propres cookies.</p>
+                </div>
+                <input type="checkbox" id="cookies-externes" class="cookies__interrupteur">
+            </label>
+        </div>
+
+        <div class="cookies__boutons">
+            <button type="button" class="btn btn--primary" data-cookies-action="refuser">Tout refuser</button>
+            <button type="button" class="btn btn--secondary" data-cookies-action="personnaliser" aria-expanded="false" aria-controls="cookies-details">Personnaliser</button>
+            <button type="button" class="btn btn--secondary" data-cookies-action="enregistrer" hidden>Enregistrer mes choix</button>
+            <button type="button" class="btn btn--primary" data-cookies-action="accepter">Tout accepter</button>
+        </div>
+    </div>
+</div>
+<script src="{% static 'consentement/consentement.js' %}" defer></script>
+{% endif %}

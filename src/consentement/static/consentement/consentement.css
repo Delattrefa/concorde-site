@@ -1,0 +1,77 @@
+/* Consentement aux cookies — bandeau et contenus bloqués */
+.cookies {
+    position: fixed;
+    left: 16px; right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+}
+.cookies[hidden] { display: none; }
+.cookies__contenu {
+    pointer-events: auto;
+    width: 100%;
+    max-width: 720px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    background: #fff;
+    color: #2b2222;
+    border-radius: 10px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .28);
+    padding: 22px 24px 18px;
+    border-top: 4px solid var(--color-accent, #d4a72c);
+}
+.cookies__titre { margin: 0 0 8px; font-size: 1.2rem; color: var(--color-primary-dark, #4a1018); }
+.cookies__texte p { margin: 0 0 8px; font-size: .93rem; line-height: 1.5; }
+.cookies__politique { margin: 0 0 10px; font-size: .9rem; }
+.cookies__politique a { color: var(--color-primary, #7a1f2b); }
+
+.cookies__details { border-top: 1px solid #eee3d9; margin: 10px 0 4px; }
+.cookies__categorie {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 12px 0; border-bottom: 1px solid #eee3d9; cursor: default;
+}
+label.cookies__categorie { cursor: pointer; }
+.cookies__categorie p { margin: 4px 0 0; font-size: .86rem; color: #6b5c5c; }
+.cookies__toujours { font-size: .8rem; color: #3b7a3b; font-weight: 700; white-space: nowrap; }
+
+/* Interrupteur (case à cocher stylée) */
+.cookies__interrupteur {
+    appearance: none; -webkit-appearance: none;
+    flex-shrink: 0; width: 46px; height: 26px; border-radius: 13px;
+    background: #cdbfb6; position: relative; cursor: pointer; transition: background .2s ease;
+}
+.cookies__interrupteur::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px;
+    border-radius: 50%; background: #fff; transition: transform .2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,.25);
+}
+.cookies__interrupteur:checked { background: #3b7a3b; }
+.cookies__interrupteur:checked::after { transform: translateX(20px); }
+.cookies__interrupteur:focus-visible { outline: 2px solid var(--color-primary, #7a1f2b); outline-offset: 2px; }
+
+.cookies__boutons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+.cookies__boutons .btn { padding: 10px 18px; font-size: .9rem; }
+.cookies__boutons [hidden] { display: none; }
+
+@media (max-width: 560px) {
+    .cookies { left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+    .cookies__contenu { padding: 18px 16px 14px; }
+    .cookies__boutons .btn { flex: 1 1 calc(50% - 5px); text-align: center; }
+}
+
+/* Contenu externe en attente de consentement (carte, vidéo) */
+.cookies-bloque {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    width: 100%; height: 100%; min-height: 200px;
+    padding: 20px; text-align: center;
+    background: #f1e9e2; color: #4a3d3d; border-radius: 4px;
+}
+.cookies-bloque p { margin: 0; max-width: 420px; font-size: .92rem; }
+
+/* Lien « Gérer les cookies » du pied de page */
+.lien-cookies {
+    background: none; border: 0; padding: 0; font: inherit; color: inherit;
+    text-decoration: underline; cursor: pointer;
+}

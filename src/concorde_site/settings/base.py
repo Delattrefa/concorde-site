@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "calendrier",
     "theatre",
     "page_libre",
+    "consentement",
 
     # Wagtail
     "wagtail.contrib.forms",
@@ -67,6 +68,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
+    # Bloque les contenus de sites tiers (cartes, vidéos) avant consentement
+    "consentement.middleware.BlocageContenusTiersMiddleware",
 ]
 
 ROOT_URLCONF = "concorde_site.urls"
