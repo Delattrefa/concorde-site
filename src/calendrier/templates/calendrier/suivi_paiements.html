@@ -100,6 +100,11 @@
                         <td data-label="Locataire">
                             {{ form.id }}
                             <a href="{% url 'calendrier:reservation_detail' reservation.pk %}"><strong>{{ reservation.nom }}</strong> {{ reservation.prenom }}</a>
+                            {% if contrat.fichier_disponible %}
+                                <a class="paiements__contrat" href="{% url 'calendrier:reservation_contrat_pdf' reservation.pk %}" title="Télécharger le contrat de location (PDF)">📄 Contrat (PDF)</a>
+                            {% else %}
+                                <a class="paiements__contrat paiements__contrat--absent" href="{% url 'calendrier:reservation_contrat' reservation.pk %}" title="Le fichier du contrat est introuvable : le régénérer">⚠ Contrat introuvable — régénérer</a>
+                            {% endif %}
                             {% if form.non_field_errors %}<div class="paiements__erreur">{{ form.non_field_errors|join:" " }}</div>{% endif %}
                         </td>
                         <td data-label="Du / au">

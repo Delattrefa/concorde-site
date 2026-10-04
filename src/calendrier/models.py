@@ -259,6 +259,14 @@ class ContratLocation(models.Model):
         return f"Contrat — {self.reservation.prenom} {self.reservation.nom}"
 
     @property
+    def fichier_disponible(self):
+        """Vrai si le PDF du contrat est enregistré et présent sur le serveur."""
+        try:
+            return bool(self.fichier_pdf) and self.fichier_pdf.storage.exists(self.fichier_pdf.name)
+        except Exception:
+            return False
+
+    @property
     def est_solde(self):
         """Location et caution payées, caution remboursée : dossier clôturé."""
         return self.location_payee and self.caution_payee and self.caution_remboursee

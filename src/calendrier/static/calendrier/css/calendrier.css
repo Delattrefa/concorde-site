@@ -347,3 +347,8 @@
     .paiements__recherche-champ { flex: 1 1 100%; }
     .paiements__recherche-boutons { flex: 1 1 100%; justify-content: space-between; }
 }
+.paiements__contrat {
+    display: inline-block; margin-top: 6px; font-size: .84rem; white-space: nowrap;
+    color: var(--color-primary, #7a1f2b);
+}
+.paiements__contrat--absent { color: #b3261e; white-space: normal; }
