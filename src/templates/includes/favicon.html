@@ -1,0 +1,21 @@
+{% load static wagtailimages_tags %}
+{% comment %}
+Icône du site (onglet du navigateur, favoris, écran d'accueil mobile).
+Image choisie dans Paramètres > Identité visuelle, sinon icône par défaut.
+{% endcomment %}
+{% with icone=settings.navigation.IdentiteVisuelle.favicon %}
+    {% if icone %}
+        {% image icone fill-32x32 format-png as icone_32 %}
+        {% image icone fill-192x192 format-png as icone_192 %}
+        {% image icone fill-180x180 format-png as icone_180 %}
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ icone_32.url }}">
+        <link rel="icon" type="image/png" sizes="192x192" href="{{ icone_192.url }}">
+        <link rel="apple-touch-icon" sizes="180x180" href="{{ icone_180.url }}">
+    {% else %}
+        <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
+        <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/favicon-32.png' %}">
+        <link rel="icon" type="image/png" sizes="192x192" href="{% static 'img/favicon-192.png' %}">
+        <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/apple-touch-icon.png' %}">
+    {% endif %}
+{% endwith %}
+<meta name="theme-color" content="#7a1f2b">

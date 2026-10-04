@@ -2,6 +2,8 @@ from django.conf import settings
 from django.urls import include, path
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
+from django.shortcuts import redirect
+from django.templatetags.static import static as url_statique
 
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail import urls as wagtail_urls
@@ -11,7 +13,13 @@ from search import views as search_views
 from news import views as news_views
 from media_gallery import views as media_gallery_views
 
+def favicon_ico(request):
+    """Certains navigateurs et robots demandent /favicon.ico directement."""
+    return redirect(url_statique("img/favicon.ico"))
+
+
 urlpatterns = [
+    path("favicon.ico", favicon_ico),
     path("django-admin/", admin.site.urls),
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),

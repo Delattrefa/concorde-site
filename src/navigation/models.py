@@ -185,3 +185,31 @@ class ReseauSocialLien(Orderable):
 
     def __str__(self):
         return f"{self.get_reseau_display()} — {self.libelle or self.url}"
+
+
+@register_setting(icon="image")
+class IdentiteVisuelle(BaseSiteSetting):
+    """Icône du site affichée dans l'onglet du navigateur (favicon), dans
+    les favoris et sur l'écran d'accueil des smartphones."""
+
+    favicon = models.ForeignKey(
+        "wagtailimages.Image",
+        verbose_name="Icône de l'onglet (logo)",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text=(
+            "Image carrée, idéalement au format PNG de 512 × 512 pixels, "
+            "sur fond uni ou transparent. Une image non carrée est recadrée "
+            "autour de son point d'intérêt. Sans image, une icône « C » aux "
+            "couleurs du site est utilisée."
+        ),
+    )
+
+    panels = [
+        FieldPanel("favicon"),
+    ]
+
+    class Meta:
+        verbose_name = "Identité visuelle (icône du site)"
