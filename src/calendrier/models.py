@@ -316,6 +316,16 @@ class ContratLocation(models.Model):
         "N° d'extrait (remboursement)", max_length=30, blank=True
     )
 
+    # --- Signature du délégué (image de la collection « Signature ») ------
+    signature = models.ForeignKey(
+        "wagtailimages.Image",
+        verbose_name="Signature du délégué",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+
     # --- Annulation de la location --------------------------------------
     # Cocher « annulé » passe la réservation au statut « Annulée » (la salle
     # redevient libre dans le calendrier) ; l'historique des paiements et
@@ -432,3 +442,36 @@ class AnnexeContrat(models.Model):
 
     def __str__(self):
         return self.titre
+
+
+class MiseEnPageContrat(models.Model):
+    """Réglages de mise en page du contrat de location (enregistrement
+    unique), modifiables depuis la page « Contrat-type de location »."""
+
+    image_entete = models.ImageField(
+        "Image de fond de l'en-tête",
+        upload_to="contrat_mise_en_page/",
+        blank=True,
+        help_text=(
+            "Affichée en bandeau en haut de la première page, derrière le nom de "
+            "l'ASBL. Format paysage conseillé (environ 2000 × 450 pixels)."
+        ),
+    )
+    eclaircir_entete = models.BooleanField(
+        "Éclaircir l'image pour garder le texte lisible",
+        default=True,
+    )
+    date_modification = models.DateTimeField("Dernière modification", auto_now=True)
+
+    class Meta:
+        verbose_name = "Mise en page du contrat"
+        verbose_name_plural = "Mise en page du contrat"
+
+    def __str__(self):
+        return "Mise en page du contrat de location"
+
+    @classmethod
+    def charger(cls):
+        """Renvoie l'unique enregistrement de mise en page (créé au besoin)."""
+        objet, _ = cls.objects.get_or_create(pk=1)
+        return objet

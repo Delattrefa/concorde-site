@@ -12,6 +12,7 @@ from .models import (
     AnnexeContrat,
     ArticleContrat,
     ContratLocation,
+    MiseEnPageContrat,
     Reservation,
     activites_sur,
     jours_occupes,
@@ -181,11 +182,36 @@ class ReservationTraitementForm(forms.ModelForm):
         fields = ["statut"]
 
 
+NOM_COLLECTION_SIGNATURES = "Signature"
+
+
+def images_de_signature():
+    """Images de la collection « Signature » de la médiathèque Wagtail."""
+    from wagtail.images import get_image_model
+
+    return get_image_model().objects.filter(
+        collection__name__iexact=NOM_COLLECTION_SIGNATURES
+    ).order_by("title")
+
+
+class ChoixSignatureWidget(forms.RadioSelect):
+    """Boutons radio : le gabarit du contrat affiche une vignette par image."""
+
+
 class ContratLocationForm(forms.ModelForm):
     """Formulaire de rédaction du contrat de location, à partir d'une
     réservation déjà validée. Le locataire et les dates sont déjà connus
     (repris de la réservation) : ce formulaire ne demande que les
-    informations propres au contrat lui-même."""
+    informations propres au contrat lui-même, et la signature (image) du
+    délégué à imprimer au-dessus de son nom."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        champ = self.fields["signature"]
+        champ.queryset = images_de_signature()
+        champ.required = False
+        champ.empty_label = "Sans signature (à signer à la main)"
+        champ.label = "Signature du délégué"
 
     class Meta:
         model = ContratLocation
@@ -198,8 +224,10 @@ class ContratLocationForm(forms.ModelForm):
             "local_toilettes",
             "montant_location",
             "montant_caution",
+            "signature",
         ]
         widgets = {
+            "signature": ChoixSignatureWidget,
             "delegue_prenom": forms.TextInput(attrs={"class": "champ-texte"}),
             "delegue_nom": forms.TextInput(attrs={"class": "champ-texte"}),
             "montant_location": forms.NumberInput(attrs={"class": "champ-texte", "step": "0.01", "min": "0"}),
@@ -377,3 +405,28 @@ class SuiviPaiementForm(forms.ModelForm):
 SuiviPaiementFormSet = forms.modelformset_factory(
     ContratLocation, form=SuiviPaiementForm, extra=0, can_delete=False,
 )
+
+
+class MiseEnPageContratForm(forms.ModelForm):
+    """Image de fond de l'en-tête du contrat."""
+
+    supprimer_image = forms.BooleanField(
+        label="Retirer l'image d'en-tête actuelle", required=False,
+    )
+
+    class Meta:
+        model = MiseEnPageContrat
+        fields = ["image_entete", "eclaircir_entete"]
+        widgets = {
+            "image_entete": forms.FileInput(attrs={"accept": "image/jpeg,image/png"}),
+        }
+
+    def save(self, commit=True):
+        objet = super().save(commit=False)
+        if self.cleaned_data.get("supprimer_image") and "image_entete" not in self.changed_data:
+            if objet.image_entete:
+                objet.image_entete.delete(save=False)
+            objet.image_entete = ""
+        if commit:
+            objet.save()
+        return objet

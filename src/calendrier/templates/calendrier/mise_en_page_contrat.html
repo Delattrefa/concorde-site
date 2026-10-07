@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mise en page du contrat de location{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <p class="breadcrumb"><a href="{{ url_retour }}">← Retour au contrat-type</a></p>
+        <h1>Mise en page du contrat</h1>
+        <p class="page-header__intro">
+            Image de fond affichée en bandeau en haut de la première page du contrat,
+            derrière le nom de l'ASBL.
+        </p>
+    </div>
+</section>
+
+<section class="calendrier-form wrap">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-field">
+            <span class="form-field__label">Image actuelle</span>
+            {% if mise_en_page.image_entete %}
+                <div class="apercu-entete">
+                    <img src="{{ mise_en_page.image_entete.url }}" alt="Image d'en-tête du contrat">
+                    {% if mise_en_page.eclaircir_entete %}<span class="apercu-entete__voile"></span>{% endif %}
+                    <span class="apercu-entete__texte">La Concorde asbl</span>
+                </div>
+                <label class="form-field__case">{{ form.supprimer_image }} {{ form.supprimer_image.label }}</label>
+            {% else %}
+                <p class="form-field__help">Aucune image : l'en-tête du contrat est sur fond blanc.</p>
+            {% endif %}
+        </div>
+
+        <div class="form-field">
+            <label for="{{ form.image_entete.id_for_label }}">{% if mise_en_page.image_entete %}Remplacer l'image{% else %}Ajouter une image{% endif %}</label>
+            {{ form.image_entete }}
+            {{ form.image_entete.errors }}
+            <p class="form-field__help">{{ form.image_entete.help_text }} Formats JPEG ou PNG.</p>
+        </div>
+
+        <div class="form-field">
+            <label class="form-field__case">{{ form.eclaircir_entete }} {{ form.eclaircir_entete.label }}</label>
+            <p class="form-field__help">Recommandé pour une photo : un voile blanc rend le nom de l'ASBL et son adresse lisibles.</p>
+        </div>
+
+        <button type="submit" class="btn btn--primary">Enregistrer</button>
+        <a class="btn btn--secondary" href="{% url 'calendrier:modele_contrat_apercu' %}" target="_blank">Aperçu du contrat (PDF)</a>
+    </form>
+</section>
+{% endblock %}

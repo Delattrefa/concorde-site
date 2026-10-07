@@ -30,12 +30,13 @@ from django.utils.dates import MONTHS, WEEKDAYS
 from django.utils import timezone
 
 from .contrats import VARIABLES_DISPONIBLES, AIDE_MISE_EN_FORME, generer_pdf_contrat, nom_fichier_contrat
-from .forms import ActiviteForm, AnnexeContratForm, ReservationAdminForm, SuiviPaiementFormSet, ArticleContratForm, ContratLocationForm, ReservationForm
+from .forms import ActiviteForm, AnnexeContratForm, MiseEnPageContratForm, ReservationAdminForm, SuiviPaiementFormSet, images_de_signature, ArticleContratForm, ContratLocationForm, ReservationForm
 from .models import (
     Activite,
     AnnexeContrat,
     ArticleContrat,
     ContratLocation,
+    MiseEnPageContrat,
     Reservation,
     demandes_en_attente_sur,
     occupations_sur,
@@ -610,12 +611,26 @@ def rediger_contrat(request, reservation_pk):
             reponse["Content-Disposition"] = f'attachment; filename="{nom_fichier}"'
             return reponse
     else:
-        form = ContratLocationForm(instance=contrat)
+        initial = {}
+        if contrat is None:
+            # Nouveau contrat : on propose la dernière signature utilisée.
+            precedent = (
+                ContratLocation.objects.filter(signature__isnull=False)
+                .order_by("-date_creation").first()
+            )
+            if precedent:
+                initial["signature"] = precedent.signature_id
+        form = ContratLocationForm(instance=contrat, initial=initial)
 
     return render(
         request,
         "calendrier/contrat_form.html",
-        {"form": form, "reservation": reservation, "contrat": contrat},
+        {
+            "form": form,
+            "reservation": reservation,
+            "contrat": contrat,
+            "signatures": form.fields["signature"].queryset,
+        },
     )
 
 
@@ -687,6 +702,7 @@ def apercu_modele_contrat(request):
         delegue_prenom="Prénom", delegue_nom="NOM DU DÉLÉGUÉ",
         montant_location=0, montant_caution=150,
         locaux_selectionnes=lambda: ["Une salle des fêtes et une scène", "Cuisine équipée"],
+        signature=images_de_signature().first(),
     )
     contenu_pdf = generer_pdf_contrat(reservation, contrat)
     reponse = HttpResponse(contenu_pdf, content_type="application/pdf")
@@ -919,4 +935,24 @@ def suivi_paiements(request):
         "recherche_active": recherche_active,
         "params_recherche": params_recherche,
         "nb_resultats": contrats.count(),
+    })
+
+
+@user_passes_test(_est_administrateur, login_url="login")
+def mise_en_page_contrat(request):
+    """Image de fond de l'en-tête du contrat de location."""
+    mise_en_page = MiseEnPageContrat.charger()
+    if request.method == "POST":
+        form = MiseEnPageContratForm(request.POST, request.FILES, instance=mise_en_page)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "La mise en page du contrat a été enregistrée.")
+            return redirect(_url_modele_contrat(request))
+    else:
+        form = MiseEnPageContratForm(instance=mise_en_page)
+    return render(request, "calendrier/mise_en_page_contrat.html", {
+        "form": form,
+        "mise_en_page": mise_en_page,
+        "url_retour": _url_modele_contrat(request),
+        "reservation_retour": _reservation_de_retour(request),
     })

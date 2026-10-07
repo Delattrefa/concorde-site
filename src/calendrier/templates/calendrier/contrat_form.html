@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static wagtailimages_tags %}
 
 {% block title %}Contrat de location — {{ reservation.prenom }} {{ reservation.nom }}{% endblock %}
 
@@ -74,6 +74,37 @@
                 {{ form.montant_caution }}
                 {{ form.montant_caution.errors }}
             </div>
+        </div>
+
+        <div class="form-field">
+            <span class="form-field__label">Signature du délégué</span>
+            {% if signatures %}
+                <p class="form-field__help">Imprimée sur le contrat au-dessus du nom du délégué.</p>
+                {% with choisie=form.signature.value|stringformat:"s" %}
+                <div class="choix-signature">
+                    <label class="choix-signature__option">
+                        <input type="radio" name="{{ form.signature.html_name }}" value="" {% if not choisie or choisie == "None" %}checked{% endif %}>
+                        <span class="choix-signature__vignette choix-signature__vignette--vide">Sans signature<br><small>(à signer à la main)</small></span>
+                    </label>
+                    {% for image in signatures %}
+                        <label class="choix-signature__option">
+                            <input type="radio" name="{{ form.signature.html_name }}" value="{{ image.pk }}" {% if choisie == image.pk|stringformat:"s" %}checked{% endif %}>
+                            <span class="choix-signature__vignette">
+                                {% image image max-220x90 format-png %}
+                                <small>{{ image.title }}</small>
+                            </span>
+                        </label>
+                    {% endfor %}
+                </div>
+                {% endwith %}
+                {{ form.signature.errors }}
+            {% else %}
+                <p class="form-field__help">
+                    Aucune signature disponible. Pour en proposer une, ajoutez l'image de la
+                    signature dans l'admin Wagtail (menu <b>Images</b>), dans une collection nommée
+                    <b>« Signature »</b>. Le contrat sera sinon généré sans signature, à signer à la main.
+                </p>
+            {% endif %}
         </div>
 
         <button type="submit" class="btn btn--primary">

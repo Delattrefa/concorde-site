@@ -38,6 +38,7 @@ urlpatterns = [
     # --- Contrat-type : articles et annexes (administrateurs) ---------------
     path("contrat-type/", views.modele_contrat, name="modele_contrat"),
     path("contrat-type/apercu/", views.apercu_modele_contrat, name="modele_contrat_apercu"),
+    path("contrat-type/mise-en-page/", views.mise_en_page_contrat, name="mise_en_page_contrat"),
     path("contrat-type/article/ajouter/", views.ArticleContratCreateView.as_view(), name="article_contrat_ajouter"),
     path("contrat-type/article/<int:pk>/modifier/", views.ArticleContratUpdateView.as_view(), name="article_contrat_modifier"),
     path("contrat-type/article/<int:pk>/supprimer/", views.ArticleContratDeleteView.as_view(), name="article_contrat_supprimer"),

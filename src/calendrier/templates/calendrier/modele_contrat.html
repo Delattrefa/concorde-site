@@ -37,6 +37,7 @@
 
     <p>
         <a class="btn btn--secondary" href="{% url 'calendrier:modele_contrat_apercu' %}" target="_blank">Aperçu du contrat-type (PDF)</a>
+        <a class="btn btn--secondary" href="{% url 'calendrier:mise_en_page_contrat' %}{% if reservation_retour %}?reservation={{ reservation_retour.pk }}{% endif %}">Mise en page : image d'en-tête</a>
     </p>
 
     <h2>Articles</h2>
