@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags %}
+
+{% block title %}Ajouter une vidéo — {{ album.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'media_gallery/css/media_gallery.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <p class="breadcrumb"><a href="{% pageurl album %}">← Retour à l'album</a></p>
+        <h1>Ajouter une vidéo</h1>
+        <p class="page-header__intro">
+            Album : <strong>{{ album.title }}</strong> — {{ album.videos.count }} vidéo{{ album.videos.count|pluralize }} actuellement.
+        </p>
+    </div>
+</section>
+
+<section class="galerie-form wrap">
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="message message--{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-field">
+            {{ form.url.label_tag }}
+            {{ form.url }}
+            {{ form.url.errors }}
+            <p class="form-field__help">
+                Copiez l'adresse de la vidéo depuis la barre d'adresse ou le bouton « Partager » de la
+                plateforme : YouTube, Vimeo, Facebook, Dailymotion, Instagram ou TikTok.
+                La vidéo doit être publique.
+            </p>
+        </div>
+
+        <div class="form-field">
+            {{ form.titre.label_tag }}
+            {{ form.titre }}
+            {{ form.titre.errors }}
+        </div>
+
+        <button type="submit" class="btn btn--primary">Ajouter la vidéo</button>
+        <button type="submit" name="encore" value="1" class="btn btn--secondary">Ajouter et en ajouter une autre</button>
+    </form>
+
+    <p class="galerie-form__note">
+        Pour choisir une vignette personnalisée ou réordonner les vidéos, modifiez l'album dans l'admin Wagtail.
+    </p>
+</section>
+{% endblock %}

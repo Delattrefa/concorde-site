@@ -72,6 +72,7 @@
                 enregistrerChoix({ externes: true });
                 activerContenus();
                 fermerBanniere();
+                signalerChoix({ externes: true });
             });
 
             bloc.appendChild(texte);
@@ -110,9 +111,14 @@
         boutonPersonnaliser.setAttribute("aria-expanded", visible ? "true" : "false");
     }
 
+    function signalerChoix(choix) {
+        document.dispatchEvent(new CustomEvent("concorde:consentement", { detail: choix }));
+    }
+
     function appliquer(choix) {
         var avant = lireChoix();
         enregistrerChoix(choix);
+        signalerChoix(choix);
         fermerBanniere();
         if (choix.externes) {
             activerContenus();
@@ -151,4 +157,18 @@
     } else {
         afficherMessagesBlocage();
     }
+    /* ---------- API pour les autres scripts (ex. visionneuse de la galerie) ---------- */
+    window.ConcordeConsentement = {
+        externesAcceptes: function () {
+            var c = lireChoix();
+            return !!(c && c.externes);
+        },
+        accepterExternes: function () {
+            enregistrerChoix({ externes: true });
+            activerContenus();
+            fermerBanniere();
+            signalerChoix({ externes: true });
+        },
+        ouvrirReglages: function () { ouvrirBanniere(true); }
+    };
 })();

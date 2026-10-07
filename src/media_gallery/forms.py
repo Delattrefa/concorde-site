@@ -46,3 +46,26 @@ class AjoutPhotosForm(forms.Form):
         label="Photos à ajouter",
         help_text="Vous pouvez sélectionner plusieurs fichiers à la fois (Ctrl/Cmd + clic, ou glisser-déposer).",
     )
+
+
+class AjoutVideoForm(forms.Form):
+    """Ajout rapide d'une vidéo (lien YouTube, Facebook...) à un album."""
+
+    url = forms.URLField(
+        label="Lien de la vidéo",
+        max_length=500,
+        assume_scheme="https",
+        widget=forms.URLInput(attrs={"placeholder": "https://www.youtube.com/watch?v=…"}),
+    )
+    titre = forms.CharField(label="Titre (facultatif)", max_length=255, required=False)
+
+    def clean_url(self):
+        from .videos import PLATEFORMES, analyser_video
+
+        url = self.cleaned_data["url"]
+        if not analyser_video(url):
+            raise forms.ValidationError(
+                "Lien non reconnu. Plateformes acceptées : " + ", ".join(PLATEFORMES)
+                + ". Utilisez l'adresse de la vidéo elle-même."
+            )
+        return url

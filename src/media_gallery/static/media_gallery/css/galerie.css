@@ -1,0 +1,202 @@
+/* =========================================================
+   Galerie interactive (page Médias et albums)
+   ========================================================= */
+.visually-hidden {
+    position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ---------- Page Médias : liste des albums ---------- */
+.galerie-albums { padding-top: 28px; padding-bottom: 80px; }
+.galerie-annees { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 26px; }
+.galerie-annees__lien {
+    padding: 7px 16px; border-radius: 20px; background: #f1e9e2; color: #4a3d3d;
+    text-decoration: none; font-size: .92rem; transition: background .2s ease;
+}
+.galerie-annees__lien:hover { background: #e6d8cc; }
+.galerie-annees__lien.est-actif { background: var(--color-primary, #7a1f2b); color: #fff; }
+
+.galerie-albums__grille {
+    display: grid; gap: 26px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+}
+.galerie-album {
+    display: flex; flex-direction: column; background: #fff; border-radius: 8px; overflow: hidden;
+    color: inherit; text-decoration: none; box-shadow: 0 6px 20px rgba(0, 0, 0, .07);
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+.galerie-album:hover, .galerie-album:focus-visible {
+    transform: translateY(-4px); box-shadow: 0 14px 32px rgba(0, 0, 0, .13);
+}
+.galerie-album__image { position: relative; aspect-ratio: 4 / 3; background: #efe6de; overflow: hidden; }
+.galerie-album__image img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
+.galerie-album:hover .galerie-album__image img { transform: scale(1.04); }
+.galerie-album__vide { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2.6rem; opacity: .5; }
+.galerie-album__badge-video {
+    position: absolute; top: 10px; right: 10px; width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: .8rem;
+    background: rgba(0, 0, 0, .65); color: #fff;
+}
+.galerie-album__texte { padding: 16px 18px 18px; }
+.galerie-album__texte h2 { margin: 0 0 6px; font-size: 1.2rem; color: var(--color-primary-dark, #4a1018); }
+.galerie-album__infos { margin: 0; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: .86rem; color: #7a6d6d; }
+
+/* ---------- Album : en-tête et navigation entre albums ---------- */
+.galerie-entete__infos { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 4px 0 0; color: #7a6d6d; font-size: .95rem; }
+.galerie-entete__infos > * + *::before { content: "·"; margin-right: 18px; margin-left: -12px; }
+.galerie-entete__actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+
+.galerie-nav-albums {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 16px;
+    margin: 10px 0 26px; padding: 14px 18px; background: #fff; border: 1px solid #ece2d8; border-radius: 8px;
+}
+.galerie-nav-albums__cote--droite { justify-self: end; text-align: right; }
+.galerie-nav-albums__lien {
+    display: inline-flex; align-items: center; gap: 10px; color: var(--color-primary, #7a1f2b);
+    text-decoration: none; font-weight: 600; line-height: 1.25;
+}
+.galerie-nav-albums__lien small { display: block; font-weight: 400; color: #8a7a7a; font-size: .78rem; }
+.galerie-nav-albums__lien:hover span:not(.galerie-nav-albums__fleche) { text-decoration: underline; }
+.galerie-nav-albums__fleche { font-size: 1.4rem; }
+.galerie-nav-albums__centre { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.galerie-nav-albums__choix { max-width: 260px; padding: 7px 10px; border: 1px solid #d9cbbf; border-radius: 6px; background: #fff; font: inherit; font-size: .92rem; }
+.galerie-nav-albums__tous { font-size: .82rem; color: #7a6d6d; }
+
+/* ---------- Album : grilles de photos et de vidéos ---------- */
+.galerie { padding-bottom: 20px; }
+.galerie__section + .galerie__section { margin-top: 40px; }
+.galerie__titre-section { font-size: 1.3rem; margin: 0 0 16px; color: var(--color-primary-dark, #4a1018); }
+.galerie__grille {
+    display: grid; gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+}
+.galerie__grille--videos { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 18px; }
+.galerie__vide { padding: 40px 0; color: #7a6d6d; }
+
+.galerie-element {
+    position: relative; display: block; width: 100%; padding: 0; border: 0; cursor: zoom-in;
+    aspect-ratio: 5 / 4; overflow: hidden; border-radius: 6px; background: #efe6de;
+}
+.galerie-element--video { aspect-ratio: 16 / 9; cursor: pointer; }
+.galerie-element img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .45s ease, filter .3s ease; }
+.galerie-element:hover img, .galerie-element:focus-visible img { transform: scale(1.05); filter: brightness(.9); }
+.galerie-element:focus-visible { outline: 3px solid var(--color-accent, #d4a72c); outline-offset: 2px; }
+.galerie-element__legende {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 12px 10px; text-align: left;
+    color: #fff; font-size: .85rem; line-height: 1.3;
+    background: linear-gradient(transparent, rgba(0, 0, 0, .72));
+    opacity: 0; transform: translateY(6px); transition: opacity .25s ease, transform .25s ease;
+}
+.galerie-element:hover .galerie-element__legende, .galerie-element:focus-visible .galerie-element__legende,
+.galerie-element--video .galerie-element__legende { opacity: 1; transform: none; }
+
+.galerie-element__fond-video {
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 30% 20%, #a3394a, #7a1f2b 45%, #3d0d15);
+}
+.galerie-element__fond-video[data-plateforme="YouTube"] { background: radial-gradient(circle at 30% 20%, #b3393a, #7a1f2b 50%, #2b080d); }
+.galerie-element__fond-video[data-plateforme="Facebook"] { background: radial-gradient(circle at 30% 20%, #4d6fae, #2a3f6e 50%, #121c33); }
+.galerie-element__fond-video[data-plateforme="Vimeo"] { background: radial-gradient(circle at 30% 20%, #3a95b3, #1f5d73 50%, #0c2731); }
+.galerie-element__lecture {
+    position: absolute; top: 50%; left: 50%; width: 62px; height: 62px; margin: -31px 0 0 -31px;
+    display: flex; align-items: center; justify-content: center; padding-left: 4px;
+    border-radius: 50%; background: rgba(255, 255, 255, .92); color: var(--color-primary, #7a1f2b);
+    font-size: 1.4rem; box-shadow: 0 6px 18px rgba(0, 0, 0, .3); transition: transform .25s ease;
+}
+.galerie-element--video:hover .galerie-element__lecture { transform: scale(1.1); }
+.galerie-element__plateforme {
+    position: absolute; top: 10px; left: 10px; padding: 3px 9px; border-radius: 12px;
+    background: rgba(0, 0, 0, .6); color: #fff; font-size: .72rem; letter-spacing: .03em;
+}
+
+/* ---------- Visionneuse plein écran ---------- */
+html.visionneuse-ouverte, html.visionneuse-ouverte body { overflow: hidden; }
+.visionneuse {
+    position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column;
+    background: rgba(12, 8, 9, .985); color: #f4ecec;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    animation: visionneuse-apparition .2s ease;
+}
+.visionneuse[hidden] { display: none; }
+@keyframes visionneuse-apparition { from { opacity: 0; } to { opacity: 1; } }
+
+.visionneuse__barre { display: flex; align-items: center; gap: 16px; padding: 10px 14px 6px 20px; }
+.visionneuse__compteur { font-variant-numeric: tabular-nums; font-size: .92rem; opacity: .85; }
+.visionneuse__album { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .65; font-size: .92rem; }
+.visionneuse__bouton {
+    display: flex; align-items: center; justify-content: center; border: 0; cursor: pointer;
+    background: rgba(255, 255, 255, .08); color: #fff; border-radius: 50%; transition: background .2s ease;
+}
+.visionneuse__bouton:hover, .visionneuse__bouton:focus-visible { background: rgba(255, 255, 255, .22); outline: none; }
+.visionneuse__fermer { width: 44px; height: 44px; font-size: 1.2rem; }
+
+.visionneuse__corps {
+    flex: 1; min-height: 0; display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px;
+    align-items: center; gap: 8px; padding: 0 8px;
+}
+.visionneuse__fleche { width: 52px; height: 52px; font-size: 2.2rem; line-height: 1; padding-bottom: 4px; justify-self: center; }
+.visionneuse__scene {
+    position: relative; height: 100%; min-height: 0; display: flex; align-items: center; justify-content: center;
+}
+.visionneuse__photo {
+    max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain;
+    border-radius: 2px; box-shadow: 0 10px 40px rgba(0, 0, 0, .5); animation: visionneuse-apparition .25s ease;
+}
+.visionneuse__scene.est-en-chargement::after {
+    content: ""; position: absolute; width: 38px; height: 38px; border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, .25); border-top-color: #fff; animation: visionneuse-rotation .8s linear infinite;
+}
+@keyframes visionneuse-rotation { to { transform: rotate(360deg); } }
+
+.visionneuse__video { position: relative; width: 100%; max-height: 100%; background: #000; border-radius: 4px; overflow: hidden; }
+.visionneuse__video--paysage { aspect-ratio: 16 / 9; max-width: min(100%, calc((100vh - 230px) * 16 / 9)); }
+.visionneuse__video--portrait { aspect-ratio: 9 / 16; height: 100%; width: auto; max-width: 100%; }
+.visionneuse__video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.visionneuse__consentement {
+    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; padding: 24px; text-align: center; background: linear-gradient(135deg, #3d0d15, #1a0a0d);
+}
+.visionneuse__consentement p { max-width: 440px; margin: 0; }
+.visionneuse__consentement a { color: #f0d9a0; font-size: .9rem; }
+
+.visionneuse__legende { margin: 0; padding: 10px 20px 4px; text-align: center; font-size: .95rem; min-height: 1.5em; }
+.visionneuse__legende[hidden] { display: block; visibility: hidden; }
+
+.visionneuse__miniatures {
+    display: flex; gap: 6px; padding: 8px 16px 14px; overflow-x: auto; scrollbar-width: thin;
+    scroll-snap-type: x proximity; justify-content: safe center;
+}
+.visionneuse__miniature {
+    flex: 0 0 auto; width: 64px; height: 48px; padding: 0; border: 2px solid transparent; border-radius: 4px;
+    overflow: hidden; cursor: pointer; background: #2a2224; color: #fff; font-size: .9rem; opacity: .55;
+    scroll-snap-align: center; transition: opacity .2s ease, border-color .2s ease;
+}
+.visionneuse__miniature img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.visionneuse__miniature--video { background: #5a1621; }
+.visionneuse__miniature:hover { opacity: .85; }
+.visionneuse__miniature.est-active { opacity: 1; border-color: var(--color-accent, #d4a72c); }
+
+/* ---------- Tablettes et smartphones ---------- */
+@media (max-width: 760px) {
+    .galerie-nav-albums { grid-template-columns: 1fr 1fr; padding: 12px; }
+    .galerie-nav-albums__centre { grid-column: 1 / -1; grid-row: 1; }
+    .galerie-nav-albums__choix { max-width: 100%; width: 100%; }
+    .galerie-nav-albums__lien { font-size: .9rem; }
+    .galerie__grille { grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr)); gap: 8px; }
+    .galerie__grille.galerie__grille--videos { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+
+    .visionneuse__corps { grid-template-columns: minmax(0, 1fr); padding: 0; }
+    .visionneuse__fleche {
+        position: absolute; top: 50%; z-index: 2; width: 42px; height: 42px; margin-top: -21px;
+        background: rgba(0, 0, 0, .45); font-size: 1.8rem;
+    }
+    .visionneuse__fleche[data-action="precedent"] { left: 6px; }
+    .visionneuse__fleche[data-action="suivant"] { right: 6px; }
+    .visionneuse__corps { position: relative; }
+    .visionneuse__video--paysage { max-width: 100%; }
+    .visionneuse__miniature { width: 52px; height: 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .visionneuse, .visionneuse__photo, .galerie-element img, .galerie-album, .galerie-album__image img { animation: none; transition: none; }
+}

@@ -1,5 +1,9 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags wagtailimages_tags %}
+{% load static wagtailcore_tags wagtailimages_tags %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'media_gallery/css/galerie.css' %}">
+{% endblock %}
 
 {% block content %}
 <section class="page-header fade-target">
@@ -9,20 +13,42 @@
     </div>
 </section>
 
-<section class="album-grid wrap fade-target">
-    {% for album in albums %}
-        <a class="album-card fade-up" href="{% pageurl album %}">
-            {% if album.cover_image %}
-                {% image album.cover_image fill-500x400 as cover %}
-                <img src="{{ cover.url }}" alt="{{ album.title }}" loading="lazy">
-            {% endif %}
-            <div class="album-card__caption">
-                <h2>{{ album.title }}</h2>
-                {% if album.date %}<time>{{ album.date|date:"d F Y" }}</time>{% endif %}
-            </div>
-        </a>
-    {% empty %}
-        <p>Aucun album n'est publié pour le moment.</p>
-    {% endfor %}
+<section class="galerie-albums wrap">
+    {% if annees|length > 1 %}
+        <nav class="galerie-annees" aria-label="Filtrer les albums par année">
+            <a href="{% pageurl page %}" class="galerie-annees__lien{% if not annee %} est-actif{% endif %}">Tous</a>
+            {% for a in annees %}
+                <a href="{% pageurl page %}?annee={{ a }}" class="galerie-annees__lien{% if annee == a %} est-actif{% endif %}">{{ a }}</a>
+            {% endfor %}
+        </nav>
+    {% endif %}
+
+    <div class="galerie-albums__grille">
+        {% for album in albums %}
+            {% with nb_photos=album.gallery_images.all|length nb_videos=album.videos.all|length couverture=album.couverture %}
+            <a class="galerie-album fade-up" href="{% pageurl album %}">
+                <div class="galerie-album__image">
+                    {% if couverture %}
+                        {% image couverture fill-600x450 loading="lazy" alt="" %}
+                    {% else %}
+                        <span class="galerie-album__vide" aria-hidden="true">📷</span>
+                    {% endif %}
+                    {% if nb_videos %}<span class="galerie-album__badge-video" title="Contient des vidéos">▶</span>{% endif %}
+                </div>
+                <div class="galerie-album__texte">
+                    <h2>{{ album.title }}</h2>
+                    <p class="galerie-album__infos">
+                        {% if album.date %}<time datetime="{{ album.date|date:'Y-m-d' }}">{{ album.date|date:"d F Y" }}</time>{% endif %}
+                        <span>
+                            {% if nb_photos %}{{ nb_photos }} photo{{ nb_photos|pluralize }}{% endif %}{% if nb_photos and nb_videos %} · {% endif %}{% if nb_videos %}{{ nb_videos }} vidéo{{ nb_videos|pluralize }}{% endif %}
+                        </span>
+                    </p>
+                </div>
+            </a>
+            {% endwith %}
+        {% empty %}
+            <p>Aucun album n'est publié{% if annee %} pour {{ annee }}{% endif %} pour le moment.</p>
+        {% endfor %}
+    </div>
 </section>
 {% endblock %}

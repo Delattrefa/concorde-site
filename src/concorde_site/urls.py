@@ -53,6 +53,7 @@ urlpatterns = [
     # Ajout de plusieurs photos à la fois dans un album (administrateurs).
     # Même logique de chemin distinct de l'arborescence Wagtail que ci-dessus.
     path("galerie/<int:album_id>/ajouter-photos/", media_gallery_views.ajouter_photos, name="galerie_ajouter_photos"),
+    path("galerie/<int:album_id>/ajouter-video/", media_gallery_views.ajouter_video, name="galerie_ajouter_video"),
 
     # Connexion / déconnexion (nécessaires pour ajouter une activité).
     # Utilise les vues d'authentification standard de Django avec nos

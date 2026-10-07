@@ -1,0 +1,33 @@
+{% load wagtailcore_tags %}
+{% comment %}Navigation entre les albums (en haut et en bas de chaque album).{% endcomment %}
+{% if tous_les_albums|length > 1 %}
+<nav class="galerie-nav-albums" aria-label="Navigation entre les albums">
+    <div class="galerie-nav-albums__cote">
+        {% if album_precedent %}
+            <a class="galerie-nav-albums__lien" href="{% pageurl album_precedent %}" rel="prev">
+                <span class="galerie-nav-albums__fleche" aria-hidden="true">←</span>
+                <span><small>Album plus récent</small>{{ album_precedent.title }}</span>
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="galerie-nav-albums__centre">
+        <label class="visually-hidden" for="choix-album-{{ emplacement }}">Aller à l'album</label>
+        <select id="choix-album-{{ emplacement }}" class="galerie-nav-albums__choix" data-aller-album>
+            {% for a in tous_les_albums %}
+                <option value="{% pageurl a %}" {% if a.pk == page.pk %}selected{% endif %}>{{ a.title }}{% if a.date %} ({{ a.date|date:"m/Y" }}){% endif %}</option>
+            {% endfor %}
+        </select>
+        <a class="galerie-nav-albums__tous" href="{% pageurl page.get_parent %}">Tous les albums ({{ tous_les_albums|length }})</a>
+    </div>
+
+    <div class="galerie-nav-albums__cote galerie-nav-albums__cote--droite">
+        {% if album_suivant %}
+            <a class="galerie-nav-albums__lien" href="{% pageurl album_suivant %}" rel="next">
+                <span><small>Album plus ancien</small>{{ album_suivant.title }}</span>
+                <span class="galerie-nav-albums__fleche" aria-hidden="true">→</span>
+            </a>
+        {% endif %}
+    </div>
+</nav>
+{% endif %}

@@ -28,3 +28,8 @@
 .galerie-form .form-field__help { font-size: .85rem; color: #8a7a7a; margin: 8px 0 0; }
 
 .galerie-form__note { margin-top: 24px; font-size: .85rem; color: #8a7a7a; }
+
+.galerie-form input[type="url"], .galerie-form input[type="text"] {
+    width: 100%; padding: 10px 12px; border: 1px solid #d9cbbf; border-radius: 4px; font: inherit; background: #fff;
+}
+.galerie-form .btn + .btn { margin-left: 8px; }

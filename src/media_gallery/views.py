@@ -10,12 +10,23 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from wagtail.images.models import Image
 
-from .forms import AjoutPhotosForm
-from .models import GalleryAlbum, GalleryImage
+from .forms import AjoutPhotosForm, AjoutVideoForm
+from .models import GalleryAlbum, GalleryImage, GalleryVideo
 
 
 def _est_administrateur(user):
     return user.is_authenticated and user.is_staff
+
+
+def _enregistrer_revision(album_pk, utilisateur):
+    """Crée une révision Wagtail de l'album à jour (photos et vidéos ajoutées
+    comprises) et la publie si l'album est en ligne. Sans cela, une
+    modification ultérieure dans l'admin Wagtail repartirait de l'ancienne
+    révision et ferait disparaître les ajouts."""
+    album = GalleryAlbum.objects.get(pk=album_pk)
+    revision = album.save_revision(user=utilisateur, log_action=True)
+    if album.live:
+        revision.publish(user=utilisateur)
 
 
 @user_passes_test(_est_administrateur, login_url="login")
@@ -45,6 +56,8 @@ def ajouter_photos(request, album_id):
                     sort_order=ordre_depart + index,
                 )
 
+            _enregistrer_revision(album.pk, request.user)
+
             messages.success(
                 request,
                 f"{len(fichiers)} photo(s) ajoutée(s) à l'album « {album.title} ».",
@@ -58,3 +71,28 @@ def ajouter_photos(request, album_id):
         "media_gallery/ajouter_photos.html",
         {"form": form, "album": album},
     )
+
+
+@user_passes_test(_est_administrateur, login_url="login")
+def ajouter_video(request, album_id):
+    """Ajout rapide d'une vidéo (lien YouTube, Facebook...) à un album."""
+    album = get_object_or_404(GalleryAlbum, pk=album_id)
+
+    if request.method == "POST":
+        form = AjoutVideoForm(request.POST)
+        if form.is_valid():
+            GalleryVideo.objects.create(
+                page=album,
+                url=form.cleaned_data["url"],
+                titre=form.cleaned_data["titre"],
+                sort_order=album.videos.count(),
+            )
+            _enregistrer_revision(album.pk, request.user)
+            messages.success(request, f"La vidéo a été ajoutée à l'album « {album.title} ».")
+            if request.POST.get("encore"):
+                return redirect("galerie_ajouter_video", album_id=album.pk)
+            return redirect(album.url)
+    else:
+        form = AjoutVideoForm()
+
+    return render(request, "media_gallery/ajouter_video.html", {"form": form, "album": album})

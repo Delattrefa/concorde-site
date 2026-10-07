@@ -1,38 +1,118 @@
 {% extends "base.html" %}
 {% load wagtailcore_tags wagtailimages_tags static %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'media_gallery/css/galerie.css' %}">
+{% endblock %}
+
 {% block content %}
 <section class="page-header fade-target">
     <div class="wrap">
         <p class="breadcrumb"><a href="{% pageurl page.get_parent %}">← Médias</a></p>
         <h1>{{ page.title }}</h1>
-        {% if page.date %}<time>{{ page.date|date:"d F Y" }}</time>{% endif %}
+        <p class="galerie-entete__infos">
+            {% if page.date %}<time datetime="{{ page.date|date:'Y-m-d' }}">{{ page.date|date:"d F Y" }}</time>{% endif %}
+            {% if photos %}<span>{{ photos|length }} photo{{ photos|length|pluralize }}</span>{% endif %}
+            {% if videos %}<span>{{ videos|length }} vidéo{{ videos|length|pluralize }}</span>{% endif %}
+        </p>
         {% if page.description %}<div class="page-header__intro">{{ page.description|richtext }}</div>{% endif %}
         {% if user.is_staff %}
-            <a class="btn btn--primary" href="{% url 'galerie_ajouter_photos' page.pk %}">+ Ajouter des photos</a>
+            <p class="galerie-entete__actions">
+                <a class="btn btn--primary" href="{% url 'galerie_ajouter_photos' page.pk %}">+ Ajouter des photos</a>
+                <a class="btn btn--secondary" href="{% url 'galerie_ajouter_video' page.pk %}">+ Ajouter une vidéo</a>
+            </p>
         {% endif %}
     </div>
 </section>
 
-<section class="photo-gallery wrap fade-target" id="lightbox-gallery">
-    {% for item in page.gallery_images.all %}
-        {% image item.image fill-500x400 as thumb %}
-        {% image item.image width-1600 as full %}
-        <button type="button" class="photo-gallery__item fade-up" data-full="{{ full.url }}" data-caption="{{ item.caption }}">
-            <img src="{{ thumb.url }}" alt="{{ item.caption|default:page.title }}" loading="lazy">
-        </button>
-    {% empty %}
-        <p>Aucune photo n'a encore été ajoutée à cet album.</p>
-    {% endfor %}
-</section>
+<div class="wrap">
+    {% include "media_gallery/_navigation_albums.html" with emplacement="haut" %}
+</div>
 
-<div class="lightbox" id="lightbox" aria-hidden="true">
-    <button class="lightbox__close" aria-label="Fermer">&times;</button>
-    <img class="lightbox__image" src="" alt="">
-    <p class="lightbox__caption"></p>
+<div class="galerie wrap" data-galerie data-titre-album="{{ page.title }}">
+
+    {% if videos %}
+        <section class="galerie__section" aria-labelledby="titre-videos">
+            <h2 id="titre-videos" class="galerie__titre-section">Vidéos</h2>
+            <div class="galerie__grille galerie__grille--videos">
+                {% for video in videos %}
+                    {% with infos=video.infos %}
+                    <button type="button" class="galerie-element galerie-element--video fade-up"
+                            id="video-{{ forloop.counter }}"
+                            data-type="video"
+                            data-ancre="video-{{ forloop.counter }}"
+                            data-embed="{{ infos.embed }}"
+                            data-lien="{{ infos.lien }}"
+                            data-plateforme="{{ infos.plateforme }}"
+                            data-format="{{ infos.format }}"
+                            data-legende="{{ video.titre }}"
+                            {% if video.vignette %}{% image video.vignette fill-200x150 as mini %}data-miniature="{{ mini.url }}"{% endif %}
+                            aria-label="Lire la vidéo{% if video.titre %} « {{ video.titre }} »{% endif %} ({{ infos.plateforme }})">
+                        {% if video.vignette %}
+                            {% image video.vignette fill-640x360 loading="lazy" alt="" %}
+                        {% else %}
+                            <span class="galerie-element__fond-video" data-plateforme="{{ infos.plateforme }}" aria-hidden="true"></span>
+                        {% endif %}
+                        <span class="galerie-element__lecture" aria-hidden="true">▶</span>
+                        <span class="galerie-element__plateforme">{{ infos.plateforme }}</span>
+                        {% if video.titre %}<span class="galerie-element__legende">{{ video.titre }}</span>{% endif %}
+                    </button>
+                    {% endwith %}
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+    {% if photos %}
+        <section class="galerie__section" aria-labelledby="titre-photos">
+            {% if videos %}<h2 id="titre-photos" class="galerie__titre-section">Photos</h2>{% endif %}
+            <div class="galerie__grille">
+                {% for item in photos %}
+                    {% image item.image fill-500x400 as vignette %}
+                    {% image item.image max-1600x1200 as grande %}
+                    <button type="button" class="galerie-element fade-up"
+                            id="photo-{{ forloop.counter }}"
+                            data-type="photo"
+                            data-ancre="photo-{{ forloop.counter }}"
+                            data-grande="{{ grande.url }}"
+                            data-largeur="{{ grande.width }}" data-hauteur="{{ grande.height }}"
+                            data-miniature="{{ vignette.url }}"
+                            data-legende="{{ item.caption }}"
+                            aria-label="Agrandir la photo {{ forloop.counter }}{% if item.caption %} : {{ item.caption }}{% endif %}">
+                        <img src="{{ vignette.url }}" width="{{ vignette.width }}" height="{{ vignette.height }}" alt="{{ item.caption|default:'' }}" loading="lazy">
+                        {% if item.caption %}<span class="galerie-element__legende">{{ item.caption }}</span>{% endif %}
+                    </button>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+    {% if not photos and not videos %}
+        <p class="galerie__vide">Aucune photo ni vidéo n'a encore été ajoutée à cet album.</p>
+    {% endif %}
+</div>
+
+<div class="wrap">
+    {% include "media_gallery/_navigation_albums.html" with emplacement="bas" %}
+</div>
+
+{# Visionneuse plein écran (photos et vidéos), pilotée par galerie.js #}
+<div class="visionneuse" id="visionneuse" role="dialog" aria-modal="true" aria-label="Visionneuse de l'album" hidden>
+    <div class="visionneuse__barre">
+        <span class="visionneuse__compteur" aria-live="polite"></span>
+        <span class="visionneuse__album">{{ page.title }}</span>
+        <button type="button" class="visionneuse__bouton visionneuse__fermer" data-action="fermer" aria-label="Fermer (Échap)">✕</button>
+    </div>
+    <div class="visionneuse__corps">
+        <button type="button" class="visionneuse__bouton visionneuse__fleche" data-action="precedent" aria-label="Élément précédent (←)">‹</button>
+        <div class="visionneuse__scene"></div>
+        <button type="button" class="visionneuse__bouton visionneuse__fleche" data-action="suivant" aria-label="Élément suivant (→)">›</button>
+    </div>
+    <p class="visionneuse__legende"></p>
+    <div class="visionneuse__miniatures" role="list"></div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/lightbox.js' %}" defer></script>
+<script src="{% static 'media_gallery/js/galerie.js' %}" defer></script>
 {% endblock %}
