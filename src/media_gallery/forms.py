@@ -39,13 +39,61 @@ class MultipleFileField(forms.FileField):
         return valider_un_fichier(data, initial)
 
 
+TAILLE_MAX_PHOTO = 20 * 1024 * 1024  # 20 Mo, comme la médiathèque Wagtail
+
+
+class MultipleImageField(forms.ImageField):
+    """Comme MultipleFileField, mais chaque fichier doit être une image valide
+    (vérifiée avec Pillow) de 20 Mo au maximum."""
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", MultipleFileInput(attrs={"accept": "image/jpeg,image/png,image/webp,image/gif"}))
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        fichiers = data if isinstance(data, (list, tuple)) else ([data] if data else [])
+        if not fichiers:
+            return super().clean(None, initial)
+        valides, erreurs = [], []
+        for fichier in fichiers:
+            if fichier.size > TAILLE_MAX_PHOTO:
+                erreurs.append(f"« {fichier.name} » dépasse 20 Mo.")
+                continue
+            try:
+                valides.append(super().clean(fichier, initial))
+            except forms.ValidationError:
+                erreurs.append(f"« {fichier.name} » n'est pas une image valide (JPEG, PNG, WebP ou GIF).")
+        if erreurs:
+            raise forms.ValidationError(erreurs)
+        return valides
+
+
 class AjoutPhotosForm(forms.Form):
     """Formulaire d'ajout de plusieurs photos à un album existant."""
 
-    images = MultipleFileField(
+    images = MultipleImageField(
         label="Photos à ajouter",
-        help_text="Vous pouvez sélectionner plusieurs fichiers à la fois (Ctrl/Cmd + clic, ou glisser-déposer).",
+        help_text="Sélectionnez plusieurs fichiers à la fois (Ctrl/Cmd + clic) ou glissez-les dans la zone.",
     )
+    collection = forms.ModelChoiceField(
+        label="Ranger dans la collection",
+        queryset=None,
+        required=False,
+        empty_label=None,
+        help_text="Collection de la médiathèque Wagtail où les photos seront enregistrées.",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from wagtail.models import Collection
+
+        collections = Collection.objects.all().order_by("path")
+        self.fields["collection"].queryset = collections
+        self.fields["collection"].label_from_instance = lambda c: ("— " * (c.depth - 1)) + c.name
+        # Collection « Galerie » proposée par défaut si elle existe
+        par_defaut = collections.filter(name__iexact="Galerie").first() or Collection.get_first_root_node()
+        if par_defaut:
+            self.fields["collection"].initial = par_defaut.pk
 
 
 class AjoutVideoForm(forms.Form):

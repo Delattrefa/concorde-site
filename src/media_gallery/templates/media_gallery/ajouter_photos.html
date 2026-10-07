@@ -10,7 +10,13 @@
 {% block content %}
 <section class="page-header fade-target">
     <div class="wrap">
-        <p class="breadcrumb"><a href="{% pageurl album %}">← Retour à l'album</a></p>
+        <p class="breadcrumb">
+            {% if retour_admin %}
+                <a href="{{ url_editeur }}">← Retour à l'édition de l'album (admin)</a>
+            {% else %}
+                <a href="{% pageurl album %}">← Retour à l'album</a>
+            {% endif %}
+        </p>
         <h1>Ajouter des photos</h1>
         <p class="page-header__intro">
             Album : <strong>{{ album.title }}</strong> — {{ album.gallery_images.count }} photo{{ album.gallery_images.count|pluralize }} actuellement.
@@ -27,23 +33,90 @@
         </ul>
     {% endif %}
 
-    <form method="post" enctype="multipart/form-data" novalidate>
+    <form method="post" enctype="multipart/form-data" novalidate data-envoi-photos>
         {% csrf_token %}
+        {% if retour_admin %}<input type="hidden" name="retour" value="admin">{% endif %}
         {{ form.non_field_errors }}
 
         <div class="form-field">
             {{ form.images.label_tag }}
-            {{ form.images }}
-            <p class="form-field__help">{{ form.images.help_text }}</p>
+            <div class="zone-depot" data-zone-depot>
+                {{ form.images }}
+                <p class="zone-depot__texte">
+                    <strong>Glissez vos photos ici</strong><br>
+                    ou cliquez pour les choisir (plusieurs à la fois)
+                </p>
+            </div>
+            <p class="form-field__help">{{ form.images.help_text }} JPEG, PNG, WebP ou GIF, 20 Mo maximum par photo.</p>
             {{ form.images.errors }}
+            <p class="zone-depot__resume" data-resume hidden></p>
+            <div class="zone-depot__apercus" data-apercus></div>
         </div>
 
-        <button type="submit" class="btn btn--primary">Ajouter ces photos</button>
+        <div class="form-field">
+            {{ form.collection.label_tag }}
+            {{ form.collection }}
+            <p class="form-field__help">{{ form.collection.help_text }}</p>
+        </div>
+
+        <button type="submit" class="btn btn--primary" data-bouton-envoi>Ajouter ces photos</button>
+        <p class="zone-depot__envoi" data-envoi-en-cours hidden>Envoi en cours… Ne fermez pas la page : cela peut prendre une minute pour beaucoup de photos.</p>
     </form>
 
     <p class="galerie-form__note">
-        Les légendes de chaque photo (facultatives) peuvent être ajoutées
-        ensuite depuis l'admin Wagtail, sur la fiche de l'album.
+        Les photos sont ajoutées à la fin de l'album. Les légendes (facultatives) et l'ordre
+        se modifient ensuite dans l'admin Wagtail, sur la fiche de l'album.
     </p>
 </section>
+
+<script>
+/* Aperçu des photos choisies, glisser-déposer et message pendant l'envoi */
+(function () {
+    var formulaire = document.querySelector("[data-envoi-photos]");
+    if (!formulaire) { return; }
+    var champ = formulaire.querySelector('input[type="file"]');
+    var zone = formulaire.querySelector("[data-zone-depot]");
+    var apercus = formulaire.querySelector("[data-apercus]");
+    var resume = formulaire.querySelector("[data-resume]");
+
+    function afficherApercus() {
+        apercus.innerHTML = "";
+        var fichiers = Array.prototype.slice.call(champ.files || []);
+        var total = 0;
+        fichiers.forEach(function (f) {
+            total += f.size;
+            if (!f.type || f.type.indexOf("image/") !== 0) { return; }
+            var img = document.createElement("img");
+            img.alt = f.name;
+            img.title = f.name;
+            img.src = URL.createObjectURL(f);
+            img.onload = function () { URL.revokeObjectURL(img.src); };
+            apercus.appendChild(img);
+        });
+        resume.hidden = !fichiers.length;
+        resume.textContent = fichiers.length + " photo" + (fichiers.length > 1 ? "s" : "") +
+            " sélectionnée" + (fichiers.length > 1 ? "s" : "") + " (" + (total / 1048576).toFixed(1) + " Mo)";
+        zone.classList.toggle("est-remplie", fichiers.length > 0);
+    }
+
+    champ.addEventListener("change", afficherApercus);
+    ["dragenter", "dragover"].forEach(function (evt) {
+        zone.addEventListener(evt, function (e) { e.preventDefault(); zone.classList.add("est-survolee"); });
+    });
+    ["dragleave", "drop"].forEach(function (evt) {
+        zone.addEventListener(evt, function () { zone.classList.remove("est-survolee"); });
+    });
+    zone.addEventListener("drop", function (e) {
+        e.preventDefault();
+        if (e.dataTransfer && e.dataTransfer.files.length) {
+            champ.files = e.dataTransfer.files;
+            afficherApercus();
+        }
+    });
+    formulaire.addEventListener("submit", function () {
+        formulaire.querySelector("[data-bouton-envoi]").disabled = true;
+        formulaire.querySelector("[data-envoi-en-cours]").hidden = false;
+    });
+})();
+</script>
 {% endblock %}

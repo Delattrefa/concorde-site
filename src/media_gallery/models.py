@@ -3,13 +3,43 @@ from django.db import models
 
 from modelcluster.fields import ParentalKey
 
-from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
+from django.urls import reverse
+from django.utils.html import format_html
+
+from wagtail.admin.panels import FieldPanel, HelpPanel, InlinePanel, MultipleChooserPanel
 from wagtail.fields import RichTextField
 from wagtail.models import Orderable, Page
 from wagtail.search import index
 from wagtailseo.models import SeoMixin
 
 from .videos import PLATEFORMES, analyser_video
+
+
+class EnvoiGroupePhotosPanel(HelpPanel):
+    """Bouton « Envoyer plusieurs photos » dans l'éditeur d'un album : ouvre
+    la page d'envoi groupé, puis revient à l'éditeur de l'album."""
+
+    class BoundPanel(HelpPanel.BoundPanel):
+        def __init__(self, **kwargs):
+            super().__init__(**kwargs)
+            album = self.instance
+            if album is not None and album.pk:
+                url = reverse("galerie_ajouter_photos", args=[album.pk]) + "?retour=admin"
+                self.content = format_html(
+                    '<p><a class="button button-small" href="{}">'
+                    "⬆ Envoyer plusieurs photos depuis mon ordinateur</a></p>"
+                    "<p>Sélectionnez ou glissez-déposez autant de photos que vous voulez : elles sont "
+                    "ajoutées à la fin de l'album. <strong>Enregistrez d'abord vos autres modifications</strong> "
+                    "de cette page, car vous la quittez le temps de l'envoi.</p>"
+                    "<p>Pour reprendre des photos déjà présentes dans la médiathèque, utilisez le bouton "
+                    "« Ajouter des photos » ci-dessous : plusieurs images peuvent y être cochées en une fois.</p>",
+                    url,
+                )
+            else:
+                self.content = format_html(
+                    "<p>Pour envoyer plusieurs photos d'un coup, enregistrez d'abord l'album "
+                    "(bouton « Enregistrer le brouillon ») : le bouton d'envoi groupé apparaîtra ici.</p>"
+                )
 
 
 class MediaPage(SeoMixin, Page):
@@ -79,7 +109,13 @@ class GalleryAlbum(SeoMixin, Page):
         FieldPanel("date"),
         FieldPanel("description"),
         FieldPanel("cover_image"),
-        InlinePanel("gallery_images", label="Photos de l'album"),
+        EnvoiGroupePhotosPanel(heading="Envoi groupé de photos"),
+        MultipleChooserPanel(
+            "gallery_images",
+            label="Photos de l'album",
+            chooser_field_name="image",
+            help_text="« Ajouter des photos » ouvre la médiathèque : cochez plusieurs images pour les ajouter en une fois.",
+        ),
         InlinePanel(
             "videos",
             label="Vidéos de l'album",

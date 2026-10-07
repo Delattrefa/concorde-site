@@ -6,7 +6,10 @@ gestion des réservations dans l'app 'calendrier'.
 """
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
+import os
+
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 
 from wagtail.images.models import Image
 
@@ -31,25 +34,30 @@ def _enregistrer_revision(album_pk, utilisateur):
 
 @user_passes_test(_est_administrateur, login_url="login")
 def ajouter_photos(request, album_id):
-    """Affiche et traite le formulaire d'ajout de plusieurs photos à la fois
-    dans l'album donné."""
+    """Ajout de plusieurs photos en une fois à un album. Accessible depuis
+    l'album sur le site, ou depuis l'éditeur de l'album dans l'admin Wagtail
+    (?retour=admin : on y revient après l'envoi)."""
 
     album = get_object_or_404(GalleryAlbum, pk=album_id)
+    retour_admin = request.GET.get("retour") == "admin" or request.POST.get("retour") == "admin"
+    url_editeur = reverse("wagtailadmin_pages:edit", args=[album.pk])
 
     if request.method == "POST":
         form = AjoutPhotosForm(request.POST, request.FILES)
         if form.is_valid():
             fichiers = form.cleaned_data["images"]
+            collection = form.cleaned_data.get("collection")
 
             # Les nouvelles photos viennent après celles déjà présentes
             # dans l'album, pour ne pas perturber l'ordre existant.
             ordre_depart = album.gallery_images.count()
 
             for index, fichier in enumerate(fichiers):
-                image_wagtail = Image.objects.create(
-                    title=fichier.name,
-                    file=fichier,
-                )
+                titre = os.path.splitext(fichier.name)[0].replace("_", " ").strip() or fichier.name
+                donnees = {"title": titre, "file": fichier, "uploaded_by_user": request.user}
+                if collection is not None:
+                    donnees["collection"] = collection
+                image_wagtail = Image.objects.create(**donnees)
                 GalleryImage.objects.create(
                     page=album,
                     image=image_wagtail,
@@ -62,6 +70,8 @@ def ajouter_photos(request, album_id):
                 request,
                 f"{len(fichiers)} photo(s) ajoutée(s) à l'album « {album.title} ».",
             )
+            if retour_admin:
+                return redirect(url_editeur)
             return redirect("galerie_ajouter_photos", album_id=album.pk)
     else:
         form = AjoutPhotosForm()
@@ -69,7 +79,7 @@ def ajouter_photos(request, album_id):
     return render(
         request,
         "media_gallery/ajouter_photos.html",
-        {"form": form, "album": album},
+        {"form": form, "album": album, "retour_admin": retour_admin, "url_editeur": url_editeur},
     )
 
 
