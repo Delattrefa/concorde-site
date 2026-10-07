@@ -40,6 +40,14 @@
             le {{ reservation.date_traitement|date:"d/m/Y H:i" }}</p>
     {% endif %}
 
+    {% if reservation.statut == "annulee" %}
+        <p class="calendrier-detail__annulee">
+            Cette réservation a été annulée{% if reservation.contrat and reservation.contrat.date_annulation %} le {{ reservation.contrat.date_annulation|date:"d/m/Y" }}{% endif %} :
+            la salle est de nouveau libre dans le calendrier.
+            {% if reservation.contrat %}Les remboursements éventuels se gèrent dans le <a href="{% url 'calendrier:suivi_paiements' %}?filtre=annulees">suivi des paiements</a>.{% endif %}
+        </p>
+    {% endif %}
+
     {% if reservation.statut == "validee" %}
         <h2>Contrat de location</h2>
         {% if reservation.contrat %}
@@ -67,6 +75,19 @@
                 {% csrf_token %}
                 <button type="submit" name="action" value="valider" class="btn btn--primary">Valider la réservation</button>
                 <button type="submit" name="action" value="refuser" class="btn btn--danger">Refuser la réservation</button>
+            </form>
+        {% elif reservation.statut == "validee" %}
+            <form method="post" action="{% url 'calendrier:reservation_traiter' reservation.pk %}" class="calendrier-liste__form-action"
+                  onsubmit="return confirm('Annuler cette réservation ? La salle redeviendra libre dans le calendrier.');">
+                {% csrf_token %}
+                <input type="hidden" name="suivant" value="{{ request.get_full_path }}">
+                <button type="submit" name="action" value="annuler" class="btn btn--danger">Annuler la réservation</button>
+            </form>
+        {% elif reservation.statut == "annulee" %}
+            <form method="post" action="{% url 'calendrier:reservation_traiter' reservation.pk %}" class="calendrier-liste__form-action">
+                {% csrf_token %}
+                <input type="hidden" name="suivant" value="{{ request.get_full_path }}">
+                <button type="submit" name="action" value="retablir" class="btn btn--secondary">Rétablir la réservation</button>
             </form>
         {% endif %}
         <a class="btn btn--secondary" href="{% url 'calendrier:reservation_modifier' reservation.pk %}">Modifier cette réservation</a>

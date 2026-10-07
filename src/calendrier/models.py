@@ -129,7 +129,7 @@ class Reservation(models.Model):
         (STATUT_ATTENTE, "En attente de traitement"),
         (STATUT_VALIDEE, "Validée"),
         (STATUT_REFUSEE, "Refusée"),
-        (STATUT_ANNULEE, "Annulée"),
+        (STATUT_ANNULEE, "Réservation annulée"),
     ]
 
     # Couleur affichée dans le calendrier une fois la réservation validée.

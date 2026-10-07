@@ -72,6 +72,18 @@
                             </form>
                         {% else %}
                             <a href="{% url 'calendrier:reservation_detail' reservation.pk %}" class="btn btn--secondary btn--small">Détails</a>
+                            {% if reservation.statut == "validee" or reservation.statut == "annulee" %}
+                                <form method="post" action="{% url 'calendrier:reservation_traiter' reservation.pk %}" class="calendrier-liste__form-action"
+                                      onsubmit="return confirm('{% if reservation.statut == "validee" %}Annuler la réservation de {{ reservation.prenom|escapejs }} {{ reservation.nom|escapejs }} ? La salle redeviendra libre.{% else %}Rétablir cette réservation ?{% endif %}');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="suivant" value="{{ request.get_full_path }}">
+                                    {% if reservation.statut == "validee" %}
+                                        <button type="submit" name="action" value="annuler" class="btn btn--danger btn--small">Annuler</button>
+                                    {% else %}
+                                        <button type="submit" name="action" value="retablir" class="btn btn--secondary btn--small">Rétablir</button>
+                                    {% endif %}
+                                </form>
+                            {% endif %}
                         {% endif %}
                         <a href="{% url 'calendrier:reservation_modifier' reservation.pk %}" class="btn btn--secondary btn--small">Modifier</a>
                     </td>

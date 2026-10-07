@@ -375,3 +375,10 @@
     .paiements__annulation .paiements__champ span { white-space: normal; flex: 0 0 96px; line-height: 1.2; }
     .paiements__annulation input[type="number"] { max-width: none; }
 }
+
+/* Statut « Réservation annulée » */
+.etiquette--annulee { background: #b3261e; }
+.calendrier-detail__annulee {
+    background: #fdf3f1; border-left: 4px solid #b3261e; border-radius: 4px;
+    padding: 12px 16px; margin: 18px 0;
+}

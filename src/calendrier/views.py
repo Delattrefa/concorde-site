@@ -421,15 +421,67 @@ def reservation_traiter(request, pk):
             request,
             f"La réservation de {reservation.prenom} {reservation.nom} a été refusée.",
         )
+    elif action == "annuler" and reservation.statut == Reservation.STATUT_VALIDEE:
+        # La salle redevient libre ; s'il existe un contrat, il est marqué
+        # annulé dans le suivi des paiements (remboursements à y compléter).
+        reservation.statut = Reservation.STATUT_ANNULEE
+        contrat = getattr(reservation, "contrat", None)
+        if contrat is not None and not contrat.annule:
+            contrat.annule = True
+            contrat.date_annulation = contrat.date_annulation or timezone.localdate()
+            contrat.save(update_fields=["annule", "date_annulation"])
+            messages.warning(
+                request,
+                f"La réservation de {reservation.prenom} {reservation.nom} a été annulée. "
+                "Si des montants ont été payés, complétez les remboursements dans le suivi des paiements.",
+            )
+        else:
+            messages.info(
+                request,
+                f"La réservation de {reservation.prenom} {reservation.nom} a été annulée : "
+                "la salle est de nouveau libre dans le calendrier.",
+            )
+    elif action == "retablir" and reservation.statut == Reservation.STATUT_ANNULEE:
+        conflit = Reservation.objects.filter(
+            statut=Reservation.STATUT_VALIDEE,
+            date_debut__lte=reservation.date_fin,
+            date_fin__gte=reservation.date_debut,
+        ).exclude(pk=reservation.pk).first()
+        contrat = getattr(reservation, "contrat", None)
+        if conflit:
+            messages.error(request, f"Impossible de rétablir : la salle a été réservée entre-temps ({conflit}).")
+            return redirect(_url_retour_reservation(request))
+        if contrat is not None and (contrat.loyer_rembourse or contrat.caution_rendue_annulation):
+            messages.error(
+                request,
+                "Impossible de rétablir : des remboursements d'annulation ont déjà été enregistrés "
+                "dans le suivi des paiements.",
+            )
+            return redirect(_url_retour_reservation(request))
+        reservation.statut = Reservation.STATUT_VALIDEE
+        if contrat is not None and contrat.annule:
+            contrat.annule = False
+            contrat.date_annulation = None
+            contrat.extrait_annulation = ""
+            contrat.save(update_fields=["annule", "date_annulation", "extrait_annulation"])
+        messages.success(request, f"La réservation de {reservation.prenom} {reservation.nom} a été rétablie.")
     else:
-        messages.error(request, "Action inconnue.")
-        return redirect("calendrier:reservation_liste")
+        messages.error(request, "Action impossible pour cette réservation.")
+        return redirect(_url_retour_reservation(request))
 
     reservation.traite_par = request.user
     reservation.date_traitement = timezone.now()
     reservation.save()
 
-    return redirect("calendrier:reservation_liste")
+    return redirect(_url_retour_reservation(request))
+
+
+def _url_retour_reservation(request):
+    """Revient à la page d'où vient l'action (liste ou fiche), par défaut la liste."""
+    suivant = request.POST.get("suivant", "")
+    if suivant.startswith("/") and not suivant.startswith("//"):
+        return suivant
+    return reverse("calendrier:reservation_liste")
 
 
 class ReservationDeleteView(UserPassesTestMixin, DeleteView):
