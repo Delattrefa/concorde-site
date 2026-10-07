@@ -352,3 +352,26 @@
     color: var(--color-primary, #7a1f2b);
 }
 .paiements__contrat--absent { color: #b3261e; white-space: normal; }
+
+/* Location annulée : ligne principale grisée et ligne d'annulation */
+.paiements__ligne--annulee td { background: #f4efec; color: #7a6d6d; }
+.paiements__ligne--annulee .paiements__montant { text-decoration: line-through; }
+.paiements__case--annulation { margin-top: 8px; color: #b3261e; font-weight: 600; }
+.paiements__annulation td { background: #fdf3f1; border-top: 1px dashed #e3b5ae; }
+.paiements__annulation[hidden] { display: none !important; }
+.paiements__annulation-contenu { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; }
+.paiements__annulation-titre { color: #b3261e; text-transform: uppercase; font-size: .82rem; letter-spacing: .04em; }
+.paiements__annulation .paiements__champ { margin: 0; }
+.paiements__annulation .paiements__champ span { min-width: 0; white-space: nowrap; }
+.paiements__annulation input[type="number"] { max-width: 100px; }
+
+@media (max-width: 1000px) {
+    /* La ligne d'annulation se colle sous la fiche de la location */
+    .paiements__table tr.paiements__ligne--annulee { margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+    .paiements__table tr.paiements__annulation {
+        margin-top: -1px; border-top-left-radius: 0; border-top-right-radius: 0; border-color: #e3b5ae;
+    }
+    .paiements__annulation-contenu { flex-direction: column; align-items: stretch; }
+    .paiements__annulation .paiements__champ span { white-space: normal; flex: 0 0 96px; line-height: 1.2; }
+    .paiements__annulation input[type="number"] { max-width: none; }
+}

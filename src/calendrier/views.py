@@ -678,6 +678,7 @@ FILTRES_PAIEMENTS = [
     ("a_payer", "Paiement attendu"),
     ("a_rembourser", "Caution à rembourser"),
     ("soldees", "Dossiers clôturés"),
+    ("annulees", "Locations annulées"),
 ]
 
 
@@ -707,11 +708,17 @@ def _contrats_recherches(nom, date_du, date_au):
 
 def _filtrer_statut(contrats, filtre):
     if filtre == "a_payer":
-        contrats = contrats.filter(Q(location_payee=False) | Q(caution_payee=False))
+        contrats = contrats.filter(annule=False).filter(Q(location_payee=False) | Q(caution_payee=False))
     elif filtre == "a_rembourser":
         contrats = contrats.filter(caution_payee=True, caution_remboursee=False)
     elif filtre == "soldees":
-        contrats = contrats.filter(location_payee=True, caution_payee=True, caution_remboursee=True)
+        contrats = contrats.filter(
+            Q(annule=False, location_payee=True, caution_payee=True, caution_remboursee=True)
+            | Q(annule=True, caution_payee=False)
+            | Q(annule=True, caution_remboursee=True)
+        )
+    elif filtre == "annulees":
+        contrats = contrats.filter(annule=True)
     return contrats.order_by("-reservation__date_debut", "-pk")
 
 
@@ -765,10 +772,14 @@ def suivi_paiements(request):
         formset = SuiviPaiementFormSet(queryset=contrats)
 
     # Totaux : sur la recherche en cours (nom / période), sinon sur tout.
+    loyers_payes = selection.filter(location_payee=True).aggregate(t=Sum("montant_location"))["t"] or 0
+    loyers_rembourses = selection.filter(annule=True).aggregate(t=Sum("loyer_rembourse"))["t"] or 0
     totaux = {
-        "locations_encaissees": selection.filter(location_payee=True).aggregate(t=Sum("montant_location"))["t"] or 0,
-        "locations_attendues": selection.filter(location_payee=False).aggregate(t=Sum("montant_location"))["t"] or 0,
+        # Net des loyers remboursés suite à une annulation
+        "locations_encaissees": loyers_payes - loyers_rembourses,
+        "locations_attendues": selection.filter(location_payee=False, annule=False).aggregate(t=Sum("montant_location"))["t"] or 0,
         "cautions_detenues": selection.filter(caution_payee=True, caution_remboursee=False).aggregate(t=Sum("montant_caution"))["t"] or 0,
+        "loyers_rembourses": loyers_rembourses,
     }
 
     return render(request, "calendrier/suivi_paiements.html", {

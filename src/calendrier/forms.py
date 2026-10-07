@@ -223,7 +223,11 @@ class AnnexeContratForm(forms.ModelForm):
 
 class SuiviPaiementForm(forms.ModelForm):
     """Une ligne du tableau de suivi des paiements (un contrat de location).
-    Les montants ne sont pas modifiables ici : ils proviennent du contrat."""
+    Les montants ne sont pas modifiables ici : ils proviennent du contrat.
+    En cas d'annulation, une ligne supplémentaire permet d'enregistrer la
+    date et les remboursements."""
+
+    CHAMPS_ANNULATION = ["date_annulation", "loyer_rembourse", "caution_rendue_annulation", "extrait_annulation"]
 
     class Meta:
         model = ContratLocation
@@ -235,16 +239,28 @@ class SuiviPaiementForm(forms.ModelForm):
             "extrait_paiement",
             "date_remboursement_caution",
             "extrait_remboursement",
+            "annule",
+            "date_annulation",
+            "loyer_rembourse",
+            "caution_rendue_annulation",
+            "extrait_annulation",
         ]
         widgets = {
             "date_paiement": forms.DateInput(attrs={"class": "champ-texte", "type": "date"}, format=FORMAT_DATE_HTML),
             "date_remboursement_caution": forms.DateInput(attrs={"class": "champ-texte", "type": "date"}, format=FORMAT_DATE_HTML),
             "extrait_paiement": forms.TextInput(attrs={"class": "champ-texte", "placeholder": "N° extrait"}),
             "extrait_remboursement": forms.TextInput(attrs={"class": "champ-texte", "placeholder": "N° extrait"}),
+            "annule": forms.CheckboxInput(attrs={"data-annulation-interrupteur": "1"}),
+            "date_annulation": forms.DateInput(attrs={"class": "champ-texte", "type": "date"}, format=FORMAT_DATE_HTML),
+            "loyer_rembourse": forms.NumberInput(attrs={"class": "champ-texte", "step": "0.01", "min": "0", "placeholder": "0,00"}),
+            "caution_rendue_annulation": forms.NumberInput(attrs={"class": "champ-texte", "step": "0.01", "min": "0", "placeholder": "0,00"}),
+            "extrait_annulation": forms.TextInput(attrs={"class": "champ-texte", "placeholder": "N° extrait"}),
         }
 
     def clean(self):
         donnees = super().clean()
+        contrat = self.instance
+
         if donnees.get("caution_remboursee") and not donnees.get("caution_payee"):
             self.add_error(
                 "caution_remboursee",
@@ -258,7 +274,61 @@ class SuiviPaiementForm(forms.ModelForm):
                     "date_remboursement_caution",
                     "Une caution ne peut être remboursée que si elle a été payée.",
                 )
+
+        # --- Annulation -----------------------------------------------------
+        annule = donnees.get("annule")
+        if not annule:
+            if any(donnees.get(champ) not in (None, "") for champ in self.CHAMPS_ANNULATION):
+                self.add_error("annule", "Cochez « Annulée » pour enregistrer une annulation.")
+            # Annulation retirée : la salle doit encore être libre.
+            reservation = contrat.reservation
+            if contrat.pk and contrat.annule and reservation.statut == Reservation.STATUT_ANNULEE:
+                conflit = Reservation.objects.filter(
+                    statut=Reservation.STATUT_VALIDEE,
+                    date_debut__lte=reservation.date_fin,
+                    date_fin__gte=reservation.date_debut,
+                ).exclude(pk=reservation.pk).first()
+                if conflit:
+                    self.add_error(
+                        "annule",
+                        f"Impossible de rétablir cette location : la salle a été réservée entre-temps ({conflit}).",
+                    )
+            return donnees
+
+        if not donnees.get("date_annulation"):
+            self.add_error("date_annulation", "Indiquez la date d'annulation.")
+
+        loyer = donnees.get("loyer_rembourse")
+        if loyer:
+            if not donnees.get("location_payee"):
+                self.add_error("loyer_rembourse", "Le loyer n'a pas été payé : il ne peut pas être remboursé.")
+            elif loyer > contrat.montant_location:
+                self.add_error("loyer_rembourse", f"Supérieur au loyer payé ({contrat.montant_location} €).")
+
+        caution = donnees.get("caution_rendue_annulation")
+        if caution:
+            if not donnees.get("caution_payee"):
+                self.add_error("caution_rendue_annulation", "La caution n'a pas été payée : elle ne peut pas être remboursée.")
+            elif caution > contrat.montant_caution:
+                self.add_error("caution_rendue_annulation", f"Supérieur à la caution payée ({contrat.montant_caution} €).")
+            else:
+                # Caution rendue lors de l'annulation : elle n'est plus à rembourser.
+                donnees["caution_remboursee"] = True
         return donnees
+
+    def save(self, commit=True):
+        contrat = super().save(commit=commit)
+        if commit:
+            # La réservation suit l'annulation : salle libérée dans le
+            # calendrier, ou de nouveau réservée si l'annulation est retirée.
+            reservation = contrat.reservation
+            if contrat.annule and reservation.statut != Reservation.STATUT_ANNULEE:
+                reservation.statut = Reservation.STATUT_ANNULEE
+                reservation.save(update_fields=["statut"])
+            elif not contrat.annule and reservation.statut == Reservation.STATUT_ANNULEE:
+                reservation.statut = Reservation.STATUT_VALIDEE
+                reservation.save(update_fields=["statut"])
+        return contrat
 
 
 SuiviPaiementFormSet = forms.modelformset_factory(

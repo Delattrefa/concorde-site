@@ -64,6 +64,9 @@
         <div><span>Locations encaissées</span><strong>{{ totaux.locations_encaissees|floatformat:2 }} €</strong></div>
         <div><span>Locations à encaisser</span><strong>{{ totaux.locations_attendues|floatformat:2 }} €</strong></div>
         <div><span>Cautions à rembourser</span><strong>{{ totaux.cautions_detenues|floatformat:2 }} €</strong></div>
+        {% if totaux.loyers_rembourses %}
+            <div><span>Loyers remboursés (annulations)</span><strong>{{ totaux.loyers_rembourses|floatformat:2 }} €</strong></div>
+        {% endif %}
     </div>
 
     <div class="calendrier-liste__filtres">
@@ -96,7 +99,7 @@
             <tbody>
                 {% for form in formset %}
                     {% with contrat=form.instance reservation=form.instance.reservation %}
-                    <tr class="{% if contrat.est_solde %}paiements__ligne--soldee{% elif form.errors %}paiements__ligne--erreur{% endif %}">
+                    <tr class="paiements__ligne{% if form.errors %} paiements__ligne--erreur{% elif contrat.annule %} paiements__ligne--annulee{% elif contrat.est_solde %} paiements__ligne--soldee{% endif %}" data-ligne="{{ form.prefix }}">
                         <td data-label="Locataire">
                             {{ form.id }}
                             <a href="{% url 'calendrier:reservation_detail' reservation.pk %}"><strong>{{ reservation.nom }}</strong> {{ reservation.prenom }}</a>
@@ -105,6 +108,8 @@
                             {% else %}
                                 <a class="paiements__contrat paiements__contrat--absent" href="{% url 'calendrier:reservation_contrat' reservation.pk %}" title="Le fichier du contrat est introuvable : le régénérer">⚠ Contrat introuvable — régénérer</a>
                             {% endif %}
+                            <label class="paiements__case paiements__case--annulation">{{ form.annule }} Annulée</label>
+                            {% if form.annule.errors %}<div class="paiements__erreur">{{ form.annule.errors|join:" " }}</div>{% endif %}
                             {% if form.non_field_errors %}<div class="paiements__erreur">{{ form.non_field_errors|join:" " }}</div>{% endif %}
                         </td>
                         <td data-label="Du / au">
@@ -131,6 +136,22 @@
                             {% if form.date_remboursement_caution.errors %}<div class="paiements__erreur">{{ form.date_remboursement_caution.errors|join:" " }}</div>{% endif %}
                         </td>
                     </tr>
+                    {% with annulation_visible=form.annule.value %}
+                    <tr class="paiements__annulation{% if form.errors %} paiements__ligne--erreur{% endif %}" data-annulation="{{ form.prefix }}" {% if not annulation_visible %}hidden{% endif %}>
+                        <td colspan="6" data-label="Annulation">
+                            <div class="paiements__annulation-contenu">
+                                <strong class="paiements__annulation-titre">Contrat annulé</strong>
+                                <label class="paiements__champ"><span>Date</span>{{ form.date_annulation }}</label>
+                                <label class="paiements__champ"><span>Loyer remboursé</span>{{ form.loyer_rembourse }} €</label>
+                                <label class="paiements__champ"><span>Caution remboursée</span>{{ form.caution_rendue_annulation }} €</label>
+                                <label class="paiements__champ"><span>Extrait</span>{{ form.extrait_annulation }}</label>
+                            </div>
+                            {% for champ in form %}{% if champ.name in "date_annulation loyer_rembourse caution_rendue_annulation extrait_annulation" and champ.errors %}
+                                <div class="paiements__erreur">{{ champ.label }} : {{ champ.errors|join:" " }}</div>
+                            {% endif %}{% endfor %}
+                        </td>
+                    </tr>
+                    {% endwith %}
                     {% endwith %}
                 {% endfor %}
             </tbody>
@@ -148,4 +169,21 @@
         {% endif %}
     {% endif %}
 </section>
+<script>
+/* Affiche la ligne « Contrat annulé » dès que la case « Annulée » est cochée. */
+document.querySelectorAll("[data-annulation-interrupteur]").forEach(function (caseAnnulee) {
+    var ligne = caseAnnulee.closest("tr");
+    var annulation = document.querySelector('[data-annulation="' + ligne.dataset.ligne + '"]');
+    if (!annulation) { return; }
+    caseAnnulee.addEventListener("change", function () {
+        annulation.hidden = !caseAnnulee.checked;
+        ligne.classList.toggle("paiements__ligne--annulee", caseAnnulee.checked);
+        if (caseAnnulee.checked) {
+            var date = annulation.querySelector('input[type="date"]');
+            if (date && !date.value) { date.valueAsDate = new Date(); }
+            date && date.focus();
+        }
+    });
+});
+</script>
 {% endblock %}

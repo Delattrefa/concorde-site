@@ -124,10 +124,12 @@ class Reservation(models.Model):
     STATUT_ATTENTE = "attente"
     STATUT_VALIDEE = "validee"
     STATUT_REFUSEE = "refusee"
+    STATUT_ANNULEE = "annulee"
     STATUT_CHOICES = [
         (STATUT_ATTENTE, "En attente de traitement"),
         (STATUT_VALIDEE, "Validée"),
         (STATUT_REFUSEE, "Refusée"),
+        (STATUT_ANNULEE, "Annulée"),
     ]
 
     # Couleur affichée dans le calendrier une fois la réservation validée.
@@ -251,6 +253,23 @@ class ContratLocation(models.Model):
         "N° d'extrait (remboursement)", max_length=30, blank=True
     )
 
+    # --- Annulation de la location --------------------------------------
+    # Cocher « annulé » passe la réservation au statut « Annulée » (la salle
+    # redevient libre dans le calendrier) ; l'historique des paiements et
+    # des remboursements est conservé.
+    annule = models.BooleanField("Location annulée", default=False)
+    date_annulation = models.DateField("Date d'annulation", null=True, blank=True)
+    loyer_rembourse = models.DecimalField(
+        "Loyer remboursé (€)", max_digits=8, decimal_places=2, null=True, blank=True
+    )
+    caution_rendue_annulation = models.DecimalField(
+        "Caution remboursée à l'annulation (€)", max_digits=8, decimal_places=2,
+        null=True, blank=True,
+    )
+    extrait_annulation = models.CharField(
+        "N° d'extrait (remboursement d'annulation)", max_length=30, blank=True
+    )
+
     class Meta:
         verbose_name = "Contrat de location"
         verbose_name_plural = "Contrats de location"
@@ -268,7 +287,11 @@ class ContratLocation(models.Model):
 
     @property
     def est_solde(self):
-        """Location et caution payées, caution remboursée : dossier clôturé."""
+        """Dossier clôturé : location et caution payées puis caution
+        remboursée ; ou location annulée dont les remboursements éventuels
+        ont été enregistrés."""
+        if self.annule:
+            return not self.caution_payee or self.caution_remboursee
         return self.location_payee and self.caution_payee and self.caution_remboursee
 
     def locaux_selectionnes(self):
