@@ -328,12 +328,16 @@ class HomePage(SeoMixin, Page):
         # --- Section "Dernière actualité" (30 derniers jours) -------------
         context["derniere_actualite"] = None
         if self.afficher_section_actualite:
-            il_y_a_30_jours = date.today() - timedelta(days=30)
+            # Actualité la plus proche de la date du jour, sans la dépasser :
+            # une actualité datée dans le futur n'apparaît qu'à sa date.
+            # À date égale, la dernière publiée passe en premier.
+            aujourd_hui = date.today()
+            il_y_a_30_jours = aujourd_hui - timedelta(days=30)
             context["derniere_actualite"] = (
                 NewsPage.objects.live()
                 .public()
-                .filter(date__gte=il_y_a_30_jours)
-                .order_by("-date")
+                .filter(date__gte=il_y_a_30_jours, date__lte=aujourd_hui)
+                .order_by("-date", "-first_published_at", "-pk")
                 .first()
             )
             if context["derniere_actualite"]:
