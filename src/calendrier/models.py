@@ -15,6 +15,8 @@ plutôt qu'une date unique avec horaires : une activité ou une réservation
 peut ainsi couvrir un seul jour (date_debut == date_fin) ou plusieurs jours
 consécutifs.
 """
+from datetime import timedelta
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
@@ -190,6 +192,67 @@ class Reservation(models.Model):
     @property
     def est_validee(self):
         return self.statut == self.STATUT_VALIDEE
+
+
+# ---------------------------------------------------------------------------
+# DISPONIBILITÉ DE LA SALLE
+# Une date est « prise » si une réservation validée ou une activité l'occupe.
+# Règles :
+#  - demande publique : refusée sur une date prise ;
+#  - réservation encodée par un administrateur : acceptée, mais mise en
+#    attente si la date est prise (liste d'attente en cas d'annulation) ;
+#  - activité : refusée seulement si une réservation validée occupe la date
+#    (plusieurs activités peuvent partager une même date).
+# ---------------------------------------------------------------------------
+def reservations_validees_sur(debut, fin, exclure=None):
+    """Réservations validées qui chevauchent la période [debut, fin]."""
+    qs = Reservation.objects.filter(
+        statut=Reservation.STATUT_VALIDEE, date_debut__lte=fin, date_fin__gte=debut
+    )
+    return qs.exclude(pk=exclure) if exclure else qs
+
+
+def activites_sur(debut, fin, exclure=None):
+    """Activités qui chevauchent la période [debut, fin]."""
+    qs = Activite.objects.filter(date_debut__lte=fin, date_fin__gte=debut)
+    return qs.exclude(pk=exclure) if exclure else qs
+
+
+def demandes_en_attente_sur(debut, fin, exclure=None):
+    """Demandes de réservation en attente sur la période (liste d'attente)."""
+    qs = Reservation.objects.filter(
+        statut=Reservation.STATUT_ATTENTE, date_debut__lte=fin, date_fin__gte=debut
+    ).order_by("date_demande")
+    return qs.exclude(pk=exclure) if exclure else qs
+
+
+def jours_occupes(debut, fin, exclure_reservation=None):
+    """Jours de la période [debut, fin] où la salle est déjà prise."""
+    occupations = list(reservations_validees_sur(debut, fin, exclure_reservation)) + list(
+        activites_sur(debut, fin)
+    )
+    jours = set()
+    for occupation in occupations:
+        jour = max(debut, occupation.date_debut)
+        while jour <= min(fin, occupation.date_fin):
+            jours.add(jour)
+            jour += timedelta(days=1)
+    return sorted(jours)
+
+
+def occupations_sur(debut, fin, exclure_reservation=None):
+    """Description lisible (pour les administrateurs) de ce qui occupe la période."""
+    textes = [
+        f"location de {r.prenom} {r.nom} ({r.date_debut:%d/%m/%Y}"
+        + (f" au {r.date_fin:%d/%m/%Y}" if r.date_fin != r.date_debut else "") + ")"
+        for r in reservations_validees_sur(debut, fin, exclure_reservation)
+    ]
+    textes += [
+        f"activité « {a.nom} » ({a.date_debut:%d/%m/%Y}"
+        + (f" au {a.date_fin:%d/%m/%Y}" if a.date_fin != a.date_debut else "") + ")"
+        for a in activites_sur(debut, fin)
+    ]
+    return textes
 
 
 class ContratLocation(models.Model):

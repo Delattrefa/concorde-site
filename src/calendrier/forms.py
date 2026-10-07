@@ -7,7 +7,17 @@ from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 
 from .contrats import AIDE_MISE_EN_FORME, VARIABLES_DISPONIBLES, variables_inconnues
-from .models import Activite, AnnexeContrat, ArticleContrat, ContratLocation, Reservation
+from .models import (
+    Activite,
+    AnnexeContrat,
+    ArticleContrat,
+    ContratLocation,
+    Reservation,
+    activites_sur,
+    jours_occupes,
+    occupations_sur,
+    reservations_validees_sur,
+)
 
 
 # Un champ <input type="date"> n'accepte qu'une valeur au format ISO
@@ -51,12 +61,39 @@ class ActiviteForm(forms.ModelForm):
         fin = cleaned_data.get("date_fin")
         if debut and fin and fin < debut:
             self.add_error("date_fin", "La date de fin ne peut pas être antérieure à la date de début.")
+            return cleaned_data
+
+        # Plusieurs activités peuvent partager une date, mais pas une date
+        # où la salle est louée (réservation validée).
+        if debut and fin:
+            location = reservations_validees_sur(debut, fin).first()
+            if location:
+                periode = f"le {location.date_debut:%d/%m/%Y}"
+                if location.date_fin != location.date_debut:
+                    periode = f"du {location.date_debut:%d/%m/%Y} au {location.date_fin:%d/%m/%Y}"
+                raise forms.ValidationError(
+                    f"La salle est louée {periode} (réservation de {location.prenom} {location.nom}) : "
+                    "impossible d'y ajouter une activité. Choisissez d'autres dates."
+                )
         return cleaned_data
 
 
 class ReservationForm(forms.ModelForm):
-    """Formulaire public de demande de réservation de salle.
-    Accessible sans connexion."""
+    """Formulaire de réservation de salle.
+
+    mode="public" (demande d'un visiteur) : refusée si la salle est déjà
+    prise (réservation validée ou activité) sur l'une des dates.
+    mode="admin" (administrateur) : jamais refusée ; si la salle est prise,
+    la réservation est enregistrée « en attente » (liste d'attente en cas
+    d'annulation) et self.mise_en_attente décrit ce qui occupe la salle."""
+
+    mode = "public"
+
+    def __init__(self, *args, mode=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if mode:
+            self.mode = mode
+        self.mise_en_attente = []
 
     class Meta:
         model = Reservation
@@ -87,6 +124,35 @@ class ReservationForm(forms.ModelForm):
         fin = cleaned_data.get("date_fin")
         if debut and fin and fin < debut:
             self.add_error("date_fin", "La date de fin ne peut pas être antérieure à la date de début.")
+            return cleaned_data
+        if not (debut and fin):
+            return cleaned_data
+
+        exclure = self.instance.pk
+        if self.mode == "public":
+            jours = jours_occupes(debut, fin, exclure_reservation=exclure)
+            if jours:
+                liste = ", ".join(f"{j:%d/%m/%Y}" for j in jours[:10])
+                if len(jours) > 10:
+                    liste += "…"
+                raise forms.ValidationError(
+                    f"La salle n'est pas disponible à ces dates : elle est déjà occupée le {liste}. "
+                    "Merci de choisir d'autres dates."
+                    if len(jours) == 1 else
+                    f"La salle n'est pas disponible à ces dates : elle est déjà occupée les {liste}. "
+                    "Merci de choisir d'autres dates."
+                )
+            return cleaned_data
+
+        # Mode administrateur : mise en attente plutôt que refus.
+        statut = cleaned_data.get("statut", self.instance.statut)
+        if statut == Reservation.STATUT_VALIDEE:
+            occupations = occupations_sur(debut, fin, exclure_reservation=exclure)
+            if occupations:
+                self.mise_en_attente = occupations
+                if "statut" in self.fields:
+                    cleaned_data["statut"] = Reservation.STATUT_ATTENTE
+                self.instance.statut = Reservation.STATUT_ATTENTE
         return cleaned_data
 
 
@@ -103,29 +169,7 @@ class ReservationAdminForm(ReservationForm):
         }
         labels = {"date_debut": "Date de début", "date_fin": "Date de fin"}
 
-    def clean(self):
-        cleaned_data = super().clean()
-        debut = cleaned_data.get("date_debut")
-        fin = cleaned_data.get("date_fin")
-        statut = cleaned_data.get("statut")
-
-        # Empêche une double location : une réservation validée ne peut pas
-        # chevaucher une autre réservation déjà validée.
-        if debut and fin and fin >= debut and statut == Reservation.STATUT_VALIDEE:
-            conflits = Reservation.objects.filter(
-                statut=Reservation.STATUT_VALIDEE,
-                date_debut__lte=fin,
-                date_fin__gte=debut,
-            )
-            if self.instance.pk:
-                conflits = conflits.exclude(pk=self.instance.pk)
-            conflit = conflits.first()
-            if conflit:
-                raise forms.ValidationError(
-                    f"La salle est déjà réservée sur cette période : {conflit}. "
-                    "Modifiez les dates, ou enregistrez la réservation « en attente »."
-                )
-        return cleaned_data
+    mode = "admin"
 
 
 class ReservationTraitementForm(forms.ModelForm):
@@ -283,15 +327,14 @@ class SuiviPaiementForm(forms.ModelForm):
             # Annulation retirée : la salle doit encore être libre.
             reservation = contrat.reservation
             if contrat.pk and contrat.annule and reservation.statut == Reservation.STATUT_ANNULEE:
-                conflit = Reservation.objects.filter(
-                    statut=Reservation.STATUT_VALIDEE,
-                    date_debut__lte=reservation.date_fin,
-                    date_fin__gte=reservation.date_debut,
-                ).exclude(pk=reservation.pk).first()
-                if conflit:
+                occupations = occupations_sur(
+                    reservation.date_debut, reservation.date_fin, exclure_reservation=reservation.pk
+                )
+                if occupations:
                     self.add_error(
                         "annule",
-                        f"Impossible de rétablir cette location : la salle a été réservée entre-temps ({conflit}).",
+                        "Impossible de rétablir cette location : la salle est occupée entre-temps ("
+                        + " ; ".join(occupations) + ").",
                     )
             return donnees
 
