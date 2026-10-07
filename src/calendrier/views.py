@@ -268,7 +268,7 @@ def _signaler_liste_attente(request, debut, fin, exclure=None):
     l'administrateur les demandes en attente qui peuvent être validées."""
     en_attente = list(demandes_en_attente_sur(debut, fin, exclure))
     if en_attente:
-        noms = ", ".join(f"{r.prenom} {r.nom}" for r in en_attente[:5])
+        noms = ", ".join(r.nom_court for r in en_attente[:5])
         messages.info(
             request,
             f"{len(en_attente)} demande(s) en attente sur ces dates : {noms}. "
@@ -356,13 +356,13 @@ class ReservationAdminCreateView(UserPassesTestMixin, CreateView):
             messages.warning(
                 self.request,
                 f"La salle est déjà occupée à ces dates ({' ; '.join(form.mise_en_attente)}). "
-                f"La réservation de {self.object.prenom} {self.object.nom} a été enregistrée "
+                f"La réservation de {self.object.nom_court} a été enregistrée "
                 "EN ATTENTE : elle pourra être validée si la date se libère.",
             )
         else:
             messages.success(
                 self.request,
-                f"La réservation de {self.object.prenom} {self.object.nom} a été enregistrée "
+                f"La réservation de {self.object.nom_court} a été enregistrée "
                 f"({self.object.get_statut_display().lower()}).",
             )
         return reponse
@@ -471,14 +471,14 @@ def reservation_traiter(request, pk):
         reservation.statut = Reservation.STATUT_VALIDEE
         messages.success(
             request,
-            f"La réservation de {reservation.prenom} {reservation.nom} "
+            f"La réservation de {reservation.nom_court} "
             f"pour le {reservation.date_debut:%d/%m/%Y} a été validée.",
         )
     elif action == "refuser":
         reservation.statut = Reservation.STATUT_REFUSEE
         messages.info(
             request,
-            f"La réservation de {reservation.prenom} {reservation.nom} a été refusée.",
+            f"La réservation de {reservation.nom_court} a été refusée.",
         )
     elif action == "annuler" and reservation.statut == Reservation.STATUT_VALIDEE:
         # La salle redevient libre ; s'il existe un contrat, il est marqué
@@ -491,13 +491,13 @@ def reservation_traiter(request, pk):
             contrat.save(update_fields=["annule", "date_annulation"])
             messages.warning(
                 request,
-                f"La réservation de {reservation.prenom} {reservation.nom} a été annulée. "
+                f"La réservation de {reservation.nom_court} a été annulée. "
                 "Si des montants ont été payés, complétez les remboursements dans le suivi des paiements.",
             )
         else:
             messages.info(
                 request,
-                f"La réservation de {reservation.prenom} {reservation.nom} a été annulée : "
+                f"La réservation de {reservation.nom_court} a été annulée : "
                 "la salle est de nouveau libre dans le calendrier.",
             )
     elif action == "retablir" and reservation.statut == Reservation.STATUT_ANNULEE:
@@ -524,7 +524,7 @@ def reservation_traiter(request, pk):
             contrat.date_annulation = None
             contrat.extrait_annulation = ""
             contrat.save(update_fields=["annule", "date_annulation", "extrait_annulation"])
-        messages.success(request, f"La réservation de {reservation.prenom} {reservation.nom} a été rétablie.")
+        messages.success(request, f"La réservation de {reservation.nom_court} a été rétablie.")
     else:
         messages.error(request, "Action impossible pour cette réservation.")
         return redirect(_url_retour_reservation(request))
@@ -832,7 +832,9 @@ def _contrats_recherches(nom, date_du, date_au):
     contrats = ContratLocation.objects.select_related("reservation")
     for mot in nom.split():
         contrats = contrats.filter(
-            Q(reservation__nom__icontains=mot) | Q(reservation__prenom__icontains=mot)
+            Q(reservation__nom__icontains=mot)
+            | Q(reservation__prenom__icontains=mot)
+            | Q(reservation__nom_societe__icontains=mot)
         )
     if date_du:
         contrats = contrats.filter(reservation__date_fin__gte=date_du)

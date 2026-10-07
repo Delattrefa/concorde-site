@@ -12,7 +12,7 @@
     <div class="wrap">
         <p class="breadcrumb">
             {% if reservation_retour %}
-                <a href="{% url 'calendrier:reservation_contrat' reservation_retour.pk %}">← Retour au contrat de {{ reservation_retour.prenom }} {{ reservation_retour.nom }}</a>
+                <a href="{% url 'calendrier:reservation_contrat' reservation_retour.pk %}">← Retour au contrat de {{ reservation_retour.nom_court }}</a>
             {% else %}
                 <a href="{% url 'calendrier:reservation_liste' %}">← Retour aux réservations</a>
             {% endif %}

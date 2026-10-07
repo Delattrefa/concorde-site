@@ -115,7 +115,7 @@
                                     {% for reservation in jour.reservations %}
                                         <a href="{% url 'calendrier:reservation_detail' reservation.pk %}"
                                            class="etiquette etiquette--lien etiquette--{{ reservation.statut }}">
-                                            {{ reservation.prenom }} {{ reservation.nom }} ({{ reservation.get_statut_display }})
+                                            {{ reservation.nom_court }} ({{ reservation.get_statut_display }})
                                         </a>
                                     {% endfor %}
                                 {% endif %}

@@ -38,6 +38,33 @@
         {% csrf_token %}
         {{ form.non_field_errors }}
 
+        <div class="form-field">
+            <span class="form-field__label">{{ form.type_client.label }}</span>
+            <div class="choix-type-client">
+                {% for choix in form.type_client %}
+                    <label class="choix-type-client__option">{{ choix.tag }} {{ choix.choice_label }}</label>
+                {% endfor %}
+            </div>
+            {{ form.type_client.errors }}
+        </div>
+
+        <fieldset class="bloc-societe" data-bloc-societe>
+            <div class="form-field-row">
+                <div class="form-field">
+                    {{ form.nom_societe.label_tag }}
+                    {{ form.nom_societe }}
+                    {{ form.nom_societe.errors }}
+                </div>
+                <div class="form-field">
+                    {{ form.numero_tva.label_tag }}
+                    {{ form.numero_tva }}
+                    {{ form.numero_tva.errors }}
+                    <p class="form-field__help">Si la société est assujettie à la TVA.</p>
+                </div>
+            </div>
+            <p class="bloc-societe__represente">Représentée par</p>
+        </fieldset>
+
         <div class="form-field-row">
             <div class="form-field">
                 {{ form.nom.label_tag }}
@@ -52,7 +79,8 @@
         </div>
 
         <div class="form-field">
-            {{ form.adresse.label_tag }}
+            <label for="{{ form.adresse.id_for_label }}" data-libelle-adresse
+                   data-particulier="{{ form.adresse.label }}" data-societe="Adresse du siège de la société">{{ form.adresse.label }}</label>
             {{ form.adresse }}
             {{ form.adresse.errors }}
         </div>
@@ -107,4 +135,25 @@
         {% endif %}
     </form>
 </section>
+<script>
+/* Particulier / société : affiche les champs de la société et le libellé
+   « Représentée par » uniquement pour une société. */
+(function () {
+    var radios = document.querySelectorAll('input[name="{{ form.type_client.html_name }}"]');
+    var bloc = document.querySelector("[data-bloc-societe]");
+    var libelleAdresse = document.querySelector("[data-libelle-adresse]");
+    if (!radios.length || !bloc) { return; }
+    function actualiser() {
+        var choix = document.querySelector('input[name="{{ form.type_client.html_name }}"]:checked');
+        var societe = choix && choix.value === "societe";
+        bloc.hidden = !societe;
+        bloc.disabled = !societe;
+        if (libelleAdresse) {
+            libelleAdresse.textContent = societe ? libelleAdresse.dataset.societe : libelleAdresse.dataset.particulier;
+        }
+    }
+    radios.forEach(function (r) { r.addEventListener("change", actualiser); });
+    actualiser();
+})();
+</script>
 {% endblock %}

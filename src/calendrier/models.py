@@ -137,7 +137,28 @@ class Reservation(models.Model):
     # Couleur affichée dans le calendrier une fois la réservation validée.
     COULEUR_RESERVEE = "#7a1f2b"  # bordeaux, cohérent avec la charte du site
 
-    # --- Coordonnées du demandeur (formulaire public, sans connexion) ---
+    # --- Type de client : particulier ou société ---
+    TYPE_PARTICULIER = "particulier"
+    TYPE_SOCIETE = "societe"
+    TYPE_CLIENT_CHOICES = [
+        (TYPE_PARTICULIER, "Particulier"),
+        (TYPE_SOCIETE, "Société"),
+    ]
+    type_client = models.CharField(
+        "Particulier ou société",
+        max_length=12,
+        choices=TYPE_CLIENT_CHOICES,
+        default=TYPE_PARTICULIER,
+    )
+    nom_societe = models.CharField("Nom de la société", max_length=200, blank=True)
+    numero_tva = models.CharField(
+        "N° de TVA",
+        max_length=20,
+        blank=True,
+        help_text="Si la société est assujettie à la TVA. Ex : BE 0123.456.789",
+    )
+
+    # --- Coordonnées du demandeur (pour une société : son représentant) ---
     nom = models.CharField("Nom", max_length=100)
     prenom = models.CharField("Prénom", max_length=100)
     adresse = models.CharField("Adresse complète", max_length=255)
@@ -172,13 +193,45 @@ class Reservation(models.Model):
         verbose_name_plural = "Demandes de réservation de salle"
         ordering = ["-date_demande"]
 
+    # --- Noms à afficher -------------------------------------------------
+    @property
+    def est_societe(self):
+        return self.type_client == self.TYPE_SOCIETE and bool(self.nom_societe)
+
+    @property
+    def nom_representant(self):
+        """Prénom et nom de la personne (le particulier, ou le représentant
+        de la société)."""
+        return f"{self.prenom} {self.nom}".strip()
+
+    @property
+    def nom_court(self):
+        """Nom du client : la société, ou le particulier."""
+        return self.nom_societe if self.est_societe else self.nom_representant
+
+    @property
+    def nom_affiche(self):
+        """Nom complet : « Société (représentée par Prénom Nom) » ou « Prénom Nom »."""
+        if self.est_societe:
+            return f"{self.nom_societe} (représentée par {self.nom_representant})"
+        return self.nom_representant
+
+    @property
+    def numero_tva_affiche(self):
+        """N° de TVA mis en forme (BE 0123.456.789 pour un numéro belge)."""
+        tva = self.numero_tva or ""
+        if len(tva) == 12 and tva.startswith("BE") and tva[2:].isdigit():
+            n = tva[2:]
+            return f"BE {n[:4]}.{n[4:7]}.{n[7:]}"
+        return tva
+
     def __str__(self):
         if self.date_fin and self.date_fin != self.date_debut:
             return (
-                f"{self.prenom} {self.nom} — du {self.date_debut:%d/%m/%Y} "
+                f"{self.nom_court} — du {self.date_debut:%d/%m/%Y} "
                 f"au {self.date_fin:%d/%m/%Y} ({self.get_statut_display()})"
             )
-        return f"{self.prenom} {self.nom} — {self.date_debut:%d/%m/%Y} ({self.get_statut_display()})"
+        return f"{self.nom_court} — {self.date_debut:%d/%m/%Y} ({self.get_statut_display()})"
 
     def clean(self):
         if self.date_debut and self.date_fin and self.date_fin < self.date_debut:
@@ -243,7 +296,7 @@ def jours_occupes(debut, fin, exclure_reservation=None):
 def occupations_sur(debut, fin, exclure_reservation=None):
     """Description lisible (pour les administrateurs) de ce qui occupe la période."""
     textes = [
-        f"location de {r.prenom} {r.nom} ({r.date_debut:%d/%m/%Y}"
+        f"location de {r.nom_court} ({r.date_debut:%d/%m/%Y}"
         + (f" au {r.date_fin:%d/%m/%Y}" if r.date_fin != r.date_debut else "") + ")"
         for r in reservations_validees_sur(debut, fin, exclure_reservation)
     ]
@@ -348,7 +401,7 @@ class ContratLocation(models.Model):
         verbose_name_plural = "Contrats de location"
 
     def __str__(self):
-        return f"Contrat — {self.reservation.prenom} {self.reservation.nom}"
+        return f"Contrat — {self.reservation.nom_court}"
 
     @property
     def fichier_disponible(self):

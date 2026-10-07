@@ -421,3 +421,23 @@
     font-weight: 700; font-size: 1.3rem; color: #222;
 }
 .form-field__case { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+
+/* Particulier ou société (formulaire de réservation) */
+.choix-type-client { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+.choix-type-client__option {
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
+    padding: 10px 18px; border: 2px solid #e2d6cc; border-radius: 6px; background: #fff;
+}
+.choix-type-client__option:has(input:checked) { border-color: var(--color-primary, #7a1f2b); background: #fbf4f1; }
+.bloc-societe { border: 0; margin: 0; padding: 0; min-width: 0; }
+.bloc-societe[hidden] { display: none; }
+.bloc-societe__represente {
+    margin: 6px 0 4px; padding-top: 12px; border-top: 1px solid #ece2d8;
+    font-weight: 700; color: var(--color-primary-dark, #4a1018);
+}
+.paiements__representant { display: block; color: #7a6d6d; font-size: .82rem; }
+.calendrier-detail__represente { margin-top: 10px; color: var(--color-primary-dark, #4a1018); }
+.calendrier-form .choix-type-client__option input[type="radio"] {
+    width: auto; margin: 0; padding: 0; display: inline-block; flex: 0 0 auto;
+    accent-color: var(--color-primary, #7a1f2b);
+}

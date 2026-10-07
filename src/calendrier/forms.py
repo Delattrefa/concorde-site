@@ -1,6 +1,8 @@
 """
 Formulaires de l'application 'calendrier'.
 """
+import re
+
 from django import forms
 
 from pypdf import PdfReader
@@ -73,10 +75,35 @@ class ActiviteForm(forms.ModelForm):
                 if location.date_fin != location.date_debut:
                     periode = f"du {location.date_debut:%d/%m/%Y} au {location.date_fin:%d/%m/%Y}"
                 raise forms.ValidationError(
-                    f"La salle est louée {periode} (réservation de {location.prenom} {location.nom}) : "
+                    f"La salle est louée {periode} (réservation de {location.nom_court}) : "
                     "impossible d'y ajouter une activité. Choisissez d'autres dates."
                 )
         return cleaned_data
+
+
+def normaliser_tva(valeur):
+    """Met un n° de TVA au format « BE0123456789 » (ou autre pays européen)
+    et vérifie le chiffre de contrôle d'un numéro belge. Lève ValidationError
+    si le numéro est invalide."""
+    numero = re.sub(r"[\s.\-/]", "", (valeur or "").upper())
+    if not numero:
+        return ""
+    if numero.isdigit():          # sans préfixe : numéro belge
+        numero = "BE" + numero
+    if numero.startswith("BE"):
+        chiffres = numero[2:]
+        if len(chiffres) == 9 and chiffres.isdigit():
+            chiffres = "0" + chiffres
+        if not (len(chiffres) == 10 and chiffres.isdigit() and chiffres[0] in "01"):
+            raise forms.ValidationError(
+                "Numéro de TVA belge invalide : il compte 10 chiffres (ex : BE 0123.456.749)."
+            )
+        if 97 - int(chiffres[:8]) % 97 != int(chiffres[8:]):
+            raise forms.ValidationError("Ce numéro de TVA belge n'est pas valide (chiffres de contrôle).")
+        return "BE" + chiffres
+    if re.fullmatch(r"[A-Z]{2}[A-Z0-9]{2,13}", numero):
+        return numero
+    raise forms.ValidationError("Numéro de TVA invalide. Ex : BE 0123.456.749")
 
 
 class ReservationForm(forms.ModelForm):
@@ -99,6 +126,9 @@ class ReservationForm(forms.ModelForm):
     class Meta:
         model = Reservation
         fields = [
+            "type_client",
+            "nom_societe",
+            "numero_tva",
             "nom",
             "prenom",
             "adresse",
@@ -109,6 +139,9 @@ class ReservationForm(forms.ModelForm):
             "message",
         ]
         widgets = {
+            "type_client": forms.RadioSelect(attrs={"data-type-client": "1"}),
+            "nom_societe": forms.TextInput(attrs={"class": "champ-texte"}),
+            "numero_tva": forms.TextInput(attrs={"class": "champ-texte", "placeholder": "Ex : BE 0123.456.749"}),
             "nom": forms.TextInput(attrs={"class": "champ-texte"}),
             "prenom": forms.TextInput(attrs={"class": "champ-texte"}),
             "adresse": forms.TextInput(attrs={"class": "champ-texte"}),
@@ -119,8 +152,21 @@ class ReservationForm(forms.ModelForm):
             "message": forms.Textarea(attrs={"class": "champ-texte", "rows": 4}),
         }
 
+    def clean_numero_tva(self):
+        return normaliser_tva(self.cleaned_data.get("numero_tva"))
+
     def clean(self):
         cleaned_data = super().clean()
+
+        # --- Particulier ou société ---
+        if cleaned_data.get("type_client") == Reservation.TYPE_SOCIETE:
+            if not (cleaned_data.get("nom_societe") or "").strip():
+                self.add_error("nom_societe", "Indiquez le nom de la société.")
+        else:
+            cleaned_data["nom_societe"] = ""
+            cleaned_data["numero_tva"] = ""
+            self.errors.pop("numero_tva", None)
+
         debut = cleaned_data.get("date_debut")
         fin = cleaned_data.get("date_fin")
         if debut and fin and fin < debut:

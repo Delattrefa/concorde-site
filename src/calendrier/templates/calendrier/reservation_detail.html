@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Réservation de {{ reservation.prenom }} {{ reservation.nom }}{% endblock %}
+{% block title %}Réservation de {{ reservation.nom_court }}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
@@ -11,13 +11,19 @@
 <section class="page-header fade-target">
     <div class="wrap">
         <p class="breadcrumb"><a href="{% url 'calendrier:reservation_liste' %}">← Retour à la liste des demandes</a></p>
-        <h1>Réservation de {{ reservation.prenom }} {{ reservation.nom }}</h1>
+        <h1>Réservation de {{ reservation.nom_court }}</h1>
         <span class="etiquette etiquette--{{ reservation.statut }}">{{ reservation.get_statut_display }}</span>
     </div>
 </section>
 
 <section class="calendrier-detail wrap">
     <h2>Coordonnées</h2>
+    <p><strong>Client :</strong> {{ reservation.get_type_client_display }}</p>
+    {% if reservation.est_societe %}
+        <p><strong>Société :</strong> {{ reservation.nom_societe }}</p>
+        {% if reservation.numero_tva %}<p><strong>N° de TVA :</strong> {{ reservation.numero_tva_affiche }}</p>{% endif %}
+        <p class="calendrier-detail__represente"><strong>Représentée par</strong></p>
+    {% endif %}
     <p><strong>Nom :</strong> {{ reservation.nom }}</p>
     <p><strong>Prénom :</strong> {{ reservation.prenom }}</p>
     <p><strong>Adresse :</strong> {{ reservation.adresse }}</p>

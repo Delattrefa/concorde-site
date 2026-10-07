@@ -51,7 +51,7 @@
         <tbody>
             {% for reservation in reservations %}
                 <tr>
-                    <td><a href="{% url 'calendrier:reservation_detail' reservation.pk %}">{{ reservation.prenom }} {{ reservation.nom }}</a></td>
+                    <td><a href="{% url 'calendrier:reservation_detail' reservation.pk %}">{{ reservation.nom_court }}</a>{% if reservation.est_societe %}<br><small>représentée par {{ reservation.nom_representant }}</small>{% endif %}</td>
                     <td>
                         {% if reservation.date_fin != reservation.date_debut %}
                             Du {{ reservation.date_debut|date:"d/m/Y" }} au {{ reservation.date_fin|date:"d/m/Y" }}
@@ -74,7 +74,7 @@
                             <a href="{% url 'calendrier:reservation_detail' reservation.pk %}" class="btn btn--secondary btn--small">Détails</a>
                             {% if reservation.statut == "validee" or reservation.statut == "annulee" %}
                                 <form method="post" action="{% url 'calendrier:reservation_traiter' reservation.pk %}" class="calendrier-liste__form-action"
-                                      onsubmit="return confirm('{% if reservation.statut == "validee" %}Annuler la réservation de {{ reservation.prenom|escapejs }} {{ reservation.nom|escapejs }} ? La salle redeviendra libre.{% else %}Rétablir cette réservation ?{% endif %}');">
+                                      onsubmit="return confirm('{% if reservation.statut == "validee" %}Annuler la réservation de {{ reservation.nom_court|escapejs }} ? La salle redeviendra libre.{% else %}Rétablir cette réservation ?{% endif %}');">
                                     {% csrf_token %}
                                     <input type="hidden" name="suivant" value="{{ request.get_full_path }}">
                                     {% if reservation.statut == "validee" %}

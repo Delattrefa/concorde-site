@@ -32,8 +32,8 @@
     <form method="get" class="paiements__recherche" role="search">
         {% if filtre %}<input type="hidden" name="filtre" value="{{ filtre }}">{% endif %}
         <label class="paiements__recherche-champ paiements__recherche-champ--nom">
-            <span>Nom ou prénom</span>
-            <input type="search" name="nom" value="{{ nom }}" class="champ-texte" placeholder="Ex : Dupont">
+            <span>Nom, prénom ou société</span>
+            <input type="search" name="nom" value="{{ nom }}" class="champ-texte" placeholder="Ex : Dupont ou nom de société">
         </label>
         <label class="paiements__recherche-champ">
             <span>Location du</span>
@@ -102,7 +102,8 @@
                     <tr class="paiements__ligne{% if form.errors %} paiements__ligne--erreur{% elif contrat.annule %} paiements__ligne--annulee{% elif contrat.est_solde %} paiements__ligne--soldee{% endif %}" data-ligne="{{ form.prefix }}">
                         <td data-label="Locataire">
                             {{ form.id }}
-                            <a href="{% url 'calendrier:reservation_detail' reservation.pk %}"><strong>{{ reservation.nom }}</strong> {{ reservation.prenom }}</a>
+                            <a href="{% url 'calendrier:reservation_detail' reservation.pk %}">{% if reservation.est_societe %}<strong>{{ reservation.nom_societe }}</strong></a>
+                            <small class="paiements__representant">repr. {{ reservation.prenom }} {{ reservation.nom }}</small>{% else %}<strong>{{ reservation.nom }}</strong> {{ reservation.prenom }}</a>{% endif %}
                             {% if contrat.fichier_disponible %}
                                 <a class="paiements__contrat" href="{% url 'calendrier:reservation_contrat_pdf' reservation.pk %}" title="Télécharger le contrat de location (PDF)">📄 Contrat (PDF)</a>
                             {% else %}

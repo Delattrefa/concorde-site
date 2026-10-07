@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static wagtailimages_tags %}
 
-{% block title %}Contrat de location — {{ reservation.prenom }} {{ reservation.nom }}{% endblock %}
+{% block title %}Contrat de location — {{ reservation.nom_affiche }}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
@@ -13,7 +13,7 @@
         <p class="breadcrumb"><a href="{% url 'calendrier:reservation_detail' reservation.pk %}">← Retour à la réservation</a></p>
         <h1>{% if contrat %}Modifier le contrat de location{% else %}Rédiger le contrat de location{% endif %}</h1>
         <p class="page-header__intro">
-            Locataire : <strong>{{ reservation.prenom }} {{ reservation.nom }}</strong> —
+            Locataire : <strong>{{ reservation.nom_affiche }}</strong> —
             {% if reservation.date_fin != reservation.date_debut %}
                 du {{ reservation.date_debut|date:"d F Y" }} au {{ reservation.date_fin|date:"d F Y" }}
             {% else %}

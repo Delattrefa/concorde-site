@@ -52,16 +52,16 @@ class ReservationAdmin(admin.ModelAdmin):
     """Gestion des demandes de réservation de salle dans l'admin Django,
     avec actions groupées de validation/refus."""
 
-    list_display = ("nom", "prenom", "date_debut", "date_fin", "email", "telephone", "statut", "date_demande", "traite_par")
+    list_display = ("nom", "prenom", "nom_societe", "date_debut", "date_fin", "email", "telephone", "statut", "date_demande", "traite_par")
     list_filter = ("statut", "date_debut")
-    search_fields = ("nom", "prenom", "telephone", "email", "adresse")
+    search_fields = ("nom", "prenom", "nom_societe", "numero_tva", "telephone", "email", "adresse")
     date_hierarchy = "date_debut"
     readonly_fields = ("date_demande", "traite_par", "date_traitement")
     actions = ["valider_les_reservations", "refuser_les_reservations"]
 
     fieldsets = (
         ("Demandeur", {
-            "fields": ("nom", "prenom", "adresse", "email", "telephone"),
+            "fields": ("type_client", "nom_societe", "numero_tva", "nom", "prenom", "adresse", "email", "telephone"),
         }),
         ("Demande", {
             "fields": ("date_debut", "date_fin", "message"),

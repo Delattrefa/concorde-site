@@ -66,7 +66,7 @@ VARIABLES_DISPONIBLES = {
     "date_fin": "dernier jour de la location",
     "montant_location": "montant de la location, ex : 350,00",
     "montant_caution": "montant de la caution, ex : 150,00",
-    "locataire": "prénom et nom du locataire",
+    "locataire": "nom du locataire (pour une société : « Société (représentée par Prénom Nom) »)",
     "delegue": "prénom et nom du délégué de l'ASBL",
 }
 
@@ -95,13 +95,44 @@ def _montant(valeur):
         return str(valeur)
 
 
+def _nom_affiche(reservation):
+    """« Société (représentée par Prénom Nom) » ou « Prénom Nom »."""
+    nom = getattr(reservation, "nom_affiche", None)
+    return nom if nom else f"{reservation.prenom} {reservation.nom}"
+
+
+def _bloc_client(reservation):
+    """Identité du client pour la section « Entre les soussignés »."""
+    representant = f"{escape(reservation.prenom)} {escape(reservation.nom)}"
+    coordonnees = (
+        f"Téléphone : {escape(reservation.telephone)}<br/>"
+        f"Mail : {escape(reservation.email)}<br/>"
+    )
+    if getattr(reservation, "est_societe", False):
+        tva = getattr(reservation, "numero_tva_affiche", "") or ""
+        return (
+            f"<b>{escape(reservation.nom_societe)}</b><br/>"
+            + (f"N° de TVA : {escape(tva)}<br/>" if tva else "")
+            + f"Siège : {escape(reservation.adresse)}<br/>"
+            f"représentée par {representant}<br/>"
+            + coordonnees
+            + "Ci-après dénommée <b>client</b>,<br/>D'UNE PART,"
+        )
+    return (
+        f"{representant}<br/>"
+        f"Adresse : {escape(reservation.adresse)}<br/>"
+        + coordonnees
+        + "Ci-après dénommé(e) <b>client</b>,<br/>D'UNE PART,"
+    )
+
+
 def _valeurs_variables(reservation, contrat):
     return {
         "date_debut": _mise_en_forme_date(reservation.date_debut),
         "date_fin": _mise_en_forme_date(reservation.date_fin),
         "montant_location": _montant(contrat.montant_location),
         "montant_caution": _montant(contrat.montant_caution),
-        "locataire": f"{reservation.prenom} {reservation.nom}",
+        "locataire": _nom_affiche(reservation),
         "delegue": f"{contrat.delegue_prenom} {contrat.delegue_nom}",
     }
 
@@ -326,15 +357,7 @@ def _construire_pages_variables(reservation, contrat, articles, mise_en_page=Non
 
     # --- Parties -------------------------------------------------------------
     elements.append(Paragraph("<b>Entre les soussignés :</b>", style_normal))
-    elements.append(Paragraph(
-        f"{escape(reservation.prenom)} {escape(reservation.nom)}<br/>"
-        f"Adresse : {escape(reservation.adresse)}<br/>"
-        f"Téléphone : {escape(reservation.telephone)}<br/>"
-        f"Mail : {escape(reservation.email)}<br/>"
-        f"Ci-après dénommé(e) <b>client</b>,<br/>"
-        f"D'UNE PART,",
-        style_gauche,
-    ))
+    elements.append(Paragraph(_bloc_client(reservation), style_gauche))
     elements.append(Paragraph("Et", style_normal))
     elements.append(Paragraph(
         f"Monsieur/Madame <b>{escape(contrat.delegue_prenom)} {escape(contrat.delegue_nom)}</b><br/>"
@@ -373,7 +396,12 @@ def _construire_pages_variables(reservation, contrat, articles, mise_en_page=Non
              Paragraph("<b>Le Locataire</b>", style_signature)],
             [image_sig or espace_signature, Spacer(1, 22 * mm)],
             [Paragraph(f"{escape(contrat.delegue_prenom)} {escape(contrat.delegue_nom)}", style_signature),
-             Paragraph(f"{escape(reservation.prenom)} {escape(reservation.nom)}", style_signature)],
+             Paragraph(
+                 (f"Pour {escape(reservation.nom_societe)} :<br/>"
+                  if getattr(reservation, "est_societe", False) else "")
+                 + f"{escape(reservation.prenom)} {escape(reservation.nom)}",
+                 style_signature,
+             )],
         ],
         # Largeur utile du cadre (marges et marge intérieure de 6 pt déduites)
         colWidths=[(doc.width - 12) / 2] * 2,
@@ -493,4 +521,10 @@ def nom_fichier_contrat(reservation):
     """Nom de fichier du contrat : 'Contrat de location - Nom Prénom - date
     de début.pdf', tel que demandé."""
     date_str = reservation.date_debut.strftime("%d-%m-%Y")
-    return f"Contrat de location - {reservation.nom} {reservation.prenom} - {date_str}.pdf"
+    if getattr(reservation, "est_societe", False):
+        nom = reservation.nom_societe
+    else:
+        nom = f"{reservation.nom} {reservation.prenom}"
+    # Caractères interdits dans un nom de fichier
+    nom = re.sub(r'[\\/:*?"<>|]+', "-", nom).strip()
+    return f"Contrat de location - {nom} - {date_str}.pdf"
