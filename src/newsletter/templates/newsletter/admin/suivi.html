@@ -1,0 +1,81 @@
+{% extends "wagtailadmin/base.html" %}
+{% block titletag %}Suivi de l'envoi — {{ newsletter.titre }}{% endblock %}
+
+{% block content %}
+    {% include "wagtailadmin/shared/header.html" with title="Suivi de l'envoi" subtitle=newsletter.titre icon="mail" %}
+
+    <div class="nice-padding">
+        <section class="newsletter-admin__bloc">
+            <h2>{{ envoi.get_statut_display }}{% if envoi.statut == "en_cours" %} — {{ pourcentage }} %{% endif %}</h2>
+            <div class="newsletter-admin__barre" role="progressbar" aria-valuenow="{{ pourcentage }}" aria-valuemin="0" aria-valuemax="100">
+                <span style="width: {{ pourcentage }}%"></span>
+            </div>
+            <dl class="newsletter-admin__recap">
+                <dt>Lancé le</dt><dd>{{ envoi.date_lancement|date:"d/m/Y H:i" }}{% if envoi.lance_par %} par {{ envoi.lance_par.get_full_name|default:envoi.lance_par.get_username }}{% endif %}</dd>
+                <dt>Destinataires</dt><dd>{{ compteurs.total }}</dd>
+                <dt>Envoyés</dt><dd>{{ compteurs.envoyes }}</dd>
+                <dt>Restants</dt><dd>{{ compteurs.restants }}</dd>
+                <dt>Échecs</dt><dd>{{ compteurs.echecs }}</dd>
+                {% if compteurs.ignores %}<dt>Non envoyés</dt><dd>{{ compteurs.ignores }} <small>(désinscrits entre-temps ou envoi annulé)</small></dd>{% endif %}
+                {% if envoi.date_fin %}<dt>Terminé le</dt><dd>{{ envoi.date_fin|date:"d/m/Y H:i" }}</dd>{% endif %}
+            </dl>
+
+            {% if envoi.statut == "en_cours" %}
+                <p class="help">Les messages partent automatiquement toutes les 5 minutes (tâche planifiée) ;
+                    {{ envois_derniere_heure }} message{{ envois_derniere_heure|pluralize }} envoyé{{ envois_derniere_heure|pluralize }} au cours de la dernière heure.
+                    Cette page se met à jour toutes les 30 secondes.</p>
+                <form method="post" class="newsletter-admin__actions">
+                    {% csrf_token %}
+                    <button type="submit" name="action" value="lot" class="button button-secondary">Envoyer un lot maintenant</button>
+                    <button type="submit" name="action" value="annuler" class="button button-secondary no"
+                            onclick="return confirm('Annuler l\'envoi ? Les {{ compteurs.restants }} message(s) restant(s) ne partiront pas.');">Annuler l'envoi</button>
+                </form>
+            {% elif nouveaux_destinataires %}
+                <p>{{ nouveaux_destinataires }} abonné{{ nouveaux_destinataires|pluralize }} inscrit{{ nouveaux_destinataires|pluralize }} depuis n'{{ nouveaux_destinataires|pluralize:"a,ont" }} pas encore reçu cette newsletter.</p>
+                <p><a class="button" href="{% url 'newsletter_admin:envoyer' newsletter.pk %}">L'envoyer aux nouveaux abonnés</a></p>
+            {% endif %}
+            <p><a href="{{ url_modifier }}">← Retour à la newsletter</a></p>
+        </section>
+
+        {% if envoi.derniere_erreur %}
+            <section class="newsletter-admin__bloc newsletter-admin__bloc--erreur">
+                <h2>Dernière erreur du serveur d'envoi</h2>
+                <p><code>{{ envoi.derniere_erreur }}</code></p>
+                <p class="help">L'envoi reprendra automatiquement. Si l'erreur se répète, vérifiez les réglages SMTP (fichier .env).</p>
+            </section>
+        {% endif %}
+
+        {% if echecs %}
+            <section class="newsletter-admin__bloc">
+                <h2>Adresses en échec</h2>
+                <table class="listing">
+                    <thead><tr><th>Adresse</th><th>Erreur</th></tr></thead>
+                    <tbody>
+                        {% for l in echecs %}<tr><td>{{ l.email }}</td><td><small>{{ l.erreur }}</small></td></tr>{% endfor %}
+                    </tbody>
+                </table>
+            </section>
+        {% endif %}
+
+        {% if historique|length > 1 %}
+            <section class="newsletter-admin__bloc">
+                <h2>Historique des envois</h2>
+                <ul>{% for e in historique %}<li>{{ e.date_lancement|date:"d/m/Y H:i" }} — {{ e.get_statut_display }} — {{ e.livraisons.count }} destinataire{{ e.livraisons.count|pluralize }}</li>{% endfor %}</ul>
+            </section>
+        {% endif %}
+    </div>
+
+    <style>
+        .newsletter-admin__bloc { max-width: 760px; margin: 0 0 2rem; padding: 1.25rem 1.5rem; border: 1px solid var(--w-color-border-furniture, #e0e0e0); border-radius: .4rem; }
+        .newsletter-admin__bloc--erreur { border-color: var(--w-color-critical-200, #cd4444); }
+        .newsletter-admin__recap { display: grid; grid-template-columns: max-content 1fr; gap: .4rem 1.5rem; }
+        .newsletter-admin__recap dt { font-weight: 600; }
+        .newsletter-admin__recap dd { margin: 0; }
+        .newsletter-admin__barre { height: 12px; margin: .5rem 0 1rem; border-radius: 6px; background: var(--w-color-grey-100, #e6e6e6); overflow: hidden; }
+        .newsletter-admin__barre span { display: block; height: 100%; background: var(--w-color-positive-100, #1b8666); }
+        .newsletter-admin__actions { display: flex; gap: .75rem; flex-wrap: wrap; margin: 1rem 0; }
+    </style>
+    {% if envoi.statut == "en_cours" %}
+        <script>setTimeout(function () { window.location.reload(); }, 30000);</script>
+    {% endif %}
+{% endblock %}

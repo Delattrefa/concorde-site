@@ -49,11 +49,19 @@ elif DB_ENGINE == "mysql":
             "PASSWORD": os.environ.get("DB_PASSWORD", ""),
             "HOST": os.environ.get("DB_HOST", "localhost"),
             "PORT": os.environ.get("DB_PORT", "3306"),
-            "OPTIONS": {"charset": "utf8mb4",
-                        "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",},
+            "OPTIONS": {
+                "charset": "utf8mb4",
+                # Mode strict : une valeur trop longue ou invalide provoque une
+                # erreur au lieu d'être tronquée en silence (avertissement mysql.W002).
+                "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
         }
     }
-    SILENCED_SYSTEM_CHECKS = ["models.w036"]
+    # Wagtail déclare une contrainte d'unicité conditionnelle (un seul
+    # circuit de validation en cours par page) que MariaDB ne sait pas créer.
+    # Wagtail contrôle déjà cette règle lui-même : avertissement sans
+    # conséquence, masqué pour garder des déploiements lisibles.
+    SILENCED_SYSTEM_CHECKS = ["models.W036"]
 else:
     DATABASES = {
         "default": {
@@ -115,5 +123,7 @@ LOGGING = {
     },
     "loggers": {
         "django": {"handlers": ["fichier"], "level": "ERROR", "propagate": True},
+        # Erreurs d'envoi de la newsletter (serveur SMTP, e-mails de confirmation)
+        "newsletter": {"handlers": ["fichier"], "level": "ERROR", "propagate": False},
     },
 }

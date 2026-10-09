@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags wagtailimages_tags %}
+
+{% block body_class %}template-home template-newsletter{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'newsletter/css/newsletter.css' %}">
+{% endblock %}
+
+{% block content %}
+
+{# Bandeau : même structure et mêmes classes que la page d'accueil #}
+<section class="hero hero--newsletter fade-target">
+    {% if page.image_bandeau %}
+        {% image page.image_bandeau fill-1920x900 as img_bandeau %}
+        <div class="hero__bg" style="background-image:url('{{ img_bandeau.url }}');"></div>
+    {% endif %}
+    <div class="hero__overlay"></div>
+    <div class="hero__content">
+        <h1 class="fade-up">{{ page.titre_bandeau }}</h1>
+        {% if page.sous_titre %}<p class="hero__subtitle fade-up delay-1">{{ page.sous_titre }}</p>{% endif %}
+        <a class="btn btn--primary fade-up delay-2" href="#inscription">Je m'inscris</a>
+    </div>
+</section>
+
+{% if page.intro %}
+<section class="intro fade-target">
+    <div class="wrap">{{ page.intro|richtext }}</div>
+</section>
+{% endif %}
+
+<section class="newsletter-inscription fade-target" id="inscription">
+    <div class="wrap newsletter-inscription__grille">
+
+        <div class="newsletter-inscription__carte fade-up">
+            <h2>{{ page.titre_formulaire }}</h2>
+
+            <div class="newsletter-inscription__message" data-message role="status" aria-live="polite"
+                 {% if not messages %}hidden{% endif %}>
+                {% for message in messages %}
+                    <p class="newsletter-message newsletter-message--{{ message.tags }}">{{ message }}</p>
+                {% endfor %}
+            </div>
+
+            <form method="post" action="{% pageurl page %}" class="newsletter-form" data-newsletter-form novalidate>
+                {% csrf_token %}
+
+                <div class="form-field{% if form.email.errors %} form-field--error{% endif %}">
+                    <label for="{{ form.email.id_for_label }}">{{ form.email.label }} <span aria-hidden="true">*</span></label>
+                    {{ form.email }}
+                    <p class="newsletter-form__erreur" data-erreur="email">{{ form.email.errors|join:" " }}</p>
+                </div>
+
+                <div class="newsletter-form__ligne">
+                    <div class="form-field">
+                        <label for="{{ form.prenom.id_for_label }}">{{ form.prenom.label }}</label>
+                        {{ form.prenom }}
+                    </div>
+                    <div class="form-field">
+                        <label for="{{ form.nom.id_for_label }}">{{ form.nom.label }}</label>
+                        {{ form.nom }}
+                    </div>
+                </div>
+
+                <div class="newsletter-form__piege-zone" aria-hidden="true">
+                    <label for="{{ form.site_web.id_for_label }}">Ne pas remplir</label>{{ form.site_web }}
+                </div>
+
+                <div class="form-field">
+                    <label class="newsletter-form__case">
+                        {{ form.consentement }} <span>{{ form.consentement.label }}</span>
+                    </label>
+                    <p class="newsletter-form__erreur" data-erreur="consentement">{{ form.consentement.errors|join:" " }}</p>
+                </div>
+
+                <button type="submit" class="btn btn--secondary" data-bouton>Je m'inscris</button>
+
+                <p class="newsletter-form__mention">
+                    Votre adresse sert uniquement à l'envoi de la newsletter. Chaque e-mail contient un lien
+                    pour vous désinscrire en un clic.
+                </p>
+            </form>
+        </div>
+
+        <aside class="newsletter-inscription__atouts fade-up delay-1" aria-label="Pourquoi s'inscrire">
+            <ul>
+                <li><span aria-hidden="true">🎭</span> Les prochains spectacles et activités</li>
+                <li><span aria-hidden="true">📅</span> Les dates à réserver avant tout le monde</li>
+                <li><span aria-hidden="true">📷</span> Les photos et vidéos de nos événements</li>
+                <li><span aria-hidden="true">✉️</span> Quelques e-mails par an, jamais de publicité</li>
+            </ul>
+        </aside>
+
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'newsletter/js/inscription.js' %}" defer></script>
+{% endblock %}

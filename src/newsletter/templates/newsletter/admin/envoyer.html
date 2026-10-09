@@ -1,0 +1,74 @@
+{% extends "wagtailadmin/base.html" %}
+{% block titletag %}Envoyer « {{ newsletter.titre }} »{% endblock %}
+
+{% block content %}
+    {% include "wagtailadmin/shared/header.html" with title="Envoyer la newsletter" subtitle=newsletter.titre icon="mail" %}
+
+    <div class="nice-padding">
+        <section class="newsletter-admin__bloc">
+            <h2>Récapitulatif</h2>
+            <dl class="newsletter-admin__recap">
+                <dt>Objet de l'e-mail</dt><dd><strong>{{ newsletter.objet }}</strong></dd>
+                {% if newsletter.preheader %}<dt>Texte d'aperçu</dt><dd>{{ newsletter.preheader }}</dd>{% endif %}
+                <dt>Destinataires</dt>
+                <dd><strong class="newsletter-admin__nombre">{{ nb_destinataires }}</strong> abonné{{ nb_destinataires|pluralize }} actif{{ nb_destinataires|pluralize }}
+                    {% if deja_envoyee %}<br><small>Cette newsletter a déjà été envoyée : seuls les abonnés qui ne l'ont pas encore reçue sont comptés.</small>{% endif %}
+                </dd>
+            </dl>
+            <p>
+                <a class="button button-secondary" href="{{ url_apercu }}" target="_blank" rel="noopener">Voir l'e-mail (nouvel onglet)</a>
+                <a class="button button-secondary" href="{{ url_modifier }}">Modifier la newsletter</a>
+            </p>
+        </section>
+
+        <section class="newsletter-admin__bloc">
+            <h2>1. Envoyer un e-mail de test</h2>
+            <p>Vérifiez le rendu dans votre messagerie (ordinateur et téléphone) avant l'envoi réel.</p>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="test">
+                <label for="adresses_test">Adresse(s) de test, séparées par des virgules ({{ max_adresses_test }} au maximum)</label>
+                <input type="text" id="adresses_test" name="adresses_test" value="{{ adresses_test }}" class="newsletter-admin__champ">
+                <button type="submit" class="button button-secondary">Envoyer le test</button>
+            </form>
+        </section>
+
+        <section class="newsletter-admin__bloc newsletter-admin__bloc--envoi">
+            <h2>2. Envoyer aux abonnés</h2>
+            {% if nb_destinataires %}
+                <form method="post" id="form-lancer">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="lancer">
+                    <label class="newsletter-admin__case">
+                        <input type="checkbox" name="confirmation" value="oui" required>
+                        Je confirme l'envoi de « {{ newsletter.objet }} » à {{ nb_destinataires }} abonné{{ nb_destinataires|pluralize }}.
+                    </label>
+                    <p class="help">L'envoi se fait par petits lots en arrière-plan (limites du serveur d'o2switch).
+                        Il ne peut pas être rappelé une fois les messages partis.</p>
+                    <button type="submit" class="button">Lancer l'envoi</button>
+                </form>
+            {% else %}
+                <p>Aucun destinataire : il n'y a pas d'abonné actif, ou tous ont déjà reçu cette newsletter.</p>
+            {% endif %}
+        </section>
+    </div>
+
+    <style>
+        .newsletter-admin__bloc { max-width: 760px; margin: 0 0 2rem; padding: 1.25rem 1.5rem; border: 1px solid var(--w-color-border-furniture, #e0e0e0); border-radius: .4rem; }
+        .newsletter-admin__bloc--envoi { border-color: var(--w-color-secondary, #007d7e); }
+        .newsletter-admin__recap { display: grid; grid-template-columns: max-content 1fr; gap: .5rem 1.5rem; }
+        .newsletter-admin__recap dt { font-weight: 600; }
+        .newsletter-admin__recap dd { margin: 0; }
+        .newsletter-admin__nombre { font-size: 1.4em; }
+        .newsletter-admin__champ { max-width: 520px; margin: .5rem 0 1rem; }
+        .newsletter-admin__case { display: flex; gap: .6rem; align-items: flex-start; margin-bottom: .5rem; font-weight: 600; }
+    </style>
+    <script>
+        /* Dernière confirmation avant l'envoi réel */
+        document.getElementById("form-lancer")?.addEventListener("submit", function (e) {
+            if (!confirm("Envoyer « {{ newsletter.objet|escapejs }} » à {{ nb_destinataires }} abonné{{ nb_destinataires|pluralize }} ?\n\nCette action ne peut pas être annulée pour les messages déjà partis.")) {
+                e.preventDefault();
+            }
+        });
+    </script>
+{% endblock %}

@@ -5,7 +5,14 @@ Projet : Site vitrine ASBL "La Concorde" (théâtre / activités culturelles)
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+# Variables d'environnement du fichier src/.env (s'il existe). Chargé ici
+# pour que les réglages ci-dessous (e-mail notamment) les voient, en
+# développement comme en production.
+load_dotenv(BASE_DIR / ".env")
 
 # -----------------------------------------------------------------------
 # Applications
@@ -23,6 +30,7 @@ INSTALLED_APPS = [
     "theatre",
     "page_libre",
     "consentement",
+    "newsletter",
 
     # Wagtail
     "wagtail.contrib.forms",
@@ -172,3 +180,44 @@ SEARCH_RESULTS_PER_PAGE = 10
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "calendrier:mois_courant"
 LOGOUT_REDIRECT_URL = "calendrier:mois_courant"
+
+
+# -----------------------------------------------------------------------
+# E-mails (SMTP o2switch)
+# Valeurs lues dans src/.env (voir .env.example). Sans EMAIL_HOST, les
+# e-mails sont affichés dans la console au lieu d'être envoyés : pratique
+# en développement, aucun risque d'écrire à de vrais abonnés.
+# -----------------------------------------------------------------------
+def _env_bool(nom, defaut=False):
+    return os.environ.get(nom, str(defaut)).strip().lower() in ("1", "true", "yes", "oui", "on")
+
+
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+if EMAIL_HOST:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "465"))
+    # 465 = SSL implicite ; 587 = STARTTLS. Les deux sont exclusifs.
+    EMAIL_USE_SSL = _env_bool("EMAIL_USE_SSL", EMAIL_PORT == 465)
+    EMAIL_USE_TLS = _env_bool("EMAIL_USE_TLS", EMAIL_PORT == 587) and not EMAIL_USE_SSL
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+    EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", "30"))
+else:
+    EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "La Concorde asbl <infos@la-concorde.be>")
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+# -----------------------------------------------------------------------
+# Newsletter (application 'newsletter')
+# -----------------------------------------------------------------------
+# Expéditeur et adresse de réponse des newsletters (par défaut : DEFAULT_FROM_EMAIL)
+NEWSLETTER_FROM_EMAIL = os.environ.get("NEWSLETTER_FROM_EMAIL", "") or DEFAULT_FROM_EMAIL
+NEWSLETTER_REPLY_TO = os.environ.get("NEWSLETTER_REPLY_TO", "")
+# Adresse du site utilisée dans les e-mails (liens, images) ; à défaut WAGTAILADMIN_BASE_URL
+NEWSLETTER_BASE_URL = os.environ.get("NEWSLETTER_BASE_URL", "")
+# Cadence d'envoi, prudente pour le serveur SMTP mutualisé d'o2switch
+NEWSLETTER_LOT_TAILLE = int(os.environ.get("NEWSLETTER_LOT_TAILLE", "15"))
+NEWSLETTER_PAUSE_SECONDES = float(os.environ.get("NEWSLETTER_PAUSE_SECONDES", "2"))
+NEWSLETTER_MAX_PAR_HEURE = int(os.environ.get("NEWSLETTER_MAX_PAR_HEURE", "150"))
+NEWSLETTER_TENTATIVES_MAX = 3

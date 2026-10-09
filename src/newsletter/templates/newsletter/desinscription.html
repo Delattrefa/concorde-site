@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Se désinscrire de la newsletter{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'newsletter/css/newsletter.css' %}">{% endblock %}
+{% block content %}
+<section class="page-header">
+    <div class="wrap"><h1>Se désinscrire</h1></div>
+</section>
+<section class="newsletter-inscription">
+    <div class="wrap newsletter-inscription__seule">
+        <div class="newsletter-inscription__carte">
+            {% if abonne.statut == "desinscrit" %}
+                <p>L'adresse <strong>{{ abonne.email }}</strong> est déjà désinscrite : elle ne reçoit plus la newsletter.</p>
+                <p><a class="btn btn--secondary" href="/">Retour au site</a></p>
+            {% else %}
+                <p>Voulez-vous que l'adresse <strong>{{ abonne.email }}</strong> ne reçoive plus la newsletter de La Concorde asbl ?</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--secondary">Oui, me désinscrire</button>
+                    <a class="newsletter-form__annuler" href="/">Non, rester inscrit(e)</a>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

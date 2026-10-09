@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>{{ objet }}</title>
+<!--[if mso]>
+<noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+<style>td, th, div, p, a, h1, h2, h3 { font-family: Arial, sans-serif; }</style>
+<![endif]-->
+<style>
+  /* Lu par Apple Mail, Gmail (app et web), Outlook.com, Thunderbird.
+     Les messageries qui l'ignorent utilisent les styles en ligne. */
+  body { margin: 0; padding: 0; width: 100% !important; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+  table { border-collapse: collapse; mso-table-lspace: 0; mso-table-rspace: 0; }
+  img { border: 0; line-height: 100%; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
+  a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; }
+  @media only screen and (max-width: 620px) {
+    .conteneur { width: 100% !important; }
+    .marges { padding-left: 20px !important; padding-right: 20px !important; }
+    .image-fluide { width: 100% !important; max-width: 100% !important; height: auto !important; }
+    .colonne { display: block !important; width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
+    .colonne-image { padding-bottom: 12px !important; }
+    .titre-principal { font-size: 26px !important; }
+    .bouton-a { display: block !important; }
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background-color:{{ c.fond }};">
+
+{# Texte d'aperçu : affiché après l'objet dans la boîte de réception, invisible dans l'e-mail #}
+{% if preheader %}<span class="preheader" style="display:none !important;visibility:hidden;mso-hide:all;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;color:{{ c.fond }};">{{ preheader }}&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</span>{% endif %}
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:{{ c.fond }};">
+<tr><td align="center" style="padding:24px 12px;">
+
+  <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" align="center"><tr><td><![endif]-->
+  <table role="presentation" class="conteneur" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
+
+    {# Lien vers la version web #}
+    {% if url_navigateur %}
+    <tr><td align="center" style="padding:0 0 12px 0;font-family:{{ police_texte }};font-size:12px;color:{{ c.texte_doux }};">
+      Vous ne voyez pas bien cet e-mail ? <a href="{{ url_navigateur }}" target="_blank" style="color:{{ c.texte_doux }};text-decoration:underline;">Ouvrez-le dans votre navigateur</a>
+    </td></tr>
+    {% endif %}
+
+    {# En-tête aux couleurs du site #}
+    <tr><td align="center" bgcolor="{{ c.bordeaux }}" style="background-color:{{ c.bordeaux }};padding:28px 32px;border-radius:8px 8px 0 0;border-bottom:4px solid {{ c.dore }};">
+      <a href="{{ url_site }}" target="_blank" style="text-decoration:none;">
+        <span style="font-family:{{ police_titre }};font-size:30px;font-weight:bold;color:#ffffff;">La Concorde</span>
+        <span style="font-family:{{ police_titre }};font-size:18px;font-weight:bold;color:{{ c.dore }};">&nbsp;asbl</span>
+      </a>
+    </td></tr>
+
+    {# Corps #}
+    <tr><td class="marges" bgcolor="{{ c.carte }}" style="background-color:{{ c.carte }};padding:32px 32px 16px 32px;">
+
+      {% if salutation %}
+      <p style="margin:0 0 20px 0;font-family:{{ police_texte }};font-size:17px;line-height:1.6;color:{{ c.texte }};">{{ salutation }}</p>
+      {% endif %}
+
+      {% for bloc in blocs %}
+
+        {% if bloc.type == "titre" %}
+        <h2 class="titre-principal" style="margin:8px 0 14px 0;font-family:{{ police_titre }};font-size:28px;line-height:1.25;color:{{ c.bordeaux_fonce }};font-weight:bold;">{{ bloc.texte }}</h2>
+
+        {% elif bloc.type == "texte" %}
+        <div style="font-family:{{ police_texte }};font-size:16px;line-height:1.6;color:{{ c.texte }};">{{ bloc.html|safe }}</div>
+
+        {% elif bloc.type == "image" %}
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px 0;">
+          <tr><td align="center">
+            {% if bloc.lien %}<a href="{{ bloc.lien }}" target="_blank">{% endif %}<img src="{{ bloc.image.url }}" width="{{ bloc.image.largeur }}"{% if bloc.image.hauteur %} height="{{ bloc.image.hauteur }}"{% endif %} alt="{{ bloc.image.alt }}" class="image-fluide" style="display:block;width:{{ bloc.image.largeur }}px;max-width:100%;height:auto;border-radius:6px;font-family:{{ police_texte }};font-size:14px;color:{{ c.texte_doux }};">{% if bloc.lien %}</a>{% endif %}
+          </td></tr>
+          {% if bloc.legende %}
+          <tr><td align="center" style="padding:8px 0 0 0;font-family:{{ police_texte }};font-size:13px;line-height:1.4;color:{{ c.texte_doux }};font-style:italic;">{{ bloc.legende }}</td></tr>
+          {% endif %}
+        </table>
+
+        {% elif bloc.type == "bouton" %}
+        {# Bouton « à l'épreuve des balles » : cellule de tableau colorée, lisible même images bloquées #}
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:8px auto 24px auto;">
+          <tr><td align="center" bgcolor="{{ bloc.fond }}" style="background-color:{{ bloc.fond }};border-radius:6px;mso-padding-alt:14px 28px;">
+            <a href="{{ bloc.url }}" target="_blank" class="bouton-a" style="display:inline-block;padding:14px 28px;font-family:{{ police_texte }};font-size:16px;font-weight:bold;line-height:1.2;color:{{ bloc.couleur }};text-decoration:none;border-radius:6px;">{{ bloc.texte }}</a>
+          </td></tr>
+        </table>
+
+        {% elif bloc.type == "actualites" %}
+        {% if bloc.titre %}<h2 style="margin:16px 0 14px 0;font-family:{{ police_titre }};font-size:22px;line-height:1.3;color:{{ c.bordeaux_fonce }};font-weight:bold;">{{ bloc.titre }}</h2>{% endif %}
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px 0;">
+          {% for el in bloc.elements %}
+          <tr>
+            {% if el.image %}
+            <td class="colonne colonne-image" width="160" valign="top" style="width:160px;padding:0 16px 18px 0;">
+              <a href="{{ el.url }}" target="_blank"><img src="{{ el.image.url }}" width="160"{% if el.image.hauteur %} height="{{ el.image.hauteur }}"{% endif %} alt="{{ el.image.alt }}" class="image-fluide" style="display:block;width:160px;max-width:100%;height:auto;border-radius:4px;"></a>
+            </td>
+            {% endif %}
+            <td class="colonne" valign="top" style="padding:0 0 18px 0;border-bottom:1px solid {{ c.filet }};">
+              <p style="margin:0 0 4px 0;font-family:{{ police_texte }};font-size:12px;line-height:1.4;color:{{ c.texte_doux }};text-transform:uppercase;letter-spacing:0.5px;">{{ el.date }}</p>
+              <p style="margin:0 0 6px 0;font-family:{{ police_titre }};font-size:18px;line-height:1.3;font-weight:bold;"><a href="{{ el.url }}" target="_blank" style="color:{{ c.bordeaux_fonce }};text-decoration:none;">{{ el.titre }}</a></p>
+              {% if el.resume %}<p style="margin:0 0 8px 0;font-family:{{ police_texte }};font-size:15px;line-height:1.5;color:{{ c.texte }};">{{ el.resume }}</p>{% endif %}
+              <a href="{{ el.url }}" target="_blank" style="font-family:{{ police_texte }};font-size:14px;font-weight:bold;color:{{ c.bordeaux }};text-decoration:underline;">Lire la suite →</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+
+        {% elif bloc.type == "page_en_avant" %}
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px 0;border:1px solid {{ c.filet }};border-radius:8px;">
+          {% if bloc.image %}
+          <tr><td style="padding:0;">
+            <a href="{{ bloc.url }}" target="_blank"><img src="{{ bloc.image.url }}" width="{{ bloc.image.largeur }}"{% if bloc.image.hauteur %} height="{{ bloc.image.hauteur }}"{% endif %} alt="{{ bloc.image.alt }}" class="image-fluide" style="display:block;width:100%;max-width:{{ bloc.image.largeur }}px;height:auto;border-radius:8px 8px 0 0;"></a>
+          </td></tr>
+          {% endif %}
+          <tr><td style="padding:20px 22px 22px 22px;">
+            <p style="margin:0 0 8px 0;font-family:{{ police_titre }};font-size:20px;line-height:1.3;font-weight:bold;color:{{ c.bordeaux_fonce }};">{{ bloc.titre }}</p>
+            {% if bloc.texte %}<p style="margin:0 0 16px 0;font-family:{{ police_texte }};font-size:15px;line-height:1.6;color:{{ c.texte }};">{{ bloc.texte }}</p>{% endif %}
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr><td bgcolor="{{ c.bordeaux }}" style="background-color:{{ c.bordeaux }};border-radius:6px;mso-padding-alt:12px 22px;">
+                <a href="{{ bloc.url }}" target="_blank" style="display:inline-block;padding:12px 22px;font-family:{{ police_texte }};font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:6px;">{{ bloc.texte_bouton }}</a>
+              </td></tr>
+            </table>
+          </td></tr>
+        </table>
+
+        {% elif bloc.type == "encadre" %}
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px 0;">
+          <tr><td bgcolor="#faf3e3" style="background-color:#faf3e3;border-left:4px solid {{ c.dore }};padding:18px 20px 4px 20px;border-radius:0 6px 6px 0;">
+            {% if bloc.titre %}<p style="margin:0 0 10px 0;font-family:{{ police_titre }};font-size:18px;font-weight:bold;color:{{ c.bordeaux_fonce }};">{{ bloc.titre }}</p>{% endif %}
+            {{ bloc.html|safe }}
+          </td></tr>
+        </table>
+
+        {% elif bloc.type == "separateur" %}
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px 0;">
+          <tr><td style="border-top:1px solid {{ c.filet }};font-size:1px;line-height:1px;height:1px;">&nbsp;</td></tr>
+        </table>
+        {% endif %}
+
+      {% endfor %}
+
+    </td></tr>
+
+    {# Pied de page : obligatoire pour un envoi groupé (identité, raison, désinscription) #}
+    <tr><td class="marges" bgcolor="{{ c.bordeaux_fonce }}" style="background-color:{{ c.bordeaux_fonce }};padding:24px 32px;border-radius:0 0 8px 8px;">
+      <p style="margin:0 0 8px 0;font-family:{{ police_texte }};font-size:13px;line-height:1.5;color:#f1e3e3;">
+        <strong style="color:#ffffff;">{{ nom_expediteur }}</strong><br>{{ adresse_postale }}<br>
+        <a href="{{ url_site }}" target="_blank" style="color:{{ c.dore }};text-decoration:underline;">{{ url_site }}</a>
+      </p>
+      <p style="margin:0;font-family:{{ police_texte }};font-size:12px;line-height:1.5;color:#d9c4c4;">
+        Vous recevez cet e-mail car vous êtes inscrit(e) à la newsletter de {{ nom_expediteur }}.<br>
+        <a href="{{ url_desinscription }}" target="_blank" style="color:#ffffff;text-decoration:underline;">Se désinscrire</a>
+      </p>
+    </td></tr>
+
+  </table>
+  <!--[if mso]></td></tr></table><![endif]-->
+
+</td></tr>
+</table>
+</body>
+</html>

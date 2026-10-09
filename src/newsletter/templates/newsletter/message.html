@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ titre }} — Newsletter{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'newsletter/css/newsletter.css' %}">{% endblock %}
+{% block content %}
+<section class="page-header">
+    <div class="wrap"><h1>{{ titre }}</h1></div>
+</section>
+<section class="newsletter-inscription">
+    <div class="wrap newsletter-inscription__seule">
+        <div class="newsletter-inscription__carte">
+            <p>{{ texte }}</p>
+            <p><a class="btn btn--secondary" href="/">Retour au site</a></p>
+        </div>
+    </div>
+</section>
+{% endblock %}

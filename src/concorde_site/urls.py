@@ -20,6 +20,7 @@ def favicon_ico(request):
 
 urlpatterns = [
     path("favicon.ico", favicon_ico),
+    path("nl/", include("newsletter.urls")),
     path("django-admin/", admin.site.urls),
     path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),

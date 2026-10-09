@@ -10,7 +10,7 @@ Chaque élément est (type de bloc, contenu) pour le StreamField de InfoPage :
 "heading" (texte), "paragraph" (HTML), "callout" (titre, HTML).
 """
 
-DATE_MISE_A_JOUR = "4 octobre 2026"
+DATE_MISE_A_JOUR = "8 octobre 2026"
 
 CONTENU = [
     ("callout", ("En résumé",
@@ -58,6 +58,15 @@ CONTENU = [
         "Base légale : l'exécution de votre réservation.<br/>"
         "Durée de conservation : jusqu'à la fin de la saison théâtrale concernée ; les "
         "données liées aux ventes sont conservées le temps requis par nos obligations comptables.</p>"),
+    ("paragraph",
+        "<p><b>Newsletter</b><br/>"
+        "Données : adresse e-mail, et si vous les indiquez, prénom et nom ; date d'inscription et "
+        "de désinscription ; historique des envois qui vous ont été adressés.<br/>"
+        "Finalité : vous envoyer les nouvelles de l'association (spectacles, activités, événements).<br/>"
+        "Base légale : votre consentement, donné en cochant la case du formulaire d'inscription. "
+        "Vous pouvez le retirer à tout moment grâce au lien « Se désinscrire » présent dans chaque e-mail.<br/>"
+        "Durée de conservation : tant que vous êtes abonné(e) ; après une désinscription, seule votre "
+        "adresse est gardée au maximum 3 ans, comme preuve de votre choix et pour ne plus vous écrire.</p>"),
     ("paragraph",
         "<p><b>Comptes des membres et administrateurs du site</b><br/>"
         "Données : nom, prénom, identifiant, adresse e-mail et mot de passe (enregistré "
