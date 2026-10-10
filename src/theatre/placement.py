@@ -9,7 +9,6 @@ Fonctionnalités :
   - Scoring de placement (rangée souhaitée, avant/centre/arrière, gauche/milieu/droite)
   - Placement groupé par réservation (places contiguës sur une ou deux rangées)
   - Création des PlaceReservee et PlaceLibre en base de données
-  - Utilitaires de recalcul du CA
 
 Langue  : Français
 """
@@ -22,7 +21,6 @@ from dataclasses import dataclass, field
 from typing      import Optional
 
 from django.db        import transaction
-from django.utils     import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -683,7 +681,10 @@ def placer_reservations(representation):
         representation : Instance du modèle Representation Django.
 
     Returns:
-        Instance du modèle PlanSalle nouvellement créé.
+        Instance du modèle PlanSalle nouvellement créé. Son attribut
+        `reservations_non_placees` (non enregistré en base) liste les
+        réservations restées sans place (salle pleine), dans l'ordre de
+        traitement, pour en avertir l'utilisateur.
 
     Raises:
         Exception : Toute erreur annule la transaction (rollback complet).
@@ -747,7 +748,7 @@ def placer_reservations(representation):
     snapshots_par_reservation : list[tuple] = []
     # tuple = (reservation, [SnapshotPlace, ...])
 
-    nb_non_places = 0
+    non_placees = []
 
     for res in reservations_triees:
         nb_places = res.total_places()
@@ -772,7 +773,7 @@ def placer_reservations(representation):
                 "IMPOSSIBLE À PLACER (salle pleine ?).",
                 res.pk, res.nom, res.prenom, nb_places
             )
-            nb_non_places += 1
+            non_placees.append(res)
             continue
 
         # ── CRITIQUE : snapshot AVANT appliquer_placement ────────────────────
@@ -786,7 +787,7 @@ def placer_reservations(representation):
                 "Réservation ignorée.",
                 res.pk, exc
             )
-            nb_non_places += 1
+            non_placees.append(res)
             continue
 
         # Vérifie qu'aucun numéro n'est None dans le snapshot
@@ -797,7 +798,7 @@ def placer_reservations(representation):
                 "Réservation ignorée.",
                 res.pk, numeros_snap
             )
-            nb_non_places += 1
+            non_placees.append(res)
             continue
 
         # Stocke le snapshot pour le bulk_create
@@ -858,67 +859,15 @@ def placer_reservations(representation):
         "%d place(s) libre(s), %d réservation(s) non placée(s). ===",
         len(places_reservees),
         len(places_libres),
-        nb_non_places,
+        len(non_placees),
     )
 
-    if nb_non_places > 0:
+    if non_placees:
         logger.warning(
             "%d réservation(s) non placée(s). "
             "Vérifiez la capacité de la salle ou les données.",
-            nb_non_places
+            len(non_placees)
         )
 
+    plan.reservations_non_placees = non_placees
     return plan
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-#  UTILITAIRES CHIFFRE D'AFFAIRES
-# ══════════════════════════════════════════════════════════════════════════════
-
-def calculer_ca_total(plan) -> float:
-    """
-    Calcule le chiffre d'affaires total d'un plan de salle :
-    tickets valides (entrées validées) + ventes flash valides.
-
-    Args:
-        plan : Instance du modèle PlanSalle.
-
-    Returns:
-        Montant total en euros (float).
-    """
-    from .models import Ticket, VenteFlash
-
-    ca_tickets = sum(
-        float(t.prix_unitaire)
-        for t in Ticket.objects.filter(
-            place__plan_salle = plan,
-            statut            = 'valide',
-        )
-    )
-
-    ca_flash = sum(
-        float(v.prix)
-        for v in VenteFlash.objects.filter(
-            place_libre__plan_salle = plan,
-            statut                  = 'valide',
-        )
-    )
-
-    return ca_tickets + ca_flash
-
-
-def calculer_ca_representation(representation) -> float:
-    """
-    Calcule le CA total pour une représentation.
-    Retourne 0.0 si aucun plan n'existe encore.
-
-    Args:
-        representation : Instance du modèle Representation Django.
-
-    Returns:
-        Montant total en euros (float).
-    """
-    from .models import PlanSalle
-
-    plan = PlanSalle.objects.filter(representation=representation).first()
-    return calculer_ca_total(plan) if plan else 0.0

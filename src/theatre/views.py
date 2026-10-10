@@ -186,6 +186,16 @@ def plan_salle_generer(request, rep_pk):
     if request.method == 'POST':
         plan = placer_reservations(representation)
         messages.success(request, f"Plan de salle généré : {plan.nb_total_places} places, {plan.nb_rangees} rangées.")
+        if plan.reservations_non_placees:
+            details = ", ".join(
+                f"{r.nom} {r.prenom} ({r.total_places()} place{'s' if r.total_places() > 1 else ''})"
+                for r in plan.reservations_non_placees
+            )
+            messages.warning(
+                request,
+                f"Salle complète : {len(plan.reservations_non_placees)} réservation(s) sans place "
+                f"(capacité maximale {plan.nb_total_places} places) : {details}.",
+            )
         return redirect('plan_salle_afficher', rep_pk=rep_pk)
 
     return render(request, 'theatre/plan_salle_confirm.html', {
