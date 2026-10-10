@@ -1,22 +1,49 @@
-wagtail>=6.2,<7.0
-django>=5.0,<5.3
-Pillow>=10.0
-whitenoise>=6.6
+# Versions exactes installées sur le serveur (deploy.sh : pip install -r requirements.txt).
+# Généré depuis requirements.in ; vérifié pour Python 3.11 (o2switch).
+#
+# Ne pas modifier à la main. Pour mettre à jour les dépendances :
+#   1. ajuster si besoin les plages de versions dans requirements.in ;
+#   2. dans un environnement virtuel VIDE :
+#        pip install -r requirements.in
+#        pip freeze --exclude pip --exclude setuptools --exclude wheel > requirements.txt
+#   3. remettre cet en-tête, lancer les tests (python manage.py test), puis committer.
 
-# Base de données de production (o2switch propose PostgreSQL et MySQL)
-psycopg2-binary>=2.9   # PostgreSQL
-PyMySQL>=1.1           # MySQL/MariaDB (seulement si DB_ENGINE=mysql)
-
-# Lecture du fichier src/.env en production
-python-dotenv>=1.0
-
-# Serveur d'application hors cPanel (inutile sur o2switch, Passenger s'en charge)
-gunicorn>=22.0
-
-# Référencement (SEO) : balises meta, Open Graph, Twitter Card, données
-# structurées Schema.org
-wagtail-seo>=3.0
-
-# Génération du contrat de location en PDF (app 'calendrier')
-reportlab>=4.0
-pypdf>=5.0
+anyascii==0.3.3
+asgiref==3.12.1
+beautifulsoup4==4.15.0
+certifi==2026.7.22
+charset-normalizer==3.5.2
+defusedxml==0.7.1
+Django==5.2.18
+django-filter==26.2
+django-modelcluster==6.5
+django-permissionedforms==0.1
+django-stubs-ext==6.1.2
+django-taggit==6.1.0
+django-tasks==0.6.1
+django-treebeard==4.8.0
+djangorestframework==3.18.3
+draftjs_exporter==5.2.0
+et_xmlfile==2.0.0
+filetype==1.2.0
+gunicorn==26.2.0
+idna==3.20
+laces==0.1.2
+openpyxl==3.1.5
+pillow==11.3.0
+pillow_heif==1.8.0
+psycopg2-binary==2.9.13
+PyMySQL==1.2.3
+pypdf==6.20.0
+python-dotenv==1.2.4
+reportlab==5.0.1
+requests==2.34.2
+soupsieve==3.0
+sqlparse==0.6.0
+telepath==0.3.1
+typing_extensions==4.16.0
+urllib3==2.8.0
+wagtail==6.4.2
+wagtail-seo==3.1.1
+whitenoise==6.12.0
+Willow==1.12.0

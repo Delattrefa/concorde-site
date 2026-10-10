@@ -9,7 +9,8 @@ Organisation retenue sur le serveur :
 /home/compte/
 ├── concorde/                 ← clone du dépôt GitHub (hors du web public)
 │   ├── deploy.sh
-│   ├── requirements.txt
+│   ├── requirements.txt      ← versions exactes installées (générées depuis requirements.in)
+│   ├── requirements.in       ← dépendances directes et plages de versions
 │   ├── deploiement/htaccess-contrats
 │   └── src/                  ← racine de l'application Python (cPanel)
 │       ├── manage.py
