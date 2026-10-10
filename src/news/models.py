@@ -88,6 +88,12 @@ class NewsPage(SeoMixin, Page):
     seo_content_type = SeoType.ARTICLE
     seo_twitter_card = TwitterCard.LARGE
 
+    # Aperçu lors d'un partage (Facebook, WhatsApp, LinkedIn...) : image et
+    # résumé de l'onglet « Promotion » si remplis, sinon l'image principale
+    # et l'introduction de l'article.
+    seo_image_sources = ["og_image", "featured_image"]
+    seo_description_sources = ["search_description", "intro"]
+
     date = models.DateField(
         "Date de publication", help_text="Utilisée pour trier les articles."
     )

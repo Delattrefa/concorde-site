@@ -1,0 +1,35 @@
+{% comment %}
+Boutons de partage d'une actualité. Simples liens vers les réseaux : aucun
+script ni cookie tiers n'est chargé avant le clic du visiteur.
+Instagram ne propose pas de lien de partage web : sur téléphone, le bouton
+« Partager… » ouvre le menu du système (Instagram, Messenger, WhatsApp...),
+et « Copier le lien » permet de coller l'adresse partout ailleurs.
+{% endcomment %}
+{% with url=page.full_url titre=page.title %}
+<aside class="partage" aria-label="Partager cette actualité" data-partage
+       data-url="{{ url }}" data-titre="{{ titre }}" data-texte="{{ page.intro|default:'' }}">
+    <p class="partage__titre">Partager cette actualité</p>
+    <ul class="partage__liste">
+        <li class="partage__natif" hidden>
+            <button type="button" class="partage__bouton partage__bouton--natif" data-partage-natif>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Partager… <small>(Instagram, Messenger…)</small>
+            </button>
+        </li>
+        <li><a class="partage__bouton" data-fenetre href="https://www.facebook.com/sharer/sharer.php?u={{ url|urlencode:'' }}" target="_blank" rel="noopener noreferrer">Facebook</a></li>
+        <li><a class="partage__bouton" href="https://wa.me/?text={{ titre|urlencode:'' }}%20{{ url|urlencode:'' }}" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
+        <li><a class="partage__bouton" data-fenetre href="https://x.com/intent/post?url={{ url|urlencode:'' }}&amp;text={{ titre|urlencode:'' }}" target="_blank" rel="noopener noreferrer">X</a></li>
+        <li><a class="partage__bouton" data-fenetre href="https://www.linkedin.com/sharing/share-offsite/?url={{ url|urlencode:'' }}" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
+        <li><a class="partage__bouton" href="mailto:?subject={{ titre|urlencode:'' }}&amp;body={{ titre|urlencode:'' }}%0A%0A{{ url|urlencode:'' }}">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3zM3 6l9 7 9-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            E-mail</a></li>
+        <li>
+            <button type="button" class="partage__bouton" data-partage-copier>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <span data-partage-libelle>Copier le lien</span>
+            </button>
+        </li>
+    </ul>
+    <p class="partage__aide" data-partage-aide hidden>Lien copié : collez-le dans une story ou un message Instagram, Messenger…</p>
+</aside>
+{% endwith %}

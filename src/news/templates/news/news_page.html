@@ -1,8 +1,12 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags wagtailimages_tags %}
+{% load static wagtailcore_tags wagtailimages_tags %}
 
 {% block title %}{{ page.title }}{% endblock %}
 {% block meta_description %}{{ page.intro|default:page.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'news/css/news.css' %}">
+{% endblock %}
 
 {% block content %}
 <section class="page-header fade-target">
@@ -34,6 +38,8 @@
     {% if page.intro %}<p class="news-body__intro fade-up">{{ page.intro }}</p>{% endif %}
     {% include "news/includes/corps_actualite.html" with article=page %}
 
+    {% include "news/includes/partage.html" %}
+
     {% if peut_modifier %}
         <div class="news-body__actions">
             <a class="btn btn--secondary" href="{% url 'news_modifier' page.pk %}">Modifier cette actualité</a>
@@ -63,4 +69,8 @@
     </div>
 </section>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'news/js/partage.js' %}" defer></script>
 {% endblock %}

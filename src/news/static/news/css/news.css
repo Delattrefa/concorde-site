@@ -34,3 +34,24 @@
 .news-form__actions { margin-top: 26px; }
 
 .btn--danger { background: #b23a3a; color: #fff; margin-left: 12px; }
+
+/* ---------- Partage d'une actualité ---------- */
+.partage { margin: 36px 0 8px; padding: 18px 20px; background: #f1e9e2; border-radius: 8px; }
+.partage__titre { margin: 0 0 12px; font-weight: 700; color: var(--color-primary-dark, #5a161f); }
+.partage__liste { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.partage__liste li[hidden] { display: none; }
+.partage__bouton {
+    display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 8px 15px;
+    border: 1px solid #d9cbbf; border-radius: 20px; background: #fff;
+    color: var(--color-primary-dark, #5a161f); font: inherit; font-size: .92rem; font-weight: 600;
+    text-decoration: none; cursor: pointer; transition: background .2s ease, border-color .2s ease, color .2s ease;
+}
+.partage__bouton:hover, .partage__bouton:focus-visible { background: var(--color-primary, #7a1f2b); border-color: var(--color-primary, #7a1f2b); color: #fff; }
+.partage__bouton svg { width: 17px; height: 17px; flex: 0 0 auto; }
+.partage__bouton small { font-weight: 400; opacity: .8; }
+.partage__bouton--natif { background: var(--color-primary, #7a1f2b); border-color: var(--color-primary, #7a1f2b); color: #fff; }
+.partage__aide { margin: 10px 0 0; font-size: .86rem; color: #5a4a4a; }
+@media (max-width: 480px) {
+    .partage__natif { flex: 1 1 100%; }
+    .partage__bouton--natif { width: 100%; justify-content: center; }
+}
