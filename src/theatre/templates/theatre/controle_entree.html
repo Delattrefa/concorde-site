@@ -335,12 +335,14 @@
 
 // ── URLs Django ──
 const URL_VALIDER          = "{% url 'valider_entree' representation.pk %}";
-const URL_ANNULER_TICKET   = (id) => `/ticket/${id}/annuler/`;
+// URL générées par Django (l'application est montée sous /theatre/) ; 0 est
+// remplacé par l'identifiant voulu.
+const URL_ANNULER_TICKET   = (id) => "{% url 'annuler_ticket' 0 %}".replace('/0/', `/${id}/`);
 const URL_VENTE_FLASH      = "{% url 'vente_flash' plan.pk %}";
-const URL_ANNULER_FLASH    = (id) => `/vente-flash/${id}/annuler/`;
+const URL_ANNULER_FLASH    = (id) => "{% url 'annuler_vente_flash' 0 %}".replace('/0/', `/${id}/`);
 const URL_METTRE_TAMPON    = "{% url 'mettre_en_tampon' plan.pk %}";
 const URL_PLACER_TAMPON    = "{% url 'placer_depuis_tampon' plan.pk %}";
-const URL_RETIRER_TAMPON   = (id) => `/tampon/${id}/retirer/`;
+const URL_RETIRER_TAMPON   = (id) => "{% url 'retirer_du_tampon' 0 %}".replace('/0/', `/${id}/`);
 
 const CSRF              = "{{ csrf_token }}";
 const PRIX_ADULTE       = parseFloat("{{ representation.prix_adulte|stringformat:"f" }}");
@@ -512,6 +514,7 @@ function afficherConfirmAnnulation(el) {
 
 async function annulerTicket(ticketId, placeId) {
     const data = await postJSON(URL_ANNULER_TICKET(ticketId), {});
+    if (data.erreur) { alert(data.erreur); return; }
     if (data.succes) {
         const el = document.getElementById('place-res-' + placeId);
         if (el) { el.classList.remove('validee'); el.classList.add('annulee'); el.dataset.statut = 'annule'; }
@@ -589,6 +592,7 @@ async function soumettrVenteFlash() {
 
 async function annulerVenteFlashDirect(venteId, el) {
     const data = await postJSON(URL_ANNULER_FLASH(venteId), {});
+    if (data.erreur) { alert(data.erreur); return; }
     if (data.succes) {
         el.classList.remove('flash-vendue');
         el.classList.add('place-libre-vide');
@@ -797,17 +801,9 @@ function annulerPlacement() {
 async function retirerDuTampon(tamponId) {
     if (!confirm('Retirer cette réservation du tampon ?')) return;
     const data = await postJSON(URL_RETIRER_TAMPON(tamponId), {});
-    if (data.succes) {
-        document.getElementById('tampon-' + tamponId)?.remove();
-        const compteur = document.getElementById('compteurTampon');
-        const [n, max] = compteur.textContent.split('/');
-        const nouveau = Math.max(0, parseInt(n) - 1);
-        compteur.textContent = nouveau + '/' + max;
-        if (nouveau === 0) {
-            document.getElementById('zoneTampon').innerHTML =
-                '<div class="text-muted small text-center py-2" id="tamponVide">Zone tampon vide</div>';
-        }
-    }
+    if (data.erreur) { alert(data.erreur); return; }
+    // La réservation a retrouvé ses places d'origine : on redessine le plan.
+    if (data.succes) window.location.reload();
 }
 
 /* ════════════════════════════════════════
@@ -875,20 +871,27 @@ function mettreAJourCA(ca) {
 }
 
 async function postJSON(url, body) {
-    const resp = await fetch(url, {
-        method  : 'POST',
-        headers : {
-            'Content-Type'     : 'application/json',
-            'X-CSRFToken'      : CSRF,
-            'X-Requested-With' : 'XMLHttpRequest',
-        },
-        body: JSON.stringify(body),
-    });
-    if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ erreur: 'Erreur serveur ' + resp.status }));
-        throw new Error(err.erreur || 'Erreur serveur');
+    // Renvoie toujours un objet : en cas de refus du serveur ou de coupure
+    // réseau, { erreur: '...' }, que les appelants affichent.
+    let resp;
+    try {
+        resp = await fetch(url, {
+            method  : 'POST',
+            headers : {
+                'Content-Type'     : 'application/json',
+                'X-CSRFToken'      : CSRF,
+                'X-Requested-With' : 'XMLHttpRequest',
+            },
+            body: JSON.stringify(body),
+        });
+    } catch (e) {
+        return { erreur: 'Connexion au serveur impossible. Vérifiez le réseau et réessayez.' };
     }
-    return resp.json();
+    const data = await resp.json().catch(() => null);
+    if (!resp.ok) {
+        return { erreur: (data && data.erreur) || ('Erreur serveur ' + resp.status) };
+    }
+    return data || { erreur: 'Réponse du serveur illisible.' };
 }
 </script>
 {% endblock %}

@@ -292,9 +292,13 @@ class ZoneTampon(models.Model):
         Reservation, on_delete=models.CASCADE,
         related_name='en_tampon', verbose_name="Réservation"
     )
+    # Places quittées par la réservation, pour les lui rendre si le
+    # déplacement est annulé : [{"numero_place", "rangee", "colonne"}, ...].
+    # (Les tampons plus anciens contiennent des identifiants de places
+    # supprimées, inutilisables.)
     places_liberes = models.JSONField(
         default=list,
-        verbose_name="IDs des PlaceReservee libérées"
+        verbose_name="Places d'origine de la réservation"
     )
     mis_en_tampon_le = models.DateTimeField(auto_now_add=True)
 

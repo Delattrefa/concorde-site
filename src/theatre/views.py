@@ -10,6 +10,10 @@ super-utilisateurs ont toujours accès.
 """
 
 import json
+from decimal import Decimal
+
+from django.db import transaction
+from django.db.models import Sum
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import permission_required
@@ -34,6 +38,10 @@ def acces_theatre_requis(vue):
     return permission_required(
         "theatre.acces_application", login_url="login", raise_exception=True
     )(vue)
+
+
+# Nombre maximum de réservations en attente de déplacement par plan de salle.
+MAX_TAMPON = 5
 
 
 # ─── REPRÉSENTATIONS ────────────────────────────────────────────────────────
@@ -164,7 +172,7 @@ def get_prix(request):
             'prix_adulte': float(rep.prix_adulte),
             'prix_enfant': float(rep.prix_enfant),
         })
-    except Representation.DoesNotExist:
+    except (Representation.DoesNotExist, ValueError, TypeError):
         return JsonResponse({'error': 'Représentation introuvable'}, status=404)
 
 
@@ -302,52 +310,54 @@ def controle_entree(request, rep_pk):
     # Zone tampon
     tampons = ZoneTampon.objects.filter(plan_salle=plan).select_related('reservation')
 
-    # CA total
-    ca_tickets = Ticket.objects.filter(
-        place__plan_salle=plan, statut='valide'
-    )
-    ca_flash = VenteFlash.objects.filter(
-        place_libre__plan_salle=plan, statut='valide'
-    )
-    ca_total = (
-        sum(t.prix_unitaire for t in ca_tickets) +
-        sum(v.prix for v in ca_flash)
-    )
-
     return render(request, 'theatre/controle_entree.html', {
         'representation' : representation,
         'plan'           : plan,
         'lignes'         : lignes,
         'tampons'        : tampons,
-        'ca_total'       : ca_total,
+        'ca_total'       : _calculer_ca(plan),
         'nb_tampon'      : tampons.count(),
-        'max_tampon'     : 5,
+        'max_tampon'     : MAX_TAMPON,
     })
 
 
 @acces_theatre_requis
 @require_POST
+@transaction.atomic
 def valider_entree(request, rep_pk):
     """
     Reçoit la liste des place_ids sélectionnées,
     crée les tickets correspondants et retourne les données pour impression.
     """
-    representation = get_object_or_404(Representation, pk=rep_pk)
-    plan           = get_object_or_404(PlanSalle, representation=representation)
+    plan           = _plan_verrouille(representation__pk=rep_pk)
+    representation = plan.representation
 
+    data = _lire_json(request)
     try:
-        data      = json.loads(request.body)
-        place_ids = data.get('place_ids', [])
-    except (json.JSONDecodeError, KeyError):
-        return JsonResponse({'erreur': 'Données invalides.'}, status=400)
+        place_ids = [int(i) for i in data['place_ids']]
+    except (TypeError, KeyError, ValueError):
+        return _donnees_invalides()
 
     if not place_ids:
         return JsonResponse({'erreur': 'Aucune place sélectionnée.'}, status=400)
 
-    places = PlaceReservee.objects.filter(
-        id__in=place_ids,
-        plan_salle=plan
-    ).select_related('reservation')
+    places = list(
+        PlaceReservee.objects
+        .filter(id__in=place_ids, plan_salle=plan)
+        .select_related('reservation', 'ticket')
+        .order_by('numero_place')
+    )
+
+    # Places de chaque réservation concernée, dans l'ordre des numéros : les
+    # nb_adultes premières sont au tarif adulte, les suivantes au tarif enfant.
+    ordre_places = {}
+    for place_id, reservation_id in (
+        PlaceReservee.objects
+        .filter(plan_salle=plan, reservation_id__in={p.reservation_id for p in places})
+        .order_by('numero_place')
+        .values_list('id', 'reservation_id')
+    ):
+        ordre_places.setdefault(reservation_id, []).append(place_id)
 
     tickets_data = []
     for place in places:
@@ -355,19 +365,9 @@ def valider_entree(request, rep_pk):
         if hasattr(place, 'ticket') and place.ticket.statut == 'valide':
             continue
 
-        res = place.reservation
-
-        # Détermination du tarif adulte ou enfant
-        places_res = list(
-            PlaceReservee.objects
-            .filter(reservation=res, plan_salle=plan)
-            .order_by('numero_place')
-            .values_list('id', flat=True)
-        )
-        idx       = list(places_res).index(place.id) if place.id in list(places_res) else 0
-        est_adulte = idx < res.nb_adultes
-        prix      = float(res.representation.prix_adulte if est_adulte
-                          else res.representation.prix_enfant)
+        res        = place.reservation
+        est_adulte = ordre_places[res.id].index(place.id) < res.nb_adultes
+        prix       = representation.prix_adulte if est_adulte else representation.prix_enfant
 
         # Création ou réactivation du ticket
         ticket, _ = Ticket.objects.update_or_create(
@@ -386,49 +386,42 @@ def valider_entree(request, rep_pk):
             'rangee'         : place.rangee + 1,      # affichage 1-based
             'nom'            : res.nom,
             'prenom'         : res.prenom,
-            'representation' : res.representation.nom,
-            'date'           : res.representation.date.strftime('%d/%m/%Y'),
-            'prix'           : prix,
+            'representation' : representation.nom,
+            'date'           : representation.date.strftime('%d/%m/%Y'),
+            'prix'           : float(prix),
             'est_adulte'     : est_adulte,
         })
 
-    # Recalcul du CA total
-    ca_total = float(sum(
-        t.prix_unitaire
-        for t in Ticket.objects.filter(place__plan_salle=plan, statut='valide')
-    ))
-
     return JsonResponse({
         'tickets'  : tickets_data,
-        'ca_total' : ca_total,
+        'ca_total' : float(_calculer_ca(plan)),
     })
 
 
 @acces_theatre_requis
 @require_POST
+@transaction.atomic
 def annuler_ticket(request, ticket_id):
     """Annule un ticket — répond en JSON (AJAX) ou redirige (formulaire classique)."""
+    ticket = get_object_or_404(Ticket.objects.select_related('place'), pk=ticket_id)
+    plan   = _plan_verrouille(pk=ticket.place.plan_salle_id)
+    # Relu après le verrou : un autre poste a pu le modifier entre-temps.
     ticket = get_object_or_404(Ticket, pk=ticket_id)
-    plan   = ticket.place.plan_salle
 
-    ticket.statut    = 'annule'
-    ticket.annule_le = timezone.now()
-    ticket.save()
-
-    ca_total = float(sum(
-        t.prix_unitaire
-        for t in Ticket.objects.filter(place__plan_salle=plan, statut='valide')
-    ))
+    if ticket.statut == 'valide':
+        ticket.statut    = 'annule'
+        ticket.annule_le = timezone.now()
+        ticket.save()
 
     # Réponse JSON pour les appels AJAX (controle_entree)
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' \
        or request.content_type == 'application/json' \
        or request.headers.get('Accept') == 'application/json':
-        return JsonResponse({'succes': True, 'ca_total': ca_total})
+        return JsonResponse({'succes': True, 'ca_total': float(_calculer_ca(plan))})
 
     # Redirection pour les formulaires classiques (liste_tickets)
     messages.success(request, "Ticket annulé avec succès.")
-    return redirect('liste_tickets', rep_pk=plan.representation.pk)
+    return redirect('liste_tickets', rep_pk=plan.representation_id)
 
 
 @acces_theatre_requis
@@ -457,40 +450,53 @@ def liste_tickets(request, rep_pk):
 
 @acces_theatre_requis
 @require_POST
+@transaction.atomic
 def vente_flash(request, plan_pk):
     """
     Enregistre une vente flash sur une place libre.
     Reçoit : place_libre_id, nom, prenom, tarif
     """
-    plan = get_object_or_404(PlanSalle, pk=plan_pk)
+    plan = _plan_verrouille(pk=plan_pk)
 
+    data = _lire_json(request)
     try:
-        data          = json.loads(request.body)
         place_libre_id = int(data['place_libre_id'])
-        nom           = data['nom'].strip()
-        prenom        = data['prenom'].strip()
-        tarif         = data['tarif']   # 'adulte' ou 'enfant'
-    except (KeyError, ValueError, json.JSONDecodeError):
-        return JsonResponse({'erreur': 'Données invalides.'}, status=400)
+        nom            = data['nom'].strip()
+        prenom         = data['prenom'].strip()
+        tarif          = data['tarif']   # 'adulte' ou 'enfant'
+    except (TypeError, KeyError, ValueError, AttributeError):
+        return _donnees_invalides()
+
+    if tarif not in ('adulte', 'enfant'):
+        return JsonResponse({'erreur': 'Tarif inconnu.'}, status=400)
+
+    if not nom or not prenom:
+        return JsonResponse({'erreur': 'Nom et prénom obligatoires.'}, status=400)
+
+    if len(nom) > 100 or len(prenom) > 100:
+        return JsonResponse({'erreur': 'Nom ou prénom trop long (100 caractères maximum).'}, status=400)
 
     place_libre = get_object_or_404(PlaceLibre, pk=place_libre_id, plan_salle=plan)
 
     if place_libre.statut == 'vendue':
         return JsonResponse({'erreur': 'Cette place est déjà vendue.'}, status=400)
 
-    if not nom or not prenom:
-        return JsonResponse({'erreur': 'Nom et prénom obligatoires.'}, status=400)
-
     rep   = plan.representation
     prix  = rep.prix_adulte if tarif == 'adulte' else rep.prix_enfant
 
-    # Création de la vente flash
-    vente = VenteFlash.objects.create(
+    # Une place dont la vente a été annulée garde sa vente flash (statut
+    # « annulé ») : on la réutilise, une place ne pouvant avoir qu'une vente.
+    vente, _ = VenteFlash.objects.update_or_create(
         place_libre = place_libre,
-        nom         = nom,
-        prenom      = prenom,
-        tarif       = tarif,
-        prix        = prix,
+        defaults    = {
+            'nom'      : nom,
+            'prenom'   : prenom,
+            'tarif'    : tarif,
+            'prix'     : prix,
+            'statut'   : 'valide',
+            'annule_le': None,
+            'vendu_le' : timezone.now(),
+        },
     )
     place_libre.statut = 'vendue'
     place_libre.save()
@@ -528,17 +534,20 @@ def vente_flash(request, plan_pk):
 
 @acces_theatre_requis
 @require_POST
+@transaction.atomic
 def annuler_vente_flash(request, vente_id):
     """Annule une vente flash et remet la place en statut libre."""
-    vente = get_object_or_404(VenteFlash, pk=vente_id)
-    plan  = vente.place_libre.plan_salle
+    vente = get_object_or_404(VenteFlash.objects.select_related('place_libre'), pk=vente_id)
+    plan  = _plan_verrouille(pk=vente.place_libre.plan_salle_id)
+    vente = get_object_or_404(VenteFlash.objects.select_related('place_libre'), pk=vente_id)
 
-    vente.statut    = 'annule'
-    vente.annule_le = timezone.now()
-    vente.save()
+    if vente.statut == 'valide':
+        vente.statut    = 'annule'
+        vente.annule_le = timezone.now()
+        vente.save()
 
-    vente.place_libre.statut = 'libre'
-    vente.place_libre.save()
+        vente.place_libre.statut = 'libre'
+        vente.place_libre.save()
 
     return JsonResponse({
         'succes'  : True,
@@ -550,63 +559,61 @@ def annuler_vente_flash(request, vente_id):
 
 @acces_theatre_requis
 @require_POST
+@transaction.atomic
 def mettre_en_tampon(request, plan_pk):
     """
     Déplace une réservation dans la zone tampon :
     libère ses places sur le plan (PlaceReservee → PlaceLibre).
     """
-    plan = get_object_or_404(PlanSalle, pk=plan_pk)
+    plan = _plan_verrouille(pk=plan_pk)
+
+    data = _lire_json(request)
+    try:
+        res_id = int(data['reservation_id'])
+    except (TypeError, KeyError, ValueError):
+        return _donnees_invalides()
 
     # Vérification capacité tampon
-    if ZoneTampon.objects.filter(plan_salle=plan).count() >= 5:
+    if ZoneTampon.objects.filter(plan_salle=plan).count() >= MAX_TAMPON:
         return JsonResponse(
-            {'erreur': 'La zone tampon est pleine (5 réservations maximum).'},
+            {'erreur': f'La zone tampon est pleine ({MAX_TAMPON} réservations maximum).'},
             status=400
         )
 
-    try:
-        data       = json.loads(request.body)
-        res_id     = int(data['reservation_id'])
-    except (KeyError, ValueError, json.JSONDecodeError):
-        return JsonResponse({'erreur': 'Données invalides.'}, status=400)
-
-    reservation = get_object_or_404(Reservation, pk=res_id)
+    reservation = get_object_or_404(Reservation, pk=res_id, representation=plan.representation)
 
     # Vérifier que la réservation n'est pas déjà en tampon
     if ZoneTampon.objects.filter(plan_salle=plan, reservation=reservation).exists():
         return JsonResponse({'erreur': 'Réservation déjà en zone tampon.'}, status=400)
 
     # Récupérer les places occupées par cette réservation
-    places_res = PlaceReservee.objects.filter(
-        plan_salle=plan, reservation=reservation
-    )
-    places_ids = list(places_res.values_list('id', flat=True))
+    places_res = list(PlaceReservee.objects.filter(plan_salle=plan, reservation=reservation))
+    if not places_res:
+        return JsonResponse({'erreur': "Cette réservation n'a aucune place sur le plan."}, status=400)
 
-    # Annuler les tickets associés
-    Ticket.objects.filter(place__in=places_res, statut='valide').update(
-        statut='annule', annule_le=timezone.now()
-    )
-
-    # Transformer les PlaceReservee en PlaceLibre
-    nouvelles_libres = []
-    for p in places_res:
-        nouvelles_libres.append(PlaceLibre(
+    # Transformer les PlaceReservee en PlaceLibre (leurs tickets éventuels
+    # sont supprimés avec elles : on_delete=CASCADE)
+    PlaceLibre.objects.bulk_create([
+        PlaceLibre(
             plan_salle   = plan,
             numero_place = p.numero_place,
             rangee       = p.rangee,
             colonne      = p.colonne,
             statut       = 'libre',
-        ))
-    PlaceLibre.objects.bulk_create(nouvelles_libres)
+        )
+        for p in places_res
+    ])
+    PlaceReservee.objects.filter(pk__in=[p.pk for p in places_res]).delete()
 
-    # Supprimer les PlaceReservee
-    places_res.delete()
-
-    # Créer l'entrée en zone tampon
+    # Créer l'entrée en zone tampon, en notant les places d'origine pour
+    # pouvoir les rendre si le déplacement est annulé (retirer_du_tampon)
     tampon = ZoneTampon.objects.create(
         plan_salle     = plan,
         reservation    = reservation,
-        places_liberes = places_ids,
+        places_liberes = [
+            {'numero_place': p.numero_place, 'rangee': p.rangee, 'colonne': p.colonne}
+            for p in places_res
+        ],
     )
 
     return JsonResponse({
@@ -624,19 +631,20 @@ def mettre_en_tampon(request, plan_pk):
 
 @acces_theatre_requis
 @require_POST
+@transaction.atomic
 def placer_depuis_tampon(request, plan_pk):
     """
     Place une réservation depuis la zone tampon sur de nouvelles places.
     Reçoit : tampon_id, place_ids[] (liste de PlaceLibre.id)
     """
-    plan = get_object_or_404(PlanSalle, pk=plan_pk)
+    plan = _plan_verrouille(pk=plan_pk)
 
+    data = _lire_json(request)
     try:
-        data      = json.loads(request.body)
         tampon_id = int(data['tampon_id'])
         place_ids = [int(i) for i in data['place_ids']]
-    except (KeyError, ValueError, json.JSONDecodeError):
-        return JsonResponse({'erreur': 'Données invalides.'}, status=400)
+    except (TypeError, KeyError, ValueError):
+        return _donnees_invalides()
 
     tampon      = get_object_or_404(ZoneTampon, pk=tampon_id, plan_salle=plan)
     reservation = tampon.reservation
@@ -647,29 +655,16 @@ def placer_depuis_tampon(request, plan_pk):
             'erreur': f'Sélectionnez exactement {nb_places} place(s) pour cette réservation.'
         }, status=400)
 
-    places_libres = PlaceLibre.objects.filter(
+    places_libres = list(PlaceLibre.objects.filter(
         id__in=place_ids, plan_salle=plan, statut='libre'
-    )
-    if places_libres.count() != nb_places:
+    ))
+    if len(places_libres) != nb_places:
         return JsonResponse(
             {'erreur': 'Certaines places sélectionnées ne sont plus disponibles.'},
             status=400
         )
 
-    # Créer les nouvelles PlaceReservee
-    nouvelles_places = []
-    for p in places_libres:
-        nouvelles_places.append(PlaceReservee(
-            plan_salle   = plan,
-            reservation  = reservation,
-            numero_place = p.numero_place,
-            rangee       = p.rangee,
-            colonne      = p.colonne,
-        ))
-    PlaceReservee.objects.bulk_create(nouvelles_places)
-
-    # Supprimer les PlaceLibre utilisées
-    places_libres.delete()
+    _occuper_places_libres(plan, reservation, places_libres)
 
     # Retirer du tampon
     tampon.delete()
@@ -701,39 +696,89 @@ def placer_depuis_tampon(request, plan_pk):
 
 @acces_theatre_requis
 @require_POST
+@transaction.atomic
 def retirer_du_tampon(request, tampon_id):
     """
-    Retire une réservation du tampon sans la replacer
-    (annulation du déplacement — remet les places originales si possible).
+    Annule le déplacement : la réservation retrouve ses places d'origine,
+    à condition qu'elles soient toutes encore libres. Sinon, rien ne change
+    et la réservation reste dans le tampon, à placer sur le plan.
     """
     tampon = get_object_or_404(ZoneTampon, pk=tampon_id)
-    plan   = tampon.plan_salle
+    plan   = _plan_verrouille(pk=tampon.plan_salle_id)
+    tampon = get_object_or_404(ZoneTampon, pk=tampon_id)
 
-    # Supprime les PlaceLibre créées lors de la mise en tampon
-    # (on ne peut pas remettre les originales si d'autres ont été placées dessus)
-    PlaceLibre.objects.filter(
+    # Les tampons créés avant cette version ne notaient que des identifiants
+    # de places supprimées : leurs places d'origine sont inconnues.
+    origines = tampon.places_liberes
+    if not origines or not all(isinstance(p, dict) for p in origines):
+        return JsonResponse({
+            'erreur': "Les places d'origine de cette réservation ne sont pas connues : "
+                      "placez-la sur le plan."
+        }, status=400)
+
+    places_libres = list(PlaceLibre.objects.filter(
         plan_salle=plan,
-        numero_place__in=PlaceLibre.objects.filter(
-            plan_salle=plan
-        ).values_list('numero_place', flat=True)
-    )
+        numero_place__in=[p['numero_place'] for p in origines],
+        statut='libre',
+    ))
+    if len(places_libres) != len(origines):
+        return JsonResponse({
+            'erreur': "Certaines places d'origine ont été réattribuées entre-temps : "
+                      "placez la réservation sur le plan."
+        }, status=400)
 
+    _occuper_places_libres(plan, tampon.reservation, places_libres)
     tampon.delete()
     return JsonResponse({'succes': True})
 
 
-# ─── UTILITAIRE ─────────────────────────────────────────────────────────────
+# ─── UTILITAIRES ────────────────────────────────────────────────────────────
+
+def _lire_json(request):
+    """Corps JSON d'un appel AJAX, ou None s'il est illisible ou n'est pas un
+    objet {...} (les vues répondent alors 400 au lieu d'une erreur 500)."""
+    try:
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _donnees_invalides():
+    return JsonResponse({'erreur': 'Données invalides.'}, status=400)
+
+
+def _plan_verrouille(**filtres):
+    """Plan de salle verrouillé jusqu'à la fin de la transaction : deux postes
+    (contrôle d'entrée, vente flash, déplacement) qui modifient le même plan
+    au même moment passent l'un après l'autre au lieu de vendre ou valider
+    deux fois la même place. À appeler dans une vue @transaction.atomic."""
+    return get_object_or_404(
+        PlanSalle.objects.select_for_update().select_related('representation'), **filtres
+    )
+
+
+def _occuper_places_libres(plan, reservation, places_libres):
+    """Attribue des places libres à une réservation (PlaceLibre → PlaceReservee)."""
+    PlaceReservee.objects.bulk_create([
+        PlaceReservee(
+            plan_salle   = plan,
+            reservation  = reservation,
+            numero_place = p.numero_place,
+            rangee       = p.rangee,
+            colonne      = p.colonne,
+        )
+        for p in places_libres
+    ])
+    PlaceLibre.objects.filter(pk__in=[p.pk for p in places_libres]).delete()
+
 
 def _calculer_ca(plan):
     """Calcule le CA total (tickets valides + ventes flash valides)."""
-    ca_tickets = sum(
-        t.prix_unitaire
-        for t in Ticket.objects.filter(place__plan_salle=plan, statut='valide')
-    )
-    ca_flash = sum(
-        v.prix
-        for v in VenteFlash.objects.filter(
-            place_libre__plan_salle=plan, statut='valide'
-        )
-    )
-    return ca_tickets + ca_flash
+    ca_tickets = Ticket.objects.filter(
+        place__plan_salle=plan, statut='valide'
+    ).aggregate(total=Sum('prix_unitaire'))['total']
+    ca_flash = VenteFlash.objects.filter(
+        place_libre__plan_salle=plan, statut='valide'
+    ).aggregate(total=Sum('prix'))['total']
+    return (ca_tickets or Decimal('0')) + (ca_flash or Decimal('0'))
