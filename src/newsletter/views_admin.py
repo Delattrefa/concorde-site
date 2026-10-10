@@ -10,6 +10,7 @@ from django.template.response import TemplateResponse
 from django.urls import reverse
 
 from .envoi import (
+    EnvoiDejaEnCours,
     annuler_envoi,
     destinataires_possibles,
     envoi_actif,
@@ -96,10 +97,15 @@ def suivi(request, pk):
         action = request.POST.get("action")
         if action == "lot":
             # Petit lot, pour ne pas dépasser le délai d'une requête web.
-            nb = traiter_lot(taille=10, pause=0.5)
-            messages.success(request, f"{nb} message(s) envoyé(s).") if nb else messages.warning(
-                request, "Aucun message envoyé (plafond horaire atteint ou erreur du serveur : voir ci-dessous)."
-            )
+            try:
+                nb = traiter_lot(taille=10, pause=0.5)
+            except EnvoiDejaEnCours:
+                messages.warning(request, "Un lot est déjà en cours d'envoi (tâche automatique) : "
+                                          "patientez un instant puis actualisez la page.")
+            else:
+                messages.success(request, f"{nb} message(s) envoyé(s).") if nb else messages.warning(
+                    request, "Aucun message envoyé (plafond horaire atteint ou erreur du serveur : voir ci-dessous)."
+                )
         elif action == "annuler":
             annuler_envoi(envoi)
             messages.warning(request, "Envoi annulé : les messages restants ne seront pas envoyés.")

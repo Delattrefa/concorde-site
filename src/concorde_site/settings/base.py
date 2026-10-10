@@ -159,6 +159,20 @@ MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # -----------------------------------------------------------------------
+# Cache
+# Partagé sur disque entre tous les processus (Passenger en lance plusieurs,
+# plus la tâche cron) : le cache mémoire par défaut est propre à chaque
+# processus, ce qui rendait inopérante la limite d'inscriptions par IP de
+# la newsletter. o2switch ne propose ni Redis ni Memcached.
+# -----------------------------------------------------------------------
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": BASE_DIR / "tmp" / "cache",
+    }
+}
+
+# -----------------------------------------------------------------------
 # Wagtail
 # -----------------------------------------------------------------------
 WAGTAIL_SITE_NAME = "La Concorde asbl"

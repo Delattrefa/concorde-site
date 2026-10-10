@@ -9,7 +9,10 @@ L'envoi est donc découpé :
 2. traiter_lot() envoie un petit lot sur une seule connexion SMTP, avec une
    pause entre deux messages et un plafond horaire. Il est appelé toutes les
    5 minutes par la tâche cron `python manage.py envoyer_newsletters`, et
-   peut aussi être déclenché depuis l'admin.
+   peut aussi être déclenché depuis l'admin. Un verrou fichier garantit
+   qu'un seul lot tourne à la fois (cron et admin confondus) : deux lots
+   simultanés liraient les mêmes livraisons et enverraient la lettre deux
+   fois au même abonné.
 
 Réglages (settings) :
     NEWSLETTER_LOT_TAILLE          messages par lot (défaut 15)
@@ -17,9 +20,12 @@ Réglages (settings) :
     NEWSLETTER_MAX_PAR_HEURE       plafond sur une heure glissante (défaut 150)
     NEWSLETTER_TENTATIVES_MAX      essais avant d'abandonner une adresse (défaut 3)
 """
+import fcntl
 import logging
+import os
 import smtplib
 import time
+from contextlib import contextmanager
 from datetime import timedelta
 
 from django.conf import settings
@@ -31,6 +37,28 @@ from .models import Abonne, Envoi, Livraison, Newsletter
 from .rendu import personnaliser, rendre_newsletter
 
 logger = logging.getLogger("newsletter")
+
+
+class EnvoiDejaEnCours(Exception):
+    """Un autre lot est déjà en cours d'envoi (tâche cron ou admin)."""
+
+
+@contextmanager
+def _verrou_envoi():
+    """Verrou exclusif partagé par tous les processus du serveur (cron,
+    processus Passenger de l'admin). Libéré automatiquement par le système
+    si le processus s'arrête brutalement."""
+    dossier = os.path.join(settings.BASE_DIR, "tmp")
+    os.makedirs(dossier, exist_ok=True)
+    with open(os.path.join(dossier, "newsletter-envoi.lock"), "w") as verrou:
+        try:
+            fcntl.flock(verrou, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise EnvoiDejaEnCours from None
+        try:
+            yield
+        finally:
+            fcntl.flock(verrou, fcntl.LOCK_UN)
 
 
 def _reglage(nom, defaut):
@@ -146,7 +174,14 @@ def envois_derniere_heure():
 def traiter_lot(taille=None, pause=None, journal=None):
     """Envoie au plus `taille` messages en attente (tous envois confondus,
     du plus ancien envoi au plus récent). Renvoie le nombre de messages
-    envoyés. `journal` : fonction appelée avec des lignes de suivi."""
+    envoyés. `journal` : fonction appelée avec des lignes de suivi.
+
+    Lève EnvoiDejaEnCours si un autre lot est en cours."""
+    with _verrou_envoi():
+        return _traiter_lot(taille, pause, journal)
+
+
+def _traiter_lot(taille, pause, journal):
     journal = journal or (lambda texte: logger.info(texte))
     taille = taille if taille is not None else _reglage("NEWSLETTER_LOT_TAILLE", 15)
     pause = pause if pause is not None else _reglage("NEWSLETTER_PAUSE_SECONDES", 2)

@@ -8,13 +8,9 @@ Envoie les newsletters en attente, par lots.
 
 Sans envoi en cours, la commande ne fait rien et se termine aussitôt.
 """
-import fcntl
-import os
-
-from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from newsletter.envoi import traiter_lot
+from newsletter.envoi import EnvoiDejaEnCours, traiter_lot
 
 
 class Command(BaseCommand):
@@ -26,18 +22,14 @@ class Command(BaseCommand):
         parser.add_argument("--silencieux", action="store_true", help="N'affiche que les erreurs.")
 
     def handle(self, *args, **options):
-        # Verrou : si le passage précédent n'est pas fini, on n'en lance pas un second.
-        dossier = os.path.join(settings.BASE_DIR, "tmp")
-        os.makedirs(dossier, exist_ok=True)
-        with open(os.path.join(dossier, "newsletter-envoi.lock"), "w") as verrou:
-            try:
-                fcntl.flock(verrou, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            except BlockingIOError:
-                if not options["silencieux"]:
-                    self.stdout.write("Un envoi est déjà en cours : rien à faire.")
-                return
-
-            journal = (lambda texte: None) if options["silencieux"] else self.stdout.write
+        # Si le passage précédent (ou un lot lancé depuis l'admin) n'est pas
+        # fini, on n'en lance pas un second : voir le verrou de traiter_lot().
+        journal = (lambda texte: None) if options["silencieux"] else self.stdout.write
+        try:
             nb = traiter_lot(taille=options["lot"], pause=options["pause"], journal=journal)
-            if nb and not options["silencieux"]:
-                self.stdout.write(self.style.SUCCESS(f"{nb} message(s) envoyé(s)."))
+        except EnvoiDejaEnCours:
+            if not options["silencieux"]:
+                self.stdout.write("Un envoi est déjà en cours : rien à faire.")
+            return
+        if nb and not options["silencieux"]:
+            self.stdout.write(self.style.SUCCESS(f"{nb} message(s) envoyé(s)."))

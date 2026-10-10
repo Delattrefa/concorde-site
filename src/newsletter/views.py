@@ -25,8 +25,10 @@ LIMITE_PAR_IP = 10        # inscriptions par heure et par adresse IP
 
 
 def _ip(request):
-    return (request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")[0].strip()
-            or request.META.get("REMOTE_ADDR", ""))
+    # Pas de X-Forwarded-For : l'en-tête est fourni par le visiteur lui-même,
+    # qui pourrait changer de valeur à chaque requête et contourner la limite.
+    # Sur o2switch, Apache/Passenger renseigne REMOTE_ADDR avec l'IP réelle.
+    return request.META.get("REMOTE_ADDR", "")
 
 
 def _est_ajax(request):
@@ -102,7 +104,10 @@ def servir_page_inscription(page, request, *args, **kwargs):
         elif nb >= LIMITE_PAR_IP:
             succes, message = False, "Trop de tentatives depuis votre connexion. Réessayez dans une heure."
         elif form.is_valid():
-            cache.set(cle, nb + 1, 3600)
+            # add() crée le compteur (expiration 1 h à partir de la première
+            # tentative) ; incr() l'augmente sans repousser cette échéance.
+            if not cache.add(cle, 1, 3600):
+                cache.incr(cle)
             succes, message = _inscrire(form, page)
         else:
             succes, message = False, "Merci de corriger le formulaire."
