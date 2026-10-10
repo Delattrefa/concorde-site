@@ -262,46 +262,66 @@ def liste_places_imprimer(request, rep_pk):
 @acces_theatre_requis
 def controle_entree(request, rep_pk):
     """
-    Affiche le plan de salle interactif pour valider les entrées.
-    Chaque place affiche nom, prénom et numéro.
+    Plan de salle interactif complet :
+    places réservées + places libres + zone tampon.
     """
     representation = get_object_or_404(Representation, pk=rep_pk)
     plan           = get_object_or_404(PlanSalle, representation=representation)
 
-    # Récupération de toutes les places avec leurs infos
-    places = (
-        PlaceReservee.objects
-        .filter(plan_salle=plan)
-        .select_related('reservation', 'ticket')
-        .order_by('numero_place')
-    )
-
-    # Construction de la grille rangée × colonne
     config = plan.configuration
-    grille = {}
-    for p in places:
-        grille[(p.rangee, p.colonne)] = p
 
+    # Places réservées indexées par (rangee, colonne)
+    places_res = {
+        (p.rangee, p.colonne): p
+        for p in PlaceReservee.objects
+            .filter(plan_salle=plan)
+            .select_related('reservation', 'ticket')
+    }
+
+    # Places libres indexées par (rangee, colonne)
+    places_lib = {
+        (p.rangee, p.colonne): p
+        for p in PlaceLibre.objects.filter(plan_salle=plan)
+            .select_related('vente_flash')
+    }
+
+    # Construction de la grille unifiée
     lignes = []
     for idx_r, nb_cols in enumerate(config):
         rangee = []
         for idx_c in range(nb_cols):
-            rangee.append(grille.get((idx_r, idx_c)))
+            key = (idx_r, idx_c)
+            if key in places_res:
+                rangee.append({'type': 'reservee', 'place': places_res[key]})
+            elif key in places_lib:
+                rangee.append({'type': 'libre', 'place': places_lib[key]})
+            else:
+                rangee.append({'type': 'vide', 'place': None})
         lignes.append(rangee)
 
-    # Calcul du chiffre d'affaires total des tickets valides
-    tickets_valides = Ticket.objects.filter(
-        place__plan_salle=plan,
-        statut='valide'
+    # Zone tampon
+    tampons = ZoneTampon.objects.filter(plan_salle=plan).select_related('reservation')
+
+    # CA total
+    ca_tickets = Ticket.objects.filter(
+        place__plan_salle=plan, statut='valide'
     )
-    ca_total = sum(t.prix_unitaire for t in tickets_valides)
+    ca_flash = VenteFlash.objects.filter(
+        place_libre__plan_salle=plan, statut='valide'
+    )
+    ca_total = (
+        sum(t.prix_unitaire for t in ca_tickets) +
+        sum(v.prix for v in ca_flash)
+    )
 
     return render(request, 'theatre/controle_entree.html', {
         'representation' : representation,
         'plan'           : plan,
         'lignes'         : lignes,
-        'config'         : config,
+        'tampons'        : tampons,
         'ca_total'       : ca_total,
+        'nb_tampon'      : tampons.count(),
+        'max_tampon'     : 5,
     })
 
 
@@ -430,73 +450,6 @@ def liste_tickets(request, rep_pk):
         'representation': representation,
         'tickets'       : tickets,
         'ca_total'      : ca_total,
-    })
-    
-# ─── PAGE CONTRÔLE ENTRÉE (mise à jour) ─────────────────────────────────────
-
-@acces_theatre_requis
-def controle_entree(request, rep_pk):
-    """
-    Plan de salle interactif complet :
-    places réservées + places libres + zone tampon.
-    """
-    representation = get_object_or_404(Representation, pk=rep_pk)
-    plan           = get_object_or_404(PlanSalle, representation=representation)
-
-    config = plan.configuration
-
-    # Places réservées indexées par (rangee, colonne)
-    places_res = {
-        (p.rangee, p.colonne): p
-        for p in PlaceReservee.objects
-            .filter(plan_salle=plan)
-            .select_related('reservation', 'ticket')
-    }
-
-    # Places libres indexées par (rangee, colonne)
-    places_lib = {
-        (p.rangee, p.colonne): p
-        for p in PlaceLibre.objects.filter(plan_salle=plan)
-            .select_related('vente_flash')
-    }
-
-    # Construction de la grille unifiée
-    lignes = []
-    for idx_r, nb_cols in enumerate(config):
-        rangee = []
-        for idx_c in range(nb_cols):
-            key = (idx_r, idx_c)
-            if key in places_res:
-                rangee.append({'type': 'reservee', 'place': places_res[key]})
-            elif key in places_lib:
-                rangee.append({'type': 'libre', 'place': places_lib[key]})
-            else:
-                rangee.append({'type': 'vide', 'place': None})
-        lignes.append(rangee)
-
-    # Zone tampon
-    tampons = ZoneTampon.objects.filter(plan_salle=plan).select_related('reservation')
-
-    # CA total
-    ca_tickets = Ticket.objects.filter(
-        place__plan_salle=plan, statut='valide'
-    )
-    ca_flash = VenteFlash.objects.filter(
-        place_libre__plan_salle=plan, statut='valide'
-    )
-    ca_total = (
-        sum(t.prix_unitaire for t in ca_tickets) +
-        sum(v.prix for v in ca_flash)
-    )
-
-    return render(request, 'theatre/controle_entree.html', {
-        'representation' : representation,
-        'plan'           : plan,
-        'lignes'         : lignes,
-        'tampons'        : tampons,
-        'ca_total'       : ca_total,
-        'nb_tampon'      : tampons.count(),
-        'max_tampon'     : 5,
     })
 
 
