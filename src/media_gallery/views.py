@@ -29,7 +29,10 @@ def _enregistrer_revision(album_pk, utilisateur):
     album = GalleryAlbum.objects.get(pk=album_pk)
     revision = album.save_revision(user=utilisateur, log_action=True)
     if album.live:
-        revision.publish(user=utilisateur)
+        # Le droit d'ajouter des médias vient de is_staff (règle du site), pas
+        # des groupes Wagtail : sans cela, un administrateur sans groupe
+        # Wagtail recevait une erreur 403 à la publication.
+        revision.publish(user=utilisateur, skip_permission_checks=True)
 
 
 @user_passes_test(_est_administrateur, login_url="login")
