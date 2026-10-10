@@ -286,6 +286,42 @@ GitHub changent en permanence.
 
 ---
 
+## Passage de Wagtail 6.4 à 7.4 (LTS)
+
+Wagtail 6.4 ne reçoit plus de correctifs de sécurité depuis août 2025 ;
+7.4 est maintenue jusqu'au 2 novembre 2027. Le passage ajoute des
+migrations Wagtail (non annulables sans sauvegarde) : **sauvegarder la
+base juste avant**.
+
+1. **Python** : cPanel → *Setup Python App* doit indiquer Python 3.10 ou
+   plus (3.11 conseillé, comme dans `deploy.sh`).
+2. **Sauvegarde de la base** (en SSH), selon `DB_ENGINE` dans `src/.env` :
+   ```bash
+   # SQLite
+   cp ~/concorde/src/db.sqlite3 ~/sauvegarde-avant-wagtail7.sqlite3
+   # PostgreSQL
+   pg_dump -U compte_concorde -h localhost compte_concorde > ~/sauvegarde-avant-wagtail7.sql
+   # MySQL / MariaDB
+   mysqldump -u compte_concorde -p compte_concorde > ~/sauvegarde-avant-wagtail7.sql
+   ```
+   Noter aussi le commit en ligne : `git -C ~/concorde rev-parse HEAD`.
+3. **Sur votre ordinateur** : intégrer la branche puis publier :
+   `git checkout main && git merge wagtail-7.4 && git push`.
+4. **Sur le serveur** : `bash ~/concorde/deploy.sh` (installe les nouvelles
+   versions, applique les migrations et reconstruit l'index de recherche).
+5. **Vérifications** : pages du site et recherche ; dans l'admin, ouvrir,
+   modifier et publier une page ; listes des snippets ; envoi de test d'une
+   newsletter.
+
+**Retour arrière** si besoin : restaurer la sauvegarde de la base
+(recopier le fichier SQLite, ou `psql … < sauvegarde.sql` /
+`mysql … < sauvegarde.sql` dans une base vidée), puis
+`git -C ~/concorde checkout <commit noté>`, réinstaller les dépendances
+(`pip install -r ~/concorde/requirements.txt` dans l'environnement
+virtuel) et redémarrer (`touch ~/concorde/src/tmp/restart.txt`).
+
+---
+
 ## Dépannage
 
 | Symptôme | Cause probable / solution |

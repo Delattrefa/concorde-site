@@ -5,8 +5,8 @@
 # des dépendances comprises) pour que la production tourne avec les mêmes
 # versions que celles testées. Pour mettre à jour, voir requirements.txt.
 
-wagtail>=6.2,<7.0
-django>=5.0,<5.3
+wagtail>=7.4,<7.5   # 7.4 = version LTS, maintenue jusqu’au 2 novembre 2027
+django>=5.2,<5.3    # 5.2 = version LTS de Django
 Pillow>=10.0
 whitenoise>=6.6
 
@@ -22,7 +22,7 @@ gunicorn>=22.0
 
 # Référencement (SEO) : balises meta, Open Graph, Twitter Card, données
 # structurées Schema.org
-wagtail-seo>=3.0
+wagtail-seo>=3.1,<4   # 3.1 accepte Wagtail jusqu’à 7.x (pas 8)
 
 # Génération du contrat de location en PDF (app 'calendrier')
 reportlab>=4.0

@@ -42,6 +42,7 @@ class NewsPageForm(forms.Form):
     lien_url = forms.URLField(
         label="Adresse du lien (facultatif)",
         required=False,
+        assume_scheme="https",
         widget=forms.URLInput(attrs={"class": "champ-texte", "placeholder": "https://..."}),
     )
 
