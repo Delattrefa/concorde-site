@@ -14,6 +14,7 @@
         <div class="contact__form fade-up">
             <form action="{% pageurl page %}" method="POST" novalidate>
                 {% csrf_token %}
+                {% include "includes/champ_piege.html" %}
                 {{ form.non_field_errors }}
                 {% for field in form %}
                     <div class="form-field {% if field.errors %}form-field--error{% endif %}">

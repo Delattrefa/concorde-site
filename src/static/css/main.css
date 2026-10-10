@@ -572,3 +572,7 @@ a { color: var(--color-primary); }
 @media (max-width: 600px) {
     .carte-google__cadre { max-height: 320px; }
 }
+
+/* Champ piège anti-spam des formulaires publics (includes/champ_piege.html) :
+   hors écran plutôt que display:none, que certains robots savent repérer. */
+.champ-piege { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }

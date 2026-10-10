@@ -6,7 +6,6 @@ import logging
 
 from django.conf import settings
 from django.contrib import messages
-from django.core.cache import cache
 from django.core.mail import send_mail
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -15,6 +14,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
+from concorde_site.antispam import compter_envoi, limite_atteinte
+
 from .forms import InscriptionForm
 from .models import Abonne, Newsletter, url_absolue
 from .rendu import personnaliser, rendre_newsletter
@@ -22,13 +23,6 @@ from .rendu import personnaliser, rendre_newsletter
 logger = logging.getLogger("newsletter")
 
 LIMITE_PAR_IP = 10        # inscriptions par heure et par adresse IP
-
-
-def _ip(request):
-    # Pas de X-Forwarded-For : l'en-tête est fourni par le visiteur lui-même,
-    # qui pourrait changer de valeur à chaque requête et contourner la limite.
-    # Sur o2switch, Apache/Passenger renseigne REMOTE_ADDR avec l'IP réelle.
-    return request.META.get("REMOTE_ADDR", "")
 
 
 def _est_ajax(request):
@@ -96,18 +90,13 @@ def servir_page_inscription(page, request, *args, **kwargs):
 
     if request.method == "POST":
         form = InscriptionForm(request.POST, texte_consentement=page.texte_consentement)
-        cle = f"newsletter-inscription-{_ip(request)}"
-        nb = cache.get(cle, 0)
 
         if form.est_un_robot:
             succes, message = True, page.message_succes          # robot : on fait semblant
-        elif nb >= LIMITE_PAR_IP:
+        elif limite_atteinte(request, "newsletter-inscription", LIMITE_PAR_IP):
             succes, message = False, "Trop de tentatives depuis votre connexion. Réessayez dans une heure."
         elif form.is_valid():
-            # add() crée le compteur (expiration 1 h à partir de la première
-            # tentative) ; incr() l'augmente sans repousser cette échéance.
-            if not cache.add(cle, 1, 3600):
-                cache.incr(cle)
+            compter_envoi(request, "newsletter-inscription")
             succes, message = _inscrire(form, page)
         else:
             succes, message = False, "Merci de corriger le formulaire."

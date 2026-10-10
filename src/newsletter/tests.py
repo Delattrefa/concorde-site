@@ -22,9 +22,11 @@ from django.urls import reverse
 
 from wagtail.models import Page, Site
 
+from concorde_site.antispam import ip_client
+
 from . import envoi
 from .models import Abonne, Envoi, Livraison, Newsletter, NewsletterPage
-from .views import LIMITE_PAR_IP, _ip
+from .views import LIMITE_PAR_IP
 
 
 def _tenir_le_verrou(base_dir, verrou_pris, liberer):
@@ -143,7 +145,7 @@ class LimiteInscriptionTests(TestCase):
 
     def test_ip_lue_dans_remote_addr_et_non_dans_x_forwarded_for(self):
         requete = RequestFactory().post("/", HTTP_X_FORWARDED_FOR="1.2.3.4", REMOTE_ADDR="9.9.9.9")
-        self.assertEqual(_ip(requete), "9.9.9.9")
+        self.assertEqual(ip_client(requete), "9.9.9.9")
 
     def test_limite_atteinte_meme_en_changeant_x_forwarded_for(self):
         for numero in range(LIMITE_PAR_IP):

@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.template.response import TemplateResponse
 
 from modelcluster.fields import ParentalKey
 
@@ -9,7 +10,11 @@ from wagtail.fields import RichTextField
 from wagtail.search import index
 from wagtailseo.models import SeoMixin
 
+from concorde_site.antispam import compter_envoi, est_un_robot, limite_atteinte
 from info.models import extraire_url_google_maps
+
+# Messages de contact acceptés par heure et par adresse IP.
+LIMITE_MESSAGES_PAR_IP = 5
 
 
 class ContactFormField(AbstractFormField):
@@ -75,6 +80,27 @@ class ContactPage(SeoMixin, AbstractEmailForm):
     ]
 
     promote_panels = SeoMixin.seo_panels
+
+    def serve(self, request, *args, **kwargs):
+        if request.method == "POST":
+            if est_un_robot(request):
+                # Robot : ni enregistrement ni e-mail, mais on fait comme si.
+                return super().render_landing_page(request, None, *args, **kwargs)
+            if limite_atteinte(request, "contact", LIMITE_MESSAGES_PAR_IP):
+                form = self.get_form(request.POST, request.FILES, page=self, user=request.user)
+                form.is_valid()
+                form.add_error(None, "Trop de messages envoyés depuis votre connexion. Réessayez dans une heure.")
+                context = self.get_context(request)
+                context["form"] = form
+                return TemplateResponse(request, self.get_template(request), context)
+        return super().serve(request, *args, **kwargs)
+
+    def render_landing_page(self, request, form_submission=None, *args, **kwargs):
+        # Appelé par Wagtail uniquement après un envoi valide (message
+        # enregistré et e-mail parti) : c'est lui qu'on compte.
+        if request.method == "POST":
+            compter_envoi(request, "contact")
+        return super().render_landing_page(request, form_submission, *args, **kwargs)
 
     def clean(self):
         """Accepte le code <iframe> complet fourni par Google Maps (ou sa

@@ -29,6 +29,8 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from django.utils.dates import MONTHS, WEEKDAYS
 from django.utils import timezone
 
+from concorde_site.antispam import compter_envoi, est_un_robot, limite_atteinte
+
 from .contrats import VARIABLES_DISPONIBLES, AIDE_MISE_EN_FORME, generer_pdf_contrat, nom_fichier_contrat
 from .forms import ActiviteForm, AnnexeContratForm, MiseEnPageContratForm, ReservationAdminForm, SuiviPaiementFormSet, images_de_signature, ArticleContratForm, ContratLocationForm, ReservationForm
 from .models import (
@@ -42,6 +44,10 @@ from .models import (
     occupations_sur,
 )
 from .utils import construire_semaines_du_mois, mois_adjacent
+
+
+# Demandes de réservation publiques acceptées par heure et par adresse IP.
+LIMITE_DEMANDES_PAR_IP = 5
 
 
 def _est_administrateur(user):
@@ -302,11 +308,21 @@ class ReservationCreateView(CreateView):
         return initial
 
     def form_valid(self, form):
-        messages.success(
-            self.request,
+        message_succes = (
             "Votre demande de réservation a bien été envoyée. "
-            "Un administrateur l'examinera dans les meilleurs délais.",
+            "Un administrateur l'examinera dans les meilleurs délais."
         )
+        if est_un_robot(self.request):
+            # Robot : rien n'est enregistré, mais on fait comme si.
+            messages.success(self.request, message_succes)
+            debut = form.cleaned_data["date_debut"]
+            return redirect("calendrier:mois", annee=debut.year, mois=debut.month)
+        if limite_atteinte(self.request, "calendrier-reservation", LIMITE_DEMANDES_PAR_IP):
+            form.add_error(None, "Trop de demandes envoyées depuis votre connexion. Réessayez dans une heure.")
+            return self.form_invalid(form)
+
+        compter_envoi(self.request, "calendrier-reservation")
+        messages.success(self.request, message_succes)
         return super().form_valid(form)
 
     def get_success_url(self):

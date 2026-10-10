@@ -36,6 +36,7 @@
 <section class="calendrier-form wrap">
     <form method="post" novalidate>
         {% csrf_token %}
+        {% include "includes/champ_piege.html" %}
         {{ form.non_field_errors }}
 
         <div class="form-field">
