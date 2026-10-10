@@ -168,8 +168,17 @@ class LimiteInscriptionTests(TestCase):
 class CacheTests(TestCase):
     def test_cache_partage_entre_processus(self):
         # Le cache mémoire est propre à chaque processus Passenger : la limite
-        # par IP n'y serait pas partagée.
+        # par IP n'y serait pas partagée. (Réglage du site lui-même : pendant
+        # les tests, le lanceur le remplace par un cache en mémoire.)
+        from concorde_site.settings import base
+
+        self.assertEqual(
+            base.CACHES["default"]["BACKEND"],
+            "django.core.cache.backends.filebased.FileBasedCache",
+        )
+
+    def test_les_tests_n_ecrivent_pas_dans_le_cache_du_site(self):
         self.assertEqual(
             settings.CACHES["default"]["BACKEND"],
-            "django.core.cache.backends.filebased.FileBasedCache",
+            "django.core.cache.backends.locmem.LocMemCache",
         )
