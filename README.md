@@ -11,9 +11,10 @@ contact), avec une page d'accueil en défilement continu et effets de fondu.
   qui apparaissent en fondu au fil du défilement (`home` app).
 - **Page Actualités / Blog** : articles datés, avec image mise en avant, mots-clés
   (tags), filtrage par mot-clé, pagination. Tout utilisateur connecté peut
-  publier, modifier et supprimer directement une actualité depuis le site
-  (titre, résumé, contenu, image, lien hypertexte facultatif) — la
-  modification/suppression côté site est réservée à l'auteur de
+  proposer, modifier et supprimer une actualité depuis le site (titre,
+  résumé, contenu, image, lien hypertexte facultatif) ; celles des membres
+  non administrateurs sont publiées après validation par un administrateur.
+  La modification/suppression côté site est réservée à l'auteur de
   l'actualité. Depuis l'admin Wagtail, un éditeur peut créer, modifier,
   supprimer et consulter n'importe quelle actualité (`news` app).
 - **Calendrier des activités & réservations de salle** (`calendrier` app) :
@@ -111,13 +112,22 @@ concorde_site/
 
 ## Application "news" (actualités) — gestion des droits
 
-- **Depuis le site public** : tout utilisateur connecté peut publier une
+- **Depuis le site public** : tout utilisateur connecté peut proposer une
   actualité (`/ajouter-actualite/`). Il peut ensuite la **modifier**
   (`/modifier-actualite/<id>/`) ou la **supprimer**
   (`/supprimer-actualite/<id>/`) — mais uniquement les actualités qu'il a
   lui-même créées depuis le site (vérifié via le champ technique
   `cree_par` sur `NewsPage`). Les boutons Modifier/Supprimer n'apparaissent
   que sur ses propres actualités, sur la page de l'article et dans la liste.
+- **Validation** : l'actualité d'un administrateur (`is_staff`) est publiée
+  immédiatement. Celle d'un autre membre, ainsi que ses modifications, part
+  dans le circuit de validation Wagtail « Moderators approval » : elle
+  apparaît dans le tableau de bord de l'admin Wagtail (« En attente de votre
+  relecture ») et n'est visible sur le site qu'après approbation (une
+  actualité déjà en ligne garde sa version actuelle d'ici là). Peuvent
+  approuver : les super-utilisateurs et les membres du groupe
+  « Moderators », qui reçoivent aussi un e-mail à chaque soumission. Sur la
+  page Actualités, le membre voit la liste de ses actualités en attente.
 - **Depuis l'admin Wagtail** (`/admin/`) : un éditeur dispose du CRUD
   complet natif de Wagtail sur **toutes** les actualités, y compris celles
   créées depuis le site — créer, modifier, supprimer, consulter (aperçu et

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static wagtailcore_tags %}
 
-{% block title %}{% if mode == "modification" %}Modifier l'actualité{% else %}Publier une actualité{% endif %}{% endblock %}
+{% block title %}{% if mode == "modification" %}Modifier l'actualité{% elif publie_directement %}Publier une actualité{% else %}Proposer une actualité{% endif %}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'news/css/news.css' %}">
@@ -13,11 +13,21 @@
         {% if page_index %}
             <p class="breadcrumb"><a href="{% pageurl page_index %}">← Retour aux actualités</a></p>
         {% endif %}
-        <h1>{% if mode == "modification" %}Modifier l'actualité{% else %}Publier une actualité{% endif %}</h1>
-        {% if mode != "modification" %}
+        <h1>{% if mode == "modification" %}Modifier l'actualité{% elif publie_directement %}Publier une actualité{% else %}Proposer une actualité{% endif %}</h1>
+        {% if mode != "modification" and publie_directement %}
             <p class="page-header__intro">
                 Partagez une information avec les visiteurs du site : elle sera
                 publiée immédiatement dans les actualités.
+            </p>
+        {% elif mode != "modification" %}
+            <p class="page-header__intro">
+                Partagez une information avec les visiteurs du site : elle sera
+                publiée dans les actualités après validation par un administrateur.
+            </p>
+        {% elif not publie_directement %}
+            <p class="page-header__intro">
+                Vos modifications seront visibles sur le site après validation par
+                un administrateur ; d'ici là, la version actuelle reste affichée.
             </p>
         {% endif %}
     </div>
@@ -78,7 +88,7 @@
         </div>
 
         <button type="submit" class="btn btn--primary">
-            {% if mode == "modification" %}Enregistrer les modifications{% else %}Publier l'actualité{% endif %}
+            {% if not publie_directement %}Envoyer pour validation{% elif mode == "modification" %}Enregistrer les modifications{% else %}Publier l'actualité{% endif %}
         </button>
         {% if mode == "modification" %}
             <a class="btn btn--danger" href="{% url 'news_supprimer' news.pk %}">Supprimer cette actualité</a>

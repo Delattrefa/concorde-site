@@ -9,10 +9,27 @@
         <h1>{{ page.title }}</h1>
         {% if page.intro %}<div class="page-header__intro">{{ page.intro|richtext }}</div>{% endif %}
         {% if user.is_authenticated %}
-            <a class="btn btn--primary" href="{% url 'news_ajouter' %}">+ Publier une actualité</a>
+            <a class="btn btn--primary" href="{% url 'news_ajouter' %}">+ {% if user.is_staff %}Publier{% else %}Proposer{% endif %} une actualité</a>
         {% endif %}
     </div>
 </section>
+
+{% if mes_actualites_en_attente %}
+<section class="news-attente wrap">
+    <h2>Vos actualités en attente de validation</h2>
+    <p>Elles apparaîtront sur le site dès qu'un administrateur les aura approuvées.</p>
+    <ul>
+        {% for post in mes_actualites_en_attente %}
+            <li>
+                <strong>{{ post.draft_title }}</strong>
+                <span class="news-attente__etat">{% if post.live %}modification en attente{% else %}nouvelle actualité{% endif %}</span>
+                <a href="{% url 'news_modifier' post.pk %}">Modifier</a>
+                <a href="{% url 'news_supprimer' post.pk %}">Supprimer</a>
+            </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
 
 {% if all_tags %}
 <section class="news-tags wrap fade-target">

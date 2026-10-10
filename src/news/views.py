@@ -4,8 +4,13 @@ supprimer directement des actualités depuis le site public, sans passer
 par l'admin Wagtail.
 
 Règle de permission (CREATE/UPDATE/DELETE) :
-- N'IMPORTE QUEL utilisateur connecté peut publier une actualité, qui est
-  immédiatement visible sur le site (pas de brouillon ni de modération).
+- Tout utilisateur connecté peut proposer une actualité.
+- Celle d'un administrateur (is_staff) est publiée immédiatement. Celle d'un
+  autre membre est soumise à validation : elle n'est visible sur le site
+  qu'après approbation par un administrateur, depuis l'admin Wagtail
+  (circuit de validation « Moderators approval », tableau de bord
+  « En attente de votre relecture »). Il en va de même pour ses
+  modifications : la version en ligne reste affichée jusqu'à l'approbation.
 - Un utilisateur ne peut modifier ou supprimer QUE les actualités qu'il a
   lui-même créées depuis le site (voir NewsPage.peut_etre_modifiee_par).
   Les actualités créées depuis l'admin Wagtail restent gérables uniquement
@@ -22,6 +27,41 @@ from wagtail.images.models import Image
 
 from .forms import NewsPageForm
 from .models import NewsIndexPage, NewsPage
+
+
+def _publie_directement(user):
+    """Les administrateurs publient directement ; les autres membres
+    soumettent leurs actualités à validation."""
+    return user.is_staff
+
+
+def _enregistrer(news, user):
+    """Enregistre une nouvelle version de l'actualité, puis la publie
+    (administrateur) ou la soumet à validation (autre membre).
+    Renvoie True si elle a été publiée."""
+    revision = news.save_revision(user=user, log_action=True)
+    if _publie_directement(user):
+        # Le droit de publier vient de is_staff (règle du site), pas des
+        # groupes Wagtail : un administrateur sans groupe Wagtail doit pouvoir
+        # publier depuis le site.
+        revision.publish(user=user, skip_permission_checks=True)
+        return True
+
+    workflow = news.get_workflow()
+    if workflow is not None:
+        en_cours = news.current_workflow_state
+        if en_cours is not None:
+            # Modifiée pendant sa relecture : la validation repart sur la
+            # nouvelle version (Wagtail publie la dernière version approuvée).
+            en_cours.cancel(user=user)
+        workflow.start(news, user)
+    return False
+
+
+MESSAGE_EN_ATTENTE = (
+    "Merci ! Votre actualité a été envoyée pour validation : elle sera visible "
+    "sur le site dès qu'un administrateur l'aura approuvée."
+)
 
 
 def _texte_depuis_le_corps(body):
@@ -66,6 +106,8 @@ def ajouter_news(request):
             horodatage = timezone.now().strftime("%Y%m%d%H%M%S")
 
             news = NewsPage(
+                # Hors ligne tant qu'elle n'est pas publiée (voir _enregistrer)
+                live=_publie_directement(request.user),
                 title=donnees["titre"],
                 slug=f"{base_slug}-{horodatage}",
                 date=timezone.now().date(),
@@ -87,19 +129,23 @@ def ajouter_news(request):
                 news.featured_image = image_wagtail
 
             # Insertion dans l'arborescence Wagtail (obligatoire pour toute
-            # Page) puis publication immédiate.
+            # Page), puis publication ou envoi pour validation.
             page_index.add_child(instance=news)
-            news.save_revision().publish()
-
-            messages.success(request, "Votre actualité a bien été publiée.")
-            return redirect(news.url)
+            if _enregistrer(news, request.user):
+                messages.success(request, "Votre actualité a bien été publiée.")
+                return redirect(news.url)
+            messages.success(request, MESSAGE_EN_ATTENTE)
+            return redirect(page_index.url)
     else:
         form = NewsPageForm()
 
     return render(
         request,
         "news/news_form.html",
-        {"form": form, "page_index": page_index, "mode": "ajout"},
+        {
+            "form": form, "page_index": page_index, "mode": "ajout",
+            "publie_directement": _publie_directement(request.user),
+        },
     )
 
 
@@ -111,6 +157,9 @@ def modifier_news(request, pk):
     news = get_object_or_404(NewsPage, pk=pk)
     if not news.peut_etre_modifiee_par(request.user):
         raise PermissionDenied("Vous ne pouvez modifier que les actualités que vous avez créées.")
+    # On repart de la dernière version enregistrée, éventuellement encore en
+    # attente de validation, et non de la version en ligne.
+    news = news.get_latest_revision_as_object()
 
     if request.method == "POST":
         form = NewsPageForm(request.POST, request.FILES)
@@ -130,10 +179,11 @@ def modifier_news(request, pk):
                 )
                 news.featured_image = image_wagtail
 
-            news.save_revision().publish()
-
-            messages.success(request, "L'actualité a bien été modifiée.")
-            return redirect(news.url)
+            if _enregistrer(news, request.user):
+                messages.success(request, "L'actualité a bien été modifiée.")
+                return redirect(news.url)
+            messages.success(request, MESSAGE_EN_ATTENTE)
+            return redirect(news.get_parent().url)
     else:
         form = NewsPageForm(
             initial={
@@ -148,7 +198,10 @@ def modifier_news(request, pk):
     return render(
         request,
         "news/news_form.html",
-        {"form": form, "page_index": news.get_parent(), "news": news, "mode": "modification"},
+        {
+            "form": form, "page_index": news.get_parent(), "news": news, "mode": "modification",
+            "publie_directement": _publie_directement(request.user),
+        },
     )
 
 

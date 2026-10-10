@@ -68,6 +68,16 @@ class NewsIndexPage(SeoMixin, Page):
             all_tags.extend([t.name for t in post.tags.all()])
         context["all_tags"] = sorted(set(all_tags), key=str.lower)
 
+        # Actualités de l'utilisateur connecté en attente de validation :
+        # nouvelles (hors ligne) ou modifiées (version en ligne inchangée).
+        if request.user.is_authenticated:
+            context["mes_actualites_en_attente"] = (
+                NewsPage.objects.child_of(self)
+                .filter(cree_par=request.user)
+                .filter(models.Q(live=False) | models.Q(has_unpublished_changes=True))
+                .order_by("-latest_revision_created_at")
+            )
+
         return context
 
 

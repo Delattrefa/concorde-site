@@ -371,6 +371,14 @@ a { color: var(--color-primary); }
 .news-card__link { display: block; text-decoration: none; color: inherit; }
 .news-card img { width: 100%; height: 190px; object-fit: cover; display: block; transition: transform var(--transition-medium); }
 .news-card:hover img { transform: scale(1.06); }
+/* Actualités de l'utilisateur en attente de validation (page Actualités) */
+.news-attente { margin-bottom: 32px; padding: 16px 20px; border-left: 4px solid #e0a020; background: #fff8e6; }
+.news-attente h2 { margin-top: 0; font-size: 1.15rem; }
+.news-attente ul { margin: 0; padding-left: 18px; }
+.news-attente li { margin: 6px 0; }
+.news-attente li a { margin-left: 10px; }
+.news-attente__etat { margin-left: 8px; font-size: .85em; color: #8a6100; }
+
 .news-card__body { padding: 18px 20px; }
 .news-card__body time { font-size: .78rem; color: #8a7a7a; text-transform: uppercase; letter-spacing: .04em; }
 .news-card__body h2 { font-size: 1.1rem; margin: 6px 0 8px; }
