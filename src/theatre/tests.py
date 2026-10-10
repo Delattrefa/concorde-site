@@ -8,7 +8,7 @@ from datetime import date
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.urls import reverse
 
 from .models import (
@@ -17,9 +17,6 @@ from .models import (
 )
 
 
-@override_settings(
-    STORAGES={"staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}},
-)
 class BilletterieTests(TestCase):
     """Une rangée de 4 places : 1 et 2 réservées par Dupont (1 adulte,
     1 enfant), 3 et 4 libres (vente flash)."""

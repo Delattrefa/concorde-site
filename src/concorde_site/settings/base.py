@@ -102,6 +102,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "concorde_site.wsgi.application"
 
+# Tests : fichiers envoyés dans un dossier temporaire, jamais dans media/
+TEST_RUNNER = "concorde_site.test_runner.ConcordeTestRunner"
+
 # -----------------------------------------------------------------------
 # Base de données (surchargée en dev/production)
 # -----------------------------------------------------------------------

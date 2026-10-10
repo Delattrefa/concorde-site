@@ -16,7 +16,6 @@ from .models import LIMITE_MESSAGES_PAR_IP, ContactFormField, ContactPage
 
 @override_settings(
     CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}},
-    STORAGES={"staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}},
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
 )
 class ContactAntispamTests(TestCase):
