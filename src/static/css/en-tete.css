@@ -183,3 +183,117 @@
     .site-menu .main-nav ul { padding: 0; }
     .site-menu .site-search { display: flex; }
 }
+
+/* =========================================================
+   SOUS-MENUS DÉROULANTS du menu principal
+   (templates/includes/menu_principal.html, static/js/scroll-effects.js)
+   Grand écran : liste flottante ouverte au survol ou par le bouton ▾.
+   Petit écran : accordéon dans le panneau mobile.
+   ========================================================= */
+.main-nav__item { position: relative; }
+.main-nav__parent { display: flex; align-items: center; gap: 2px; }
+
+/* Bouton ▾ seul (élément avec lien) ou titre cliquable (élément sans lien) */
+.main-nav__deplier {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 4px;
+    background: none;
+    border: 0;
+    color: #f1e9e9;
+    font: inherit;
+    font-size: 1.02rem;
+    letter-spacing: .02em;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.main-nav__deplier::after {
+    content: "";
+    width: .42em; height: .42em;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translateY(-30%) rotate(45deg);
+    transition: transform .2s ease;
+}
+.main-nav__deplier:hover { color: var(--color-accent); }
+.main-nav__item.is-open > .main-nav__parent .main-nav__deplier::after {
+    transform: translateY(20%) rotate(-135deg);
+}
+
+/* Rubrique en cours (ex : on est dans l'application théâtre) */
+.main-nav__item.is-actif > .main-nav__parent > a::after { width: 100%; }
+
+.main-nav ul.main-nav__sous-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 14px);
+    left: -18px;
+    z-index: 60;
+    flex-direction: column;
+    gap: 0;
+    min-width: 210px;
+    margin: 0;
+    padding: 8px 0;
+    background: rgba(26, 20, 20, .97);
+    border-top: 2px solid var(--color-accent);
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, .3);
+}
+/* Pont invisible entre l'élément et sa liste : le survol ne se perd pas */
+.main-nav__sous-menu::before {
+    content: "";
+    position: absolute;
+    left: 0; right: 0;
+    top: -16px; height: 16px;
+}
+.main-nav__sous-menu a {
+    display: block;
+    padding: 9px 20px;
+    font-size: .95rem;
+    transition: background .2s ease, color .2s ease;
+}
+.main-nav__sous-menu a::after { display: none; }
+.main-nav__sous-menu a:hover,
+.main-nav__sous-menu a:focus-visible,
+.main-nav__sous-menu a[aria-current="page"] {
+    background: rgba(255, 255, 255, .07);
+    color: var(--color-accent);
+}
+
+.main-nav__item--parent.is-open > .main-nav__sous-menu { display: flex; }
+@media (min-width: 1101px) {
+    /* Aligne les éléments simples et ceux qui portent un bouton ▾ */
+    .main-nav > ul { align-items: center; }
+}
+@media (min-width: 1101px) and (hover: hover) {
+    .main-nav__item--parent:hover > .main-nav__sous-menu { display: flex; }
+}
+
+/* Panneau mobile : sous-menus en accordéon */
+@media (max-width: 1100px) {
+    .main-nav__parent { justify-content: space-between; }
+    .main-nav__parent > a { flex: 1; }
+    .main-nav__deplier {
+        justify-content: center;
+        min-width: 44px;
+        padding: 14px 4px;
+        font-size: 1.05rem;
+    }
+    .main-nav__deplier--titre { flex: 1; justify-content: space-between; text-align: left; }
+
+    .main-nav ul.main-nav__sous-menu {
+        position: static;
+        min-width: 0;
+        margin: 0 0 12px 4px;
+        padding: 0 0 0 12px;
+        background: none;
+        border-top: 0;
+        border-left: 2px solid var(--color-accent);
+        border-radius: 0;
+        box-shadow: none;
+    }
+    .main-nav__sous-menu::before { display: none; }
+    .main-nav .main-nav__sous-menu li + li { border-top: 0; }
+    .main-nav .main-nav__sous-menu a { padding: 10px 12px; font-size: 1rem; }
+}

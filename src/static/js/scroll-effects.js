@@ -71,4 +71,49 @@
             if (window.innerWidth > 1100) { fermerMenu(); }
         });
     }
+
+    // Sous-menus déroulants du menu principal : le bouton ▾ ouvre / ferme
+    // son sous-menu (au clic, au toucher ou au clavier) ; un seul ouvert à
+    // la fois. Au survol de la souris, l'ouverture est gérée en CSS.
+    var parents = document.querySelectorAll(".main-nav__item--parent");
+    if (parents.length) {
+        var basculerSousMenu = function (item, ouvrir) {
+            item.classList.toggle("is-open", ouvrir);
+            var bouton = item.querySelector(".main-nav__deplier");
+            if (bouton) { bouton.setAttribute("aria-expanded", ouvrir ? "true" : "false"); }
+        };
+        var fermerSousMenus = function (sauf) {
+            parents.forEach(function (item) {
+                if (item !== sauf) { basculerSousMenu(item, false); }
+            });
+        };
+
+        parents.forEach(function (item) {
+            var bouton = item.querySelector(".main-nav__deplier");
+            if (!bouton) { return; }
+            bouton.addEventListener("click", function () {
+                var ouvrir = !item.classList.contains("is-open");
+                fermerSousMenus(item);
+                basculerSousMenu(item, ouvrir);
+            });
+            // Navigation au clavier : on referme quand le focus quitte l'élément
+            item.addEventListener("focusout", function (e) {
+                if (e.relatedTarget && !item.contains(e.relatedTarget)) {
+                    basculerSousMenu(item, false);
+                }
+            });
+        });
+
+        document.addEventListener("keydown", function (e) {
+            if (e.key !== "Escape") { return; }
+            var ouvert = document.querySelector(".main-nav__item--parent.is-open");
+            if (ouvert) {
+                basculerSousMenu(ouvert, false);
+                ouvert.querySelector(".main-nav__deplier").focus();
+            }
+        });
+        document.addEventListener("click", function (e) {
+            if (!e.target.closest(".main-nav__item--parent")) { fermerSousMenus(null); }
+        });
+    }
 })();

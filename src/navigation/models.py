@@ -1,6 +1,7 @@
 """
 Modèles de navigation :
-- MainMenuItem : liens affichés dans le menu principal du site
+- MainMenuItem : liens affichés dans le menu principal du site, chacun
+  pouvant porter un sous-menu déroulant
 - FooterLink   : liens affichés dans le pied de page
 - SocialSettings : coordonnées & réseaux sociaux (paramètre de site global)
 
@@ -11,8 +12,10 @@ from django.db import models
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 
+from wagtail import blocks
 from wagtail.admin.panels import FieldPanel, InlinePanel
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
+from wagtail.fields import StreamField
 from wagtail.models import Orderable
 from wagtail.snippets.models import register_snippet
 
@@ -35,6 +38,39 @@ class MainMenu(ClusterableModel):
         verbose_name = "Menu principal"
 
 
+class LienSousMenuValue(blocks.StructValue):
+    @property
+    def href(self):
+        page = self.get("page")
+        if page:
+            return page.url
+        return self.get("url")
+
+
+class LienSousMenuBlock(blocks.StructBlock):
+    """Un lien du sous-menu déroulant d'un élément du menu principal."""
+
+    titre = blocks.CharBlock(max_length=50)
+    page = blocks.PageChooserBlock(
+        required=False,
+        help_text="Choisir une page du site (prioritaire sur l'URL ci-dessous).",
+    )
+    url = blocks.CharBlock(
+        label="URL",
+        required=False,
+        max_length=500,
+        help_text="Ou une URL externe / ancre, si aucune page n'est choisie.",
+    )
+    ouvrir_nouvel_onglet = blocks.BooleanBlock(
+        label="Ouvrir dans un nouvel onglet", required=False
+    )
+
+    class Meta:
+        icon = "link"
+        label = "Lien"
+        value_class = LienSousMenuValue
+
+
 class MainMenuItem(Orderable):
     menu = ParentalKey(
         MainMenu, on_delete=models.CASCADE, related_name="items"
@@ -53,11 +89,22 @@ class MainMenuItem(Orderable):
         blank=True,
         help_text="Ou une URL externe / ancre, si aucune page n'est choisie.",
     )
+    sous_menu = StreamField(
+        [("lien", LienSousMenuBlock())],
+        blank=True,
+        verbose_name="Sous-menu déroulant",
+        help_text=(
+            "Liens affichés sous cet élément au survol (ou au toucher sur "
+            "smartphone). Sans page ni URL ci-dessus, l'élément sert "
+            "uniquement à ouvrir son sous-menu."
+        ),
+    )
 
     panels = [
         FieldPanel("link_title"),
         FieldPanel("link_page"),
         FieldPanel("link_url"),
+        FieldPanel("sous_menu"),
     ]
 
     @property

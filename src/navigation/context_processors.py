@@ -1,3 +1,5 @@
+from theatre.menu import menu_theatre
+
 from .models import FooterMenu, MainMenu
 
 
@@ -7,4 +9,6 @@ def menus(request):
     return {
         "main_menu": MainMenu.objects.prefetch_related("items").first(),
         "footer_menu": FooterMenu.objects.prefetch_related("links").first(),
+        # Sous-menu « Théâtre » : seulement pour les utilisateurs autorisés
+        "menu_theatre": menu_theatre(request),
     }

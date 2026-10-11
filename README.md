@@ -36,6 +36,10 @@ contact), avec une page d'accueil en défilement continu et effets de fondu.
   accessible depuis la barre du menu (`search` app).
 - **Menu principal et pied de page** : entièrement gérables depuis l'admin
   (snippets `MainMenu` / `FooterMenu`), sans toucher au code (`navigation` app).
+  Chaque élément du menu peut porter un **sous-menu déroulant** (champ
+  « Sous-menu déroulant »). Pour les utilisateurs ayant accès à l'application
+  théâtre, l'entrée « Théâtre » affiche les pages de l'application
+  (liste définie dans `theatre/menu.py`).
 
 ## Installation (développement)
 

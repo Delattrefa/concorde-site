@@ -1,0 +1,45 @@
+{% comment %}
+Menu principal du site (en-tête). Un élément peut porter un sous-menu
+déroulant : ouvert au survol ou au clavier sur grand écran, et par le
+bouton ▾ (souris, toucher) ; en accordéon dans le panneau mobile.
+Comportement piloté par static/js/scroll-effects.js.
+{% endcomment %}
+<nav class="main-nav" aria-label="Navigation principale">
+    <ul>
+        {% for item in main_menu.items.all %}
+            {% if item.sous_menu %}
+                <li class="main-nav__item main-nav__item--parent">
+                    <div class="main-nav__parent">
+                        {% if item.url %}
+                            <a href="{{ item.url }}">{{ item.link_title }}</a>
+                            <button type="button" class="main-nav__deplier" aria-expanded="false" aria-controls="sous-menu-{{ forloop.counter }}" aria-label="Afficher le sous-menu {{ item.link_title }}"></button>
+                        {% else %}
+                            <button type="button" class="main-nav__deplier main-nav__deplier--titre" aria-expanded="false" aria-controls="sous-menu-{{ forloop.counter }}">{{ item.link_title }}</button>
+                        {% endif %}
+                    </div>
+                    <ul class="main-nav__sous-menu" id="sous-menu-{{ forloop.counter }}">
+                        {% for lien in item.sous_menu %}
+                            <li><a href="{{ lien.value.href }}" {% if lien.value.ouvrir_nouvel_onglet %}target="_blank" rel="noopener"{% endif %}>{{ lien.value.titre }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% else %}
+                <li class="main-nav__item"><a href="{{ item.url }}">{{ item.link_title }}</a></li>
+            {% endif %}
+        {% endfor %}
+        <li class="main-nav__item"><a href="{% url 'calendrier:mois_courant' %}">Réservations</a></li>
+        {% if menu_theatre %}
+            <li class="main-nav__item main-nav__item--parent{% if menu_theatre.actif %} is-actif{% endif %}">
+                <div class="main-nav__parent">
+                    <a href="{{ menu_theatre.url }}">Théâtre</a>
+                    <button type="button" class="main-nav__deplier" aria-expanded="false" aria-controls="sous-menu-theatre" aria-label="Afficher le sous-menu Théâtre"></button>
+                </div>
+                <ul class="main-nav__sous-menu" id="sous-menu-theatre">
+                    {% for lien in menu_theatre.liens %}
+                        <li><a href="{{ lien.url }}"{% if lien.actif %} aria-current="page"{% endif %}>{{ lien.titre }}</a></li>
+                    {% endfor %}
+                </ul>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
