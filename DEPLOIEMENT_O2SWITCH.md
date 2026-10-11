@@ -229,8 +229,13 @@ export DJANGO_SETTINGS_MODULE=concorde_site.settings.production
 python manage.py loaddata data.json
 python manage.py update_index
 python manage.py rebuild_references_index
+python manage.py generer_miniatures
 rm data.json
 ```
+
+Les miniatures ne sont pas exportées (`-e wagtailimages.rendition`) :
+`generer_miniatures` les recrée pour tous les albums, sans quoi la
+première ouverture de chaque album serait très lente.
 
 Si `loaddata` signale un conflit sur la page d'accueil ou le site par
 défaut créés par Wagtail lors des migrations, videz la base
@@ -286,6 +291,31 @@ GitHub changent en permanence.
 
 ---
 
+## Galerie : envoi par lots et miniatures (octobre 2026)
+
+Cette mise à jour envoie les photos par lots avec une barre de progression,
+et génère les miniatures des photos dès leur envoi. Les albums déjà en
+ligne n'ont pas encore toutes leurs miniatures : sans l'étape 2, la
+première ouverture de chacun d'eux reste très lente.
+
+1. **Sur le serveur** : `bash ~/concorde/deploy.sh` (publie aussi le
+   nouveau CSS de la galerie via `collectstatic`).
+2. **Une seule fois**, générer les miniatures des albums existants :
+   ```bash
+   source ~/virtualenv/concorde/src/3.11/bin/activate   # même chemin que dans deploy.sh
+   cd ~/concorde/src
+   export DJANGO_SETTINGS_MODULE=concorde_site.settings.production
+   python manage.py generer_miniatures
+   ```
+   La commande affiche le nombre d'images traitées par album. Elle peut
+   être relancée sans risque (les miniatures existantes sont conservées),
+   ou limitée à un album : `--album <identifiant>`.
+3. **Vérifications** : ouvrir un album déjà en ligne (affichage immédiat),
+   puis ajouter quelques photos depuis le site et suivre la barre de
+   progression.
+
+---
+
 ## Passage de Wagtail 6.4 à 7.4 (LTS)
 
 Wagtail 6.4 ne reçoit plus de correctifs de sécurité depuis août 2025 ;
@@ -333,7 +363,8 @@ virtuel) et redémarrer (`touch ~/concorde/src/tmp/restart.txt`).
 | Photos en erreur 404 | Vérifier que `MEDIA_ROOT` est bien dans le dossier public du domaine. En dernier recours : `SERVE_MEDIA=1` dans `.env`, puis redémarrer. |
 | Boucle de redirection | Certificat HTTPS absent ou en cours : `SECURE_SSL_REDIRECT=0` le temps de régler le certificat. |
 | « CSRF verification failed » | Domaine manquant dans `ALLOWED_HOSTS`. |
-| Envoi groupé de photos refusé | Envoyer moins de photos à la fois ; la limite est de 200 fichiers et 20 Mo par photo. |
+| Envoi groupé de photos refusé | Les photos partent par lots de 10 : les fichiers refusés sont listés sous la barre de progression (20 Mo maximum par photo, JPEG, PNG, WebP ou GIF). Sans JavaScript, l'envoi se fait en une fois, limité à 200 fichiers. |
+| Première ouverture d'un album très lente | Miniatures pas encore générées : `python manage.py generer_miniatures` (voir « Galerie : envoi par lots et miniatures »). |
 | Modifications non visibles | `touch ~/concorde/src/tmp/restart.txt`, ou bouton *Restart* dans Setup Python App. |
 
 Sauvegardes : o2switch sauvegarde le compte chaque jour (outil *JetBackup*
