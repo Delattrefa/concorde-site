@@ -3,11 +3,17 @@ Vue permettant d'ajouter plusieurs photos en une seule fois à un album,
 plutôt que de devoir les ajouter une par une depuis l'admin Wagtail
 (InlinePanel classique). Réservée aux administrateurs (is_staff), comme la
 gestion des réservations dans l'app 'calendrier'.
+
+Pour un grand nombre de photos, la page les envoie par lots successifs
+(requêtes AJAX) : on reste ainsi sous les limites de sécurité de Django
+(DATA_UPLOAD_MAX_NUMBER_FILES) et du serveur web (taille d'une requête).
+Sans JavaScript, l'envoi se fait en une seule fois comme avant.
 """
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 import os
 
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -35,6 +41,21 @@ def _enregistrer_revision(album_pk, utilisateur):
         revision.publish(user=utilisateur, skip_permission_checks=True)
 
 
+# Formats d'affichage des photos dans l'album (gallery_album.html : vignette
+# de la grille et grande image de la visionneuse). Les générer dès l'envoi
+# évite que la première ouverture de l'album les crée toutes d'un coup.
+FORMATS_PHOTO_ALBUM = ("fill-500x400", "max-1600x1200")
+
+
+def _est_envoi_par_lots(request):
+    return request.headers.get("x-requested-with") == "XMLHttpRequest"
+
+
+def _cle_session_envoi(album):
+    """Nombre de photos ajoutées par les lots en cours, pour le message final."""
+    return f"galerie_envoi_{album.pk}"
+
+
 @user_passes_test(_est_administrateur, login_url="login")
 def ajouter_photos(request, album_id):
     """Ajout de plusieurs photos en une fois à un album. Accessible depuis
@@ -45,8 +66,19 @@ def ajouter_photos(request, album_id):
     retour_admin = request.GET.get("retour") == "admin" or request.POST.get("retour") == "admin"
     url_editeur = reverse("wagtailadmin_pages:edit", args=[album.pk])
 
+    if request.method == "POST" and request.POST.get("etape") == "terminer":
+        # Fin d'un envoi par lots : message récapitulatif et page suivante.
+        nombre = request.session.pop(_cle_session_envoi(album), 0)
+        if nombre:
+            messages.success(request, f"{nombre} photo(s) ajoutée(s) à l'album « {album.title} ».")
+        suivante = url_editeur if retour_admin else reverse("galerie_ajouter_photos", args=[album.pk])
+        return JsonResponse({"redirection": suivante})
+
     if request.method == "POST":
         form = AjoutPhotosForm(request.POST, request.FILES)
+        if not form.is_valid() and _est_envoi_par_lots(request):
+            erreurs = [str(e) for liste in form.errors.values() for e in liste]
+            return JsonResponse({"erreurs": erreurs}, status=400)
         if form.is_valid():
             fichiers = form.cleaned_data["images"]
             collection = form.cleaned_data.get("collection")
@@ -61,13 +93,21 @@ def ajouter_photos(request, album_id):
                 if collection is not None:
                     donnees["collection"] = collection
                 image_wagtail = Image.objects.create(**donnees)
+                image_wagtail.get_renditions(*FORMATS_PHOTO_ALBUM)
                 GalleryImage.objects.create(
                     page=album,
                     image=image_wagtail,
                     sort_order=ordre_depart + index,
                 )
 
+            # Une révision par lot : si l'envoi est interrompu, les photos
+            # déjà reçues restent cohérentes avec la version de l'album.
             _enregistrer_revision(album.pk, request.user)
+
+            if _est_envoi_par_lots(request):
+                cle = _cle_session_envoi(album)
+                request.session[cle] = request.session.get(cle, 0) + len(fichiers)
+                return JsonResponse({"ajoutees": len(fichiers)})
 
             messages.success(
                 request,

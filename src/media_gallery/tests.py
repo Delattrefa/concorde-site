@@ -43,6 +43,13 @@ class AjoutMediasTests(TestCase):
             {"images": [_photo(nom) for nom in noms]},
         )
 
+    def _ajouter_lot(self, *noms):
+        return self.client.post(
+            reverse("galerie_ajouter_photos", args=[self.album.pk]),
+            {"images": [_photo(nom) for nom in noms]},
+            headers={"x-requested-with": "XMLHttpRequest"},
+        )
+
     def _ajouter_video(self):
         return self.client.post(
             reverse("galerie_ajouter_video", args=[self.album.pk]),
@@ -93,3 +100,72 @@ class AjoutMediasTests(TestCase):
 
         album = GalleryAlbum.objects.get(pk=self.album.pk)
         self.assertEqual((album.gallery_images.count(), album.videos.count()), (0, 0))
+
+    def test_envoi_par_lots(self):
+        self.client.force_login(self.admin)
+
+        self.assertEqual(self._ajouter_lot("lot1_a.png", "lot1_b.png").json(), {"ajoutees": 2})
+        self.assertEqual(self._ajouter_lot("lot2_a.png").json(), {"ajoutees": 1})
+        fin = self.client.post(
+            reverse("galerie_ajouter_photos", args=[self.album.pk]) + "?retour=admin",
+            {"etape": "terminer"},
+            headers={"x-requested-with": "XMLHttpRequest"},
+        )
+
+        self.assertEqual(fin.json(), {"redirection": reverse("wagtailadmin_pages:edit", args=[self.album.pk])})
+        self.assertEqual(
+            [g.image.title for g in self._version_en_ligne().gallery_images.all()],
+            ["lot1 a", "lot1 b", "lot2 a"],
+        )
+        messages = [str(m) for m in fin.wsgi_request._messages]
+        self.assertEqual(messages, ["3 photo(s) ajoutée(s) à l'album « Spectacle 2026 »."])
+
+    def test_lot_invalide_renvoie_les_erreurs(self):
+        self.client.force_login(self.admin)
+        faux = SimpleUploadedFile("faux.png", b"pas une image", content_type="image/png")
+
+        reponse = self.client.post(
+            reverse("galerie_ajouter_photos", args=[self.album.pk]),
+            {"images": [faux]},
+            headers={"x-requested-with": "XMLHttpRequest"},
+        )
+
+        self.assertEqual(reponse.status_code, 400)
+        self.assertIn("« faux.png » n'est pas une image valide", reponse.json()["erreurs"][0])
+        self.assertEqual(self.album.gallery_images.count(), 0)
+
+    def test_miniatures_generees_a_l_envoi(self):
+        from django.core.cache import cache
+
+        from .views import FORMATS_PHOTO_ALBUM
+
+        # Les identifiants d'images sont réutilisés d'un test à l'autre : sans
+        # cela, Wagtail retrouverait en cache les miniatures d'un test précédent.
+        cache.clear()
+        self.client.force_login(self.admin)
+        self._ajouter_lot("affiche.png")
+
+        image = self.album.gallery_images.get().image
+        self.assertEqual(
+            sorted(r.filter_spec for r in image.renditions.all()), sorted(FORMATS_PHOTO_ALBUM),
+        )
+
+    def test_commande_generer_miniatures(self):
+        from django.core.cache import cache
+        from django.core.management import call_command
+        from wagtail.images.models import Image
+
+        from .models import GalleryImage
+        from .views import FORMATS_PHOTO_ALBUM
+
+        cache.clear()  # voir test_miniatures_generees_a_l_envoi
+        image = Image.objects.create(title="ancienne", file=_photo("ancienne.png"))
+        GalleryImage.objects.create(page=self.album, image=image, sort_order=0)
+        self.assertFalse(image.renditions.exists())
+
+        call_command("generer_miniatures", stdout=io.StringIO())
+
+        self.assertEqual(
+            sorted(r.filter_spec for r in image.renditions.all()),
+            sorted(FORMATS_PHOTO_ALBUM + ("fill-600x450",)),  # photo et couverture de l'album
+        )

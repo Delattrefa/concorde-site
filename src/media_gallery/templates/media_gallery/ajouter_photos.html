@@ -61,6 +61,15 @@
 
         <button type="submit" class="btn btn--primary" data-bouton-envoi>Ajouter ces photos</button>
         <p class="zone-depot__envoi" data-envoi-en-cours hidden>Envoi en cours… Ne fermez pas la page : cela peut prendre une minute pour beaucoup de photos.</p>
+
+        <div class="envoi-progression" data-progression hidden>
+            <progress class="envoi-progression__barre" max="100" value="0" data-progression-barre></progress>
+            <p class="envoi-progression__texte" aria-live="polite" data-progression-texte></p>
+            <ul class="envoi-progression__erreurs" data-progression-erreurs hidden></ul>
+            <p class="envoi-progression__suite" data-progression-suite hidden>
+                <a class="btn btn--secondary" href="#" data-progression-continuer>Continuer</a>
+            </p>
+        </div>
     </form>
 
     <p class="galerie-form__note">
@@ -70,7 +79,7 @@
 </section>
 
 <script>
-/* Aperçu des photos choisies, glisser-déposer et message pendant l'envoi */
+/* Aperçu des photos choisies, glisser-déposer et envoi par lots */
 (function () {
     var formulaire = document.querySelector("[data-envoi-photos]");
     if (!formulaire) { return; }
@@ -113,9 +122,162 @@
             afficherApercus();
         }
     });
-    formulaire.addEventListener("submit", function () {
-        formulaire.querySelector("[data-bouton-envoi]").disabled = true;
+
+    /* ---------- Envoi par lots avec barre de progression ----------
+       Envoyer des centaines de photos dans une seule requête dépasse les
+       limites de sécurité (nombre de fichiers pour Django, taille de requête
+       pour le serveur web). On les envoie donc par petits lots successifs. */
+    var PHOTOS_PAR_LOT = 10;
+    var OCTETS_PAR_LOT = 25 * 1048576;   // 25 Mo
+    var TAILLE_MAX_PHOTO = 20 * 1048576; // 20 Mo, comme côté serveur
+    var TYPES_ACCEPTES = (champ.getAttribute("accept") || "").split(",");
+
+    var bouton = formulaire.querySelector("[data-bouton-envoi]");
+    var progression = formulaire.querySelector("[data-progression]");
+    var barre = formulaire.querySelector("[data-progression-barre]");
+    var texte = formulaire.querySelector("[data-progression-texte]");
+    var listeErreurs = formulaire.querySelector("[data-progression-erreurs]");
+    var suite = formulaire.querySelector("[data-progression-suite]");
+    var continuer = formulaire.querySelector("[data-progression-continuer]");
+    var envoiEnCours = false;
+
+    function pluriel(n, mot) { return n + " " + mot + (n > 1 ? "s" : ""); }
+
+    function decouperEnLots(fichiers) {
+        var lots = [], lot = [], taille = 0;
+        fichiers.forEach(function (f) {
+            if (lot.length && (lot.length >= PHOTOS_PAR_LOT || taille + f.size > OCTETS_PAR_LOT)) {
+                lots.push(lot); lot = []; taille = 0;
+            }
+            lot.push(f); taille += f.size;
+        });
+        if (lot.length) { lots.push(lot); }
+        return lots;
+    }
+
+    /* Champs du formulaire hors photos (jeton CSRF, collection, retour) */
+    function donneesCommunes() {
+        var donnees = new FormData(formulaire);
+        donnees.delete(champ.name);
+        return donnees;
+    }
+
+    function poster(donnees, surProgression) {
+        return new Promise(function (resoudre) {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", formulaire.action || window.location.href);
+            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+            xhr.responseType = "json";
+            if (surProgression) {
+                xhr.upload.addEventListener("progress", function (e) {
+                    if (e.lengthComputable) { surProgression(e.loaded / e.total); }
+                });
+            }
+            xhr.addEventListener("load", function () { resoudre({ statut: xhr.status, json: xhr.response || {} }); });
+            xhr.addEventListener("error", function () { resoudre({ statut: 0, json: {} }); });
+            xhr.send(donnees);
+        });
+    }
+
+    function afficherErreurs(erreurs) {
+        listeErreurs.innerHTML = "";
+        erreurs.forEach(function (message) {
+            var li = document.createElement("li");
+            li.textContent = message;
+            listeErreurs.appendChild(li);
+        });
+        listeErreurs.hidden = !erreurs.length;
+    }
+
+    async function envoyerParLots() {
+        var erreurs = [];
+        var fichiers = Array.prototype.filter.call(champ.files, function (f) {
+            if (TYPES_ACCEPTES.indexOf(f.type) === -1) {
+                erreurs.push("« " + f.name + " » n'est pas une image valide (JPEG, PNG, WebP ou GIF).");
+                return false;
+            }
+            if (f.size > TAILLE_MAX_PHOTO) {
+                erreurs.push("« " + f.name + " » dépasse 20 Mo.");
+                return false;
+            }
+            return true;
+        });
+        var lots = decouperEnLots(fichiers);
+        var octetsTotal = fichiers.reduce(function (t, f) { return t + f.size; }, 0) || 1;
+        var octetsEnvoyes = 0, ajoutees = 0, traitees = 0;
+
+        envoiEnCours = true;
+        bouton.disabled = true;
+        progression.hidden = false;
+        suite.hidden = true;
+        afficherErreurs(erreurs);
+
+        function majTexte(numeroLot) {
+            texte.textContent = "Lot " + numeroLot + " sur " + lots.length + " — " +
+                traitees + " / " + fichiers.length + " photos envoyées. Ne fermez pas la page.";
+        }
+
+        for (var i = 0; i < lots.length; i++) {
+            var lot = lots[i];
+            var tailleLot = lot.reduce(function (t, f) { return t + f.size; }, 0);
+            majTexte(i + 1);
+
+            var reponse;
+            for (var essai = 0; essai < 2; essai++) {  // une nouvelle tentative en cas de coupure
+                var donnees = donneesCommunes();
+                lot.forEach(function (f) { donnees.append(champ.name, f); });
+                reponse = await poster(donnees, function (part) {
+                    barre.value = Math.round((octetsEnvoyes + part * tailleLot) / octetsTotal * 100);
+                });
+                if (reponse.statut !== 0 && reponse.statut < 500) { break; }
+            }
+
+            octetsEnvoyes += tailleLot;
+            traitees += lot.length;
+            barre.value = Math.round(octetsEnvoyes / octetsTotal * 100);
+            if (reponse.statut === 200) {
+                ajoutees += reponse.json.ajoutees || 0;
+            } else if (reponse.json.erreurs) {
+                erreurs = erreurs.concat(reponse.json.erreurs);
+            } else {
+                erreurs.push("Lot " + (i + 1) + " non envoyé (" + lot.map(function (f) { return f.name; }).join(", ") +
+                    ") : " + (reponse.statut ? "erreur du serveur " + reponse.statut : "connexion interrompue") + ".");
+            }
+            afficherErreurs(erreurs);
+        }
+
+        envoiEnCours = false;
+        texte.textContent = pluriel(ajoutees, "photo") + " ajoutée" + (ajoutees > 1 ? "s" : "") +
+            " sur " + champ.files.length + ".";
+
+        if (!ajoutees) {
+            bouton.disabled = false;
+            return;
+        }
+        var fin = donneesCommunes();
+        fin.append("etape", "terminer");
+        var reponseFin = await poster(fin);
+        var redirection = reponseFin.json.redirection || window.location.href;
+        if (!erreurs.length) {
+            window.location.href = redirection;
+            return;
+        }
+        continuer.href = redirection;
+        suite.hidden = false;
+    }
+
+    formulaire.addEventListener("submit", function (e) {
+        var lotsPossibles = window.FormData && window.Promise && FormData.prototype.delete;
+        if (lotsPossibles && champ.files && champ.files.length) {
+            e.preventDefault();
+            if (!envoiEnCours) { envoyerParLots(); }
+            return;
+        }
+        bouton.disabled = true;
         formulaire.querySelector("[data-envoi-en-cours]").hidden = false;
+    });
+    window.addEventListener("beforeunload", function (e) {
+        if (envoiEnCours) { e.preventDefault(); e.returnValue = ""; }
     });
 })();
 </script>
