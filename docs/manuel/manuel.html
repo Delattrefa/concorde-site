@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Manuel d'utilisation — Site La Concorde asbl</title>
+<style>
+  @page { size: A4; margin: 18mm 17mm 20mm 17mm; }
+  @page :first { margin: 0; }
+  :root {
+    --bordeaux: #7a1f2b; --bordeaux-fonce: #5a1620; --or: #d1a62f; --creme: #f5eee7;
+    --encre: #2a2222; --gris: #6b6262; --bord: #e2d6cc; --vert: #2e7d32; --orange: #e67e22;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: "Helvetica Neue", Arial, "Liberation Sans", sans-serif; font-size: 10.3pt; line-height: 1.5; color: var(--encre); margin: 0; counter-reset: figure; }
+  h1, h2, h3, .titre-serif { font-family: Georgia, "DejaVu Serif", "Liberation Serif", serif; color: var(--bordeaux); }
+  h1 { font-size: 24pt; margin: 0 0 4mm; line-height: 1.15; }
+  h2 { font-size: 15pt; margin: 9mm 0 3mm; padding-bottom: 1.5mm; border-bottom: 1.5px solid var(--bord); break-after: avoid; }
+  h3 { font-size: 12pt; margin: 6mm 0 2mm; color: var(--bordeaux-fonce); break-after: avoid; }
+  p { margin: 0 0 2.6mm; }
+  ul, ol { margin: 0 0 3mm; padding-left: 6mm; }
+  li { margin-bottom: 1mm; }
+  a { color: var(--bordeaux); }
+  code, .url { font-family: "DejaVu Sans Mono", Consolas, monospace; font-size: 8.8pt; background: var(--creme); padding: 0.2mm 1.2mm; border-radius: 1mm; color: var(--bordeaux-fonce); white-space: nowrap; }
+  strong { color: #1d1717; }
+  .btn { display: inline-block; font-size: 8.6pt; font-weight: 600; padding: 0.1mm 2mm; border-radius: 1mm; background: var(--or); color: #241c00; white-space: nowrap; }
+  .btn.rouge { background: var(--bordeaux); color: #fff; }
+
+  /* Couverture */
+  .couverture { height: 297mm; width: 210mm; position: relative; overflow: hidden; break-after: page; background: var(--bordeaux-fonce); color: #fff; }
+  .couverture img { position: absolute; inset: 0; width: 100%; height: 62%; object-fit: cover; opacity: .7; }
+  .couverture .voile { position: absolute; inset: 0; height: 62%; background: linear-gradient(180deg, rgba(90,22,32,.1) 0%, rgba(90,22,32,1) 100%); }
+  .couverture .texte { position: absolute; left: 20mm; right: 20mm; top: 120mm; }
+  .couverture .sur { text-transform: uppercase; letter-spacing: 3px; color: var(--or); font-size: 10pt; font-weight: 700; }
+  .couverture h1 { color: #fff; font-size: 38pt; margin: 4mm 0 5mm; }
+  .couverture .sous { font-size: 14pt; color: #f1e3d6; max-width: 140mm; }
+  .couverture .bas { position: absolute; left: 20mm; right: 20mm; bottom: 20mm; border-top: 1px solid rgba(255,255,255,.3); padding-top: 5mm; font-size: 9.5pt; color: #e9d7c8; display: flex; justify-content: space-between; }
+  .couverture .logo { font-family: Georgia, serif; font-size: 20pt; color: #fff; }
+  .couverture .logo span { color: var(--or); font-size: 12pt; }
+
+  /* Chapitres */
+  .chapitre { break-before: page; }
+  .bandeau { background: var(--creme); border-left: 3mm solid var(--bordeaux); padding: 6mm 7mm 5mm; margin-bottom: 6mm; }
+  .bandeau .num { font-size: 9pt; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gris); font-weight: 700; }
+  .bandeau p { margin: 0; color: #4a3f3f; font-size: 10.5pt; }
+
+  /* Figures */
+  figure { margin: 4mm 0 5mm; break-inside: avoid; text-align: center; }
+  figure img { max-width: 100%; max-height: 118mm; border: 1px solid var(--bord); border-radius: 1.5mm; box-shadow: 0 1mm 3mm rgba(60,30,30,.12); }
+  figure.haute img { max-height: 150mm; }
+  figure.basse img { max-height: 85mm; }
+  figure.mobile img { max-height: 105mm; }
+  figcaption { counter-increment: figure; font-size: 8.6pt; color: var(--gris); margin-top: 1.8mm; font-style: italic; }
+  figcaption::before { content: "Figure " counter(figure) " — "; font-weight: 700; font-style: normal; color: var(--bordeaux); }
+  .duo { display: flex; gap: 5mm; justify-content: center; align-items: flex-start; break-inside: avoid; }
+  .duo figure { flex: 1; margin-top: 2mm; }
+
+  /* Encadrés */
+  .encart { border-radius: 2mm; padding: 3.5mm 4.5mm; margin: 4mm 0; break-inside: avoid; font-size: 9.8pt; }
+  .encart p:last-child, .encart ul:last-child, .encart ol:last-child { margin-bottom: 0; }
+  .encart .t { font-weight: 700; display: block; margin-bottom: 1mm; }
+  .astuce { background: #eef6ee; border: 1px solid #c6e0c7; }
+  .astuce .t { color: var(--vert); }
+  .attention { background: #fdf3e3; border: 1px solid #f0d3a2; }
+  .attention .t { color: #b5600b; }
+  .exemple { background: #f6f1fa; border: 1px solid #ddd0ea; }
+  .exemple .t { color: #5b3a87; }
+  .exemple ol { margin-top: 1mm; }
+
+  /* Tableaux */
+  table { width: 100%; border-collapse: collapse; margin: 3mm 0 5mm; font-size: 9.2pt; break-inside: avoid; }
+  th { background: var(--bordeaux); color: #fff; text-align: left; padding: 2mm 2.5mm; font-weight: 600; }
+  td { border-bottom: 1px solid var(--bord); padding: 1.8mm 2.5mm; vertical-align: top; }
+  tr:nth-child(even) td { background: #fbf8f5; }
+  td.oui { color: var(--vert); font-weight: 700; text-align: center; }
+  td.non { color: #b0a5a5; text-align: center; }
+
+  /* Étapes */
+  ol.etapes { list-style: none; counter-reset: etape; padding-left: 0; }
+  ol.etapes > li { counter-increment: etape; position: relative; padding-left: 9mm; margin-bottom: 2.2mm; }
+  ol.etapes > li::before { content: counter(etape); position: absolute; left: 0; top: 0.2mm; width: 6mm; height: 6mm; border-radius: 50%; background: var(--bordeaux); color: #fff; font-weight: 700; font-size: 8.5pt; text-align: center; line-height: 6mm; }
+
+  /* Sommaire */
+  .sommaire { break-after: page; }
+  .sommaire ol { list-style: none; padding: 0; counter-reset: ch; }
+  .sommaire > ol > li { counter-increment: ch; margin: 0 0 3.2mm; padding: 2.4mm 0 2.4mm 13mm; position: relative; border-bottom: 1px dotted var(--bord); }
+  .sommaire > ol > li::before { content: counter(ch, decimal-leading-zero); position: absolute; left: 0; top: 1.6mm; font-family: Georgia, serif; font-size: 15pt; color: var(--or); font-weight: 700; }
+  .sommaire a { text-decoration: none; color: var(--encre); font-weight: 700; font-size: 11.5pt; }
+  .sommaire .desc { display: block; color: var(--gris); font-size: 9pt; font-weight: 400; }
+
+  .profils { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4mm; margin: 4mm 0; }
+  .profil { border: 1px solid var(--bord); border-top: 2mm solid var(--or); border-radius: 2mm; padding: 3mm 4mm; break-inside: avoid; font-size: 9.5pt; }
+  .profil h4 { margin: 0 0 1.5mm; font-family: Georgia, serif; color: var(--bordeaux); font-size: 11pt; }
+  .profil p { margin: 0; }
+  .legende-couleurs span { display: inline-block; width: 3mm; height: 3mm; border-radius: 50%; margin: 0 1mm -0.3mm 3mm; }
+  .petit { font-size: 8.8pt; color: var(--gris); }
+</style>
+</head>
+<body>
+
+<!-- ============================ COUVERTURE ============================ -->
+<section class="couverture">
+  <img src="img/couverture.jpg" alt="">
+  <div class="voile"></div>
+  <div class="texte">
+    <div class="sur">Manuel d'utilisation</div>
+    <h1>Le site web de<br>La Concorde</h1>
+    <div class="sous">Guide pratique pour l'équipe de l'ASBL : site public, calendrier et location de salle, application théâtre, actualités, médias, newsletter et administration.</div>
+  </div>
+  <div class="bas">
+    <div class="logo">La Concorde <span>asbl</span></div>
+    <div style="text-align:right">Rue Émile Cornez 11 — 7387 Angre<br>Version d'octobre 2026</div>
+  </div>
+</section>
+
+<!-- ============================ SOMMAIRE ============================ -->
+<section class="sommaire">
+  <h1>Sommaire</h1>
+  <ol>
+    <li><a href="#ch1">Présentation générale du site</a><span class="desc">Les différents espaces, les profils d'utilisateurs et leurs droits, les adresses utiles</span></li>
+    <li><a href="#ch2">Premiers pas</a><span class="desc">Se connecter, naviguer dans le menu, le bandeau cookies, la version mobile</span></li>
+    <li><a href="#ch3">Le site public, page par page</a><span class="desc">Accueil, News, Médias, Info, Contact, Newsletter, recherche, pages libres</span></li>
+    <li><a href="#ch4">Calendrier et activités</a><span class="desc">Consulter le calendrier, ajouter, modifier ou supprimer une activité</span></li>
+    <li><a href="#ch5">Location de la salle</a><span class="desc">Demandes, validation, contrat de location PDF, suivi des paiements, contrat-type</span></li>
+    <li><a href="#ch6">Les actualités (News)</a><span class="desc">Proposer, valider, modifier et supprimer une actualité</span></li>
+    <li><a href="#ch7">Médias : albums photos et vidéos</a><span class="desc">Créer un album, envoyer des photos par lots, ajouter une vidéo</span></li>
+    <li><a href="#ch8">L'application Théâtre</a><span class="desc">Représentations, réservations, plan de salle, contrôle d'entrée, ventes flash, tickets</span></li>
+    <li><a href="#ch9">La newsletter</a><span class="desc">Inscriptions, abonnés, rédaction, envoi de test et envoi aux abonnés</span></li>
+    <li><a href="#ch10">L'administration Wagtail (contenu du site)</a><span class="desc">Pages, images, menus, pied de page, paramètres, référencement</span></li>
+    <li><a href="#ch11">Gestion des utilisateurs et des droits</a><span class="desc">Créer un compte, donner les droits d'administration, d'accès au théâtre, de modération</span></li>
+    <li><a href="#ch12">Bonnes pratiques et questions fréquentes</a><span class="desc">Dépannage, réflexes à adopter, aide-mémoire des adresses</span></li>
+  </ol>
+</section>
+
+<!-- ============================ 1. PRÉSENTATION ============================ -->
+<section class="chapitre" id="ch1">
+  <div class="bandeau"><div class="num">Chapitre 1</div><h1>Présentation générale du site</h1>
+    <p>Ce qu'il faut savoir avant de commencer : qui voit quoi, et où se gère chaque chose.</p></div>
+
+  <p>Le site de La Concorde asbl est à la fois une <strong>vitrine publique</strong> (présentation de l'ASBL, actualités, photos, agenda) et un <strong>outil de gestion interne</strong> pour l'équipe (location de la salle, contrats, billetterie du théâtre, newsletter). Il est construit avec le gestionnaire de contenu <em>Wagtail</em> : tout le contenu se modifie depuis un navigateur web, sans aucune connaissance technique.</p>
+
+  <h2>Les quatre espaces du site</h2>
+  <table>
+    <tr><th style="width:24%">Espace</th><th style="width:22%">Adresse</th><th>À quoi il sert</th></tr>
+    <tr><td><strong>Site public</strong></td><td><span class="url">/</span></td><td>Ce que voient tous les visiteurs : accueil, News, Médias, Info, Contact, calendrier, formulaire de demande de location, inscription à la newsletter.</td></tr>
+    <tr><td><strong>Outils des membres</strong> (sur le site, une fois connecté)</td><td><span class="url">/connexion/</span></td><td>Ajouter des activités au calendrier, proposer des actualités, traiter les demandes de location, rédiger les contrats, gérer le théâtre, envoyer des photos dans les albums.</td></tr>
+    <tr><td><strong>Administration Wagtail</strong></td><td><span class="url">/admin/</span></td><td>Modifier le contenu des pages, les images, le menu, le pied de page, les coordonnées, la newsletter et ses abonnés, valider les actualités.</td></tr>
+    <tr><td><strong>Administration Django</strong></td><td><span class="url">/django-admin/</span></td><td>Gestion « technique » : comptes utilisateurs et droits, et accès brut à toutes les données (réservations, théâtre…). À réserver aux responsables.</td></tr>
+  </table>
+
+  <div class="encart astuce"><span class="t">Bon à savoir</span>
+    <p>Les adresses de ce manuel sont à ajouter après le nom de domaine du site. Exemple : <span class="url">/admin/</span> correspond à <span class="url">https://www.la-concorde.be/admin/</span>.</p></div>
+
+  <h2>Les profils d'utilisateurs</h2>
+  <p>Chaque personne de l'équipe dispose d'un compte personnel (identifiant + mot de passe). Ce que l'on peut faire dépend des droits attachés à ce compte.</p>
+  <div class="profils">
+    <div class="profil"><h4>Visiteur (non connecté)</h4><p>Consulte le site et les activités publiques, demande la location de la salle, écrit via le formulaire de contact, s'inscrit à la newsletter.</p></div>
+    <div class="profil"><h4>Membre</h4><p>Compte simple. Voit en plus les activités privées, ajoute ses propres activités au calendrier, propose des actualités (publiées après validation).</p></div>
+    <div class="profil"><h4>Administrateur</h4><p>Compte avec le statut « équipe » (<em>staff</em>). Traite les demandes de location, rédige les contrats, suit les paiements, publie directement les actualités, ajoute des photos aux albums.</p></div>
+    <div class="profil"><h4>Accès Théâtre</h4><p>Droit spécifique, cumulable avec les autres profils : donne accès à la billetterie et au plan de salle du théâtre (menu « Théâtre »).</p></div>
+  </div>
+
+  <table>
+    <tr><th>Action</th><th style="width:13%">Visiteur</th><th style="width:13%">Membre</th><th style="width:15%">Administrateur</th></tr>
+    <tr><td>Voir les activités publiques du calendrier</td><td class="oui">✓</td><td class="oui">✓</td><td class="oui">✓</td></tr>
+    <tr><td>Voir les activités privées</td><td class="non">—</td><td class="oui">✓</td><td class="oui">✓</td></tr>
+    <tr><td>Demander la location de la salle</td><td class="oui">✓</td><td class="non">—</td><td class="oui">✓ (encodage direct)</td></tr>
+    <tr><td>Ajouter / modifier ses activités</td><td class="non">—</td><td class="oui">✓</td><td class="oui">✓ (toutes)</td></tr>
+    <tr><td>Proposer une actualité</td><td class="non">—</td><td class="oui">✓ (après validation)</td><td class="oui">✓ (publiée tout de suite)</td></tr>
+    <tr><td>Valider / refuser les demandes de location, contrats, paiements</td><td class="non">—</td><td class="non">—</td><td class="oui">✓</td></tr>
+    <tr><td>Envoyer des photos et vidéos dans un album</td><td class="non">—</td><td class="non">—</td><td class="oui">✓</td></tr>
+    <tr><td>Application Théâtre</td><td class="non">—</td><td colspan="2" style="text-align:center">uniquement avec le droit « Accès Théâtre »</td></tr>
+  </table>
+  <p class="petit">La gestion de ces droits est expliquée au chapitre 11.</p>
+</section>
+
+<!-- ============================ 2. PREMIERS PAS ============================ -->
+<section class="chapitre" id="ch2">
+  <div class="bandeau"><div class="num">Chapitre 2</div><h1>Premiers pas</h1>
+    <p>Se connecter, se repérer dans le menu et utiliser le site sur téléphone.</p></div>
+
+  <h2>Se connecter</h2>
+  <ol class="etapes">
+    <li>Cliquez sur le bouton <span class="btn" style="background:#fff;border:1px solid #999">Connexion</span> en haut à droite de n'importe quelle page (ou allez sur <span class="url">/connexion/</span>).</li>
+    <li>Saisissez votre <strong>nom d'utilisateur</strong> et votre <strong>mot de passe</strong>, puis cliquez sur <span class="btn">Se connecter</span>.</li>
+    <li>Le bouton devient <strong>Déconnexion</strong> : pensez à l'utiliser sur un ordinateur partagé.</li>
+  </ol>
+  <figure class="basse"><img src="img/connexion.jpg"><figcaption>La page de connexion, commune au site, au calendrier et à l'application Théâtre.</figcaption></figure>
+  <div class="encart astuce"><span class="t">Un seul compte pour tout</span>
+    <p>Le même identifiant sert pour le site, l'application Théâtre et l'administration Wagtail (<span class="url">/admin/</span>), à condition d'avoir les droits correspondants.</p></div>
+
+  <h2>Le menu principal</h2>
+  <p>Le menu en haut de page contient les pages du site (Accueil, News, Médias, Contact, Info…), le lien <strong>Réservations</strong> vers le calendrier (ajouté automatiquement), une zone de <strong>recherche</strong> et le bouton de connexion. Une petite flèche ⌄ signale un <strong>sous-menu déroulant</strong> : il s'ouvre au survol de la souris (ou d'un toucher sur smartphone).</p>
+  <p>Pour les personnes qui ont l'accès Théâtre, une entrée <strong>Théâtre</strong> apparaît en plus, avec les raccourcis « Représentations » et « Réservations ». Les autres visiteurs ne la voient pas.</p>
+  <figure><img src="img/membre_menu_theatre.jpg"><figcaption>Une fois connecté avec l'accès Théâtre : le sous-menu « Théâtre » apparaît dans le menu principal.</figcaption></figure>
+
+  <h2>Le bandeau « Votre vie privée » (cookies)</h2>
+  <p>À la première visite, un bandeau demande au visiteur son accord pour les contenus externes (carte Google Maps, vidéos YouTube ou Facebook…). Le site lui-même n'utilise que des cookies techniques. Le visiteur peut <strong>Tout refuser</strong>, <strong>Personnaliser</strong> ou <strong>Tout accepter</strong>. S'il refuse, les cartes et vidéos sont remplacées par un message lui permettant de les activer. Le lien « Gérer les cookies » du pied de page rouvre ce bandeau.</p>
+  <figure class="basse"><img src="img/cookies.jpg"><figcaption>Le bandeau de consentement aux cookies, en bas à gauche de l'écran.</figcaption></figure>
+  <p class="petit">Le texte du bandeau se modifie dans Wagtail : <em>Paramètres → Consentement aux cookies</em>.</p>
+
+  <h2>Sur téléphone et tablette</h2>
+  <p>Le site s'adapte automatiquement aux petits écrans. Le menu se replie derrière le bouton <strong>☰</strong> en haut à droite ; le calendrier, les formulaires et les galeries restent utilisables au doigt.</p>
+  <div class="duo">
+    <figure class="mobile"><img src="img/mobile_accueil.jpg"><figcaption>Accueil sur smartphone.</figcaption></figure>
+    <figure class="mobile"><img src="img/mobile_menu.jpg"><figcaption>Menu ouvert (bouton ☰).</figcaption></figure>
+    <figure class="mobile"><img src="img/mobile_calendrier.jpg"><figcaption>Calendrier sur smartphone.</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============================ 3. SITE PUBLIC ============================ -->
+<section class="chapitre" id="ch3">
+  <div class="bandeau"><div class="num">Chapitre 3</div><h1>Le site public, page par page</h1>
+    <p>Ce que voient les visiteurs, et où se modifie chaque élément.</p></div>
+
+  <h2>La page d'accueil</h2>
+  <p>L'accueil se lit en faisant défiler la page ; chaque bloc apparaît en fondu. Elle se compose de :</p>
+  <ul>
+    <li>un <strong>bandeau d'ouverture</strong> (grande photo, titre « Bienvenue à La Concorde », sous-titre et bouton) ;</li>
+    <li>deux <strong>sections automatiques</strong> : la <em>dernière actualité</em> (publiée au cours des 30 derniers jours) et les <em>5 prochaines activités</em> du calendrier. Elles se remplissent toutes seules et disparaissent s'il n'y a rien à montrer ;</li>
+    <li>des <strong>sections en défilement</strong> libres (image + texte, ou 1 à 3 colonnes), avec des boutons de liens.</li>
+  </ul>
+  <figure><img src="img/accueil.jpg"><figcaption>Le bandeau d'ouverture de la page d'accueil.</figcaption></figure>
+  <figure><img src="img/accueil_sections.jpg"><figcaption>Les sections automatiques : dernière actualité (à gauche) et prochaines activités du calendrier (à droite).</figcaption></figure>
+  <div class="encart exemple"><span class="t">Exemple</span>
+    <p>Vous ajoutez au calendrier « Souper de la pétanque — 24 octobre ». Sans rien faire d'autre, l'activité apparaît dans « Prochaines activités » sur l'accueil, puis en disparaît d'elle-même une fois la date passée.</p></div>
+  <p class="petit">Pour modifier l'accueil : Wagtail → Pages → Accueil → Modifier (voir chapitre 10).</p>
+
+  <h2>News (actualités)</h2>
+  <p>La page <strong>News</strong> présente les actualités de la plus récente à la plus ancienne, avec image, date et résumé. Les <strong>mots-clés</strong> en haut de page (#carnaval, #théâtre, #raclette…) filtrent la liste. Chaque actualité a sa propre page avec boutons de partage (Facebook, WhatsApp, e-mail…).</p>
+  <div class="duo">
+    <figure><img src="img/actualites.jpg"><figcaption>La liste des actualités et le filtre par mot-clé.</figcaption></figure>
+    <figure><img src="img/actualite_detail.jpg"><figcaption>Une actualité, avec ses boutons de partage.</figcaption></figure>
+  </div>
+
+  <h2>Médias</h2>
+  <p>La page <strong>Médias</strong> regroupe les albums photos (un album par spectacle ou événement), filtrables par année. Un album affiche ses vidéos puis ses photos ; un clic sur une image l'ouvre en grand dans une <strong>visionneuse</strong> (flèches ← → ou glisser du doigt, diaporama ▶, miniatures en bas).</p>
+  <div class="duo">
+    <figure><img src="img/medias.jpg"><figcaption>La page Médias et ses albums.</figcaption></figure>
+    <figure><img src="img/album_photos.jpg"><figcaption>Les photos d'un album.</figcaption></figure>
+  </div>
+  <figure class="basse"><img src="img/lightbox.jpg"><figcaption>La visionneuse : photo en grand format, navigation et miniatures.</figcaption></figure>
+
+  <h2>Info, Contact et pages libres</h2>
+  <p><strong>Info</strong> présente l'ASBL (historique, informations pratiques) avec des blocs de texte, images, encarts et liens. <strong>Contact</strong> propose un formulaire (nom, e-mail, objet de la demande, message), les coordonnées et une carte. Les messages envoyés arrivent par e-mail et restent consultables dans Wagtail (<em>Formulaires</em>).</p>
+  <div class="duo">
+    <figure><img src="img/info.jpg"><figcaption>La page Info.</figcaption></figure>
+    <figure><img src="img/contact.jpg"><figcaption>La page Contact et son formulaire.</figcaption></figure>
+  </div>
+  <p>Les <strong>pages libres</strong> (par exemple « Le Blé qui Lève » ou « La pétanque ») sont des pages composées librement : logo, titre, sections en défilement et galerie de miniatures. Elles peuvent être placées n'importe où et ajoutées au menu si on le souhaite.</p>
+  <figure class="basse"><img src="img/page_libre.jpg"><figcaption>Une page libre : « L'histoire du BQL ».</figcaption></figure>
+
+  <h2>Newsletter, recherche et pied de page</h2>
+  <p>La page <strong>Newsletter</strong> permet à chacun de s'inscrire (voir chapitre 9). La <strong>recherche</strong> du menu trouve les pages et actualités contenant un mot. Le <strong>pied de page</strong> reprend l'adresse, l'e-mail, les liens utiles (politique de confidentialité) et les réseaux sociaux.</p>
+  <div class="duo">
+    <figure><img src="img/newsletter_inscription.jpg"><figcaption>La page d'inscription à la newsletter.</figcaption></figure>
+    <figure><img src="img/recherche.jpg"><figcaption>Résultats d'une recherche sur « Noël ».</figcaption></figure>
+  </div>
+</section>
+
+<!-- ============================ 4. CALENDRIER ============================ -->
+<section class="chapitre" id="ch4">
+  <div class="bandeau"><div class="num">Chapitre 4</div><h1>Calendrier et activités</h1>
+    <p>L'agenda commun de l'ASBL, accessible via « Réservations » dans le menu (<span class="url">/calendrier/</span>).</p></div>
+
+  <h2>Lire le calendrier</h2>
+  <p>Le calendrier affiche un mois à la fois. On change de mois avec les flèches ← → ou avec les listes déroulantes mois / année puis <span class="btn rouge">Afficher</span>. Une activité de plusieurs jours apparaît sur chaque case concernée. Les couleurs indiquent la nature de l'occupation :</p>
+  <p class="legende-couleurs"><span style="background:var(--vert)"></span><strong>Vert</strong> : activité publique (visible par tous)
+    <span style="background:var(--orange)"></span><strong>Orange</strong> : activité privée (visible uniquement par les personnes connectées)
+    <span style="background:var(--bordeaux)"></span><strong>Bordeaux</strong> : salle réservée (location validée)</p>
+  <figure><img src="img/calendrier_public.jpg"><figcaption>Le calendrier vu par un visiteur : activités publiques et « Salle réservée ». Le « + » de chaque case permet de demander la salle.</figcaption></figure>
+  <div class="encart astuce"><span class="t">Confidentialité</span>
+    <p>Pour une location validée, les visiteurs voient seulement « Salle réservée » : le nom et les coordonnées du locataire ne sont jamais affichés publiquement.</p></div>
+
+  <h2>Ajouter une activité (membres connectés)</h2>
+  <ol class="etapes">
+    <li>Connectez-vous, ouvrez le calendrier et cliquez sur le <strong>+</strong> du jour voulu (ou sur <span class="btn">+ Ajouter une activité</span> sous le calendrier).</li>
+    <li>Un administrateur doit choisir entre <strong>Une activité</strong> et <strong>Une réservation de salle</strong> ; un membre arrive directement sur le formulaire d'activité.</li>
+    <li>Remplissez le <strong>nom</strong>, la <strong>description</strong> (facultative), la <strong>date de début</strong> et la <strong>date de fin</strong> (identiques pour un seul jour).</li>
+    <li>Choisissez la <strong>visibilité</strong> : publique ou privée. La couleur est attribuée automatiquement (modifiable si besoin).</li>
+    <li>Cliquez sur <span class="btn">Ajouter l'activité</span>.</li>
+  </ol>
+  <div class="duo">
+    <figure><img src="img/admin_jour_choix.jpg"><figcaption>Administrateur : choix entre activité et réservation de salle.</figcaption></figure>
+    <figure><img src="img/membre_ajout_activite.jpg"><figcaption>Le formulaire « Ajouter une activité ».</figcaption></figure>
+  </div>
+  <div class="encart exemple"><span class="t">Exemple : la répétition générale du Blé qui Lève</span>
+    <ol><li>Clic sur le + du jeudi 19 novembre.</li><li>Nom : « Répétition générale BQL » ; date de début et de fin : 19/11/2026.</li><li>Visibilité : <strong>Privée</strong> — seuls les membres connectés la verront, en orange.</li></ol></div>
+
+  <h2>Modifier ou supprimer une activité</h2>
+  <p>Cliquez sur l'activité dans le calendrier pour ouvrir sa fiche. Son <strong>auteur</strong> et les <strong>administrateurs</strong> y voient les boutons <span class="btn">Modifier</span> et <span class="btn rouge">Supprimer</span> (une confirmation est demandée avant suppression).</p>
+  <figure class="basse"><img src="img/membre_activite_detail.jpg"><figcaption>La fiche d'une activité privée.</figcaption></figure>
+</section>
+
+<!-- ============================ 5. LOCATION ============================ -->
+<section class="chapitre" id="ch5">
+  <div class="bandeau"><div class="num">Chapitre 5</div><h1>Location de la salle</h1>
+    <p>De la demande en ligne au contrat signé et au remboursement de la caution.</p></div>
+
+  <h2>Vue d'ensemble</h2>
+  <table>
+    <tr><th style="width:5%">#</th><th style="width:27%">Étape</th><th style="width:20%">Qui</th><th>Où</th></tr>
+    <tr><td>1</td><td>Demande de location</td><td>Le locataire (sans compte)</td><td>Calendrier → « + » sur un jour, ou bouton « Demander la réservation de la salle »</td></tr>
+    <tr><td>2</td><td>Validation ou refus</td><td>Administrateur</td><td>Calendrier → « Gérer les demandes de réservation »</td></tr>
+    <tr><td>3</td><td>Contrat de location (PDF)</td><td>Administrateur</td><td>Fiche de la réservation → « Rédiger le contrat de location »</td></tr>
+    <tr><td>4</td><td>Paiement du loyer et de la caution</td><td>Administrateur</td><td>« Suivi des paiements »</td></tr>
+    <tr><td>5</td><td>Remboursement de la caution</td><td>Administrateur</td><td>« Suivi des paiements »</td></tr>
+  </table>
+
+  <h2>1. La demande du locataire</h2>
+  <p>Le visiteur clique sur le <strong>+</strong> d'un jour libre (ou sur le bouton sous le calendrier). Il indique s'il est un <strong>particulier</strong> ou une <strong>société</strong> (nom et n° de TVA), ses coordonnées, les dates souhaitées et des précisions (type d'événement, nombre de personnes…). Aucune inscription n'est nécessaire. Le formulaire est protégé contre les robots (champ piège et nombre d'envois limité).</p>
+  <figure><img src="img/demande_reservation.jpg"><figcaption>Le formulaire public de demande de réservation de la salle.</figcaption></figure>
+  <p>La demande est enregistrée avec le statut <strong>« En attente de traitement »</strong>. Elle n'apparaît pas encore dans le calendrier public.</p>
+
+  <h2>2. Traiter les demandes</h2>
+  <p>Les administrateurs voient dans le calendrier un rappel « <em>N demandes de réservation en attente de traitement</em> ». La page <strong>Demandes de réservation de salle</strong> (<span class="url">/calendrier/reservations/</span>) les liste toutes, avec un filtre par statut et des boutons d'action rapides.</p>
+  <figure><img src="img/admin_reservations.jpg"><figcaption>La liste des demandes, avec filtres (Toutes, En attente, Validée, Refusée…) et boutons Valider / Refuser / Modifier.</figcaption></figure>
+  <figure><img src="img/admin_reservation_attente.jpg"><figcaption>La fiche d'une demande en attente (ici une société) avec toutes les coordonnées.</figcaption></figure>
+  <p>Depuis la fiche ou la liste :</p>
+  <ul>
+    <li><span class="btn">Valider la réservation</span> : la salle apparaît « Salle réservée » dans le calendrier. La validation est <strong>refusée automatiquement</strong> si la salle est déjà occupée à ces dates.</li>
+    <li><span class="btn rouge">Refuser la réservation</span> : la demande est classée « Refusée ».</li>
+    <li><span class="btn rouge">Annuler la réservation</span> (réservation validée) : la salle redevient libre. S'il existe un contrat, il est marqué « annulé » dans le suivi des paiements, pour noter les remboursements. Le site signale alors les autres demandes en attente sur ces dates.</li>
+    <li><strong>Rétablir la réservation</strong> : annule une annulation (si la salle est toujours libre).</li>
+    <li><span class="btn rouge">Modifier cette réservation</span> / <span class="btn rouge">Supprimer cette demande</span> : corriger les dates ou coordonnées, ou effacer définitivement.</li>
+  </ul>
+  <div class="encart attention"><span class="t">Important : prévenir le locataire</span>
+    <p>Le site n'envoie pas d'e-mail au demandeur quand sa demande est validée ou refusée. Contactez-le vous-même (e-mail ou téléphone repris sur la fiche).</p></div>
+  <p>Un administrateur peut aussi encoder directement une location reçue par téléphone : clic sur le + d'un jour → <strong>Une réservation de salle</strong>.</p>
+
+  <h2>3. Rédiger le contrat de location</h2>
+  <p>Sur la fiche d'une réservation <strong>validée</strong>, cliquez sur <span class="btn">Rédiger le contrat de location</span>. Le locataire et les dates sont repris automatiquement ; il reste à compléter :</p>
+  <ul>
+    <li>le <strong>prénom et le nom du délégué</strong> de l'ASBL qui gère cette location ;</li>
+    <li>les <strong>locaux</strong> loués : salle des fêtes et scène, local café, cuisine équipée, sanitaires ;</li>
+    <li>le <strong>montant de la location</strong> et le <strong>montant de la caution</strong> ;</li>
+    <li>facultativement, la <strong>signature</strong> scannée du délégué (sinon : signature à la main).</li>
+  </ul>
+  <figure><img src="img/admin_contrat_form.jpg"><figcaption>Le formulaire du contrat de location, pré-rempli à partir de la réservation.</figcaption></figure>
+  <p>À l'enregistrement, le site produit un <strong>PDF complet</strong> (parties, dates, locaux, montants, articles, puis les annexes : mobilier, vaisselle, conditions de bruit), nommé par exemple <code>Contrat de location - Vandenberghe Sarah - 2026-11-07.pdf</code>. Il reste téléchargeable depuis la fiche de la réservation, et peut être modifié puis régénéré à tout moment.</p>
+  <div class="duo">
+    <figure><img src="img/admin_reservation_validee.jpg"><figcaption>Réservation validée avec son contrat : télécharger, modifier et régénérer.</figcaption></figure>
+    <figure><img src="img/contrat_pdf-01.jpg"><figcaption>Première page du contrat PDF généré.</figcaption></figure>
+  </div>
+  <div class="encart exemple"><span class="t">Exemple complet : l'anniversaire de Sarah Vandenberghe</span>
+    <ol>
+      <li>Sarah demande la salle pour le samedi 7 novembre 2026 (« Anniversaire de 50 ans, environ 80 personnes »).</li>
+      <li>Marie, administratrice, ouvre <em>Gérer les demandes</em>, vérifie la date et clique sur <strong>Valider</strong>. Le 7 novembre affiche désormais « Salle réservée ».</li>
+      <li>Marie appelle Sarah pour confirmer, puis clique sur <strong>Rédiger le contrat de location</strong> : délégué « Marie Dupont », salle + café + cuisine + sanitaires, location 350 €, caution 250 €.</li>
+      <li>Le PDF de 10 pages se télécharge ; Marie l'imprime ou l'envoie à Sarah pour signature.</li>
+      <li>À la réception du virement, Marie coche « Payée » dans le <em>Suivi des paiements</em> et note la date et le n° d'extrait.</li>
+    </ol></div>
+
+  <h2>4. Suivi des paiements</h2>
+  <p>Accessible depuis la liste des demandes (<span class="btn rouge">Suivi des paiements et des cautions</span>), cette page contient <strong>une ligne par contrat généré</strong>. Trois compteurs résument les locations encaissées, les locations à encaisser et les cautions à rembourser. Les onglets filtrent : paiement attendu, caution à rembourser, dossiers clôturés, locations annulées.</p>
+  <figure><img src="img/admin_paiements.jpg"><figcaption>Le suivi des paiements : cochez « Payée » / « Remboursée », complétez dates et n° d'extrait, puis « Enregistrer les modifications ».</figcaption></figure>
+
+  <h2>5. Le contrat-type (articles, annexes, mise en page)</h2>
+  <p>Le texte du contrat se modifie sans informaticien : page <strong>Contrat-type de location</strong> (lien depuis la liste des demandes). On peut y ajouter, modifier, réordonner ou retirer des <strong>articles</strong>, remplacer les <strong>annexes PDF</strong> jointes en fin de contrat, et changer l'<strong>image d'en-tête</strong> de la première page. Le bouton <span class="btn rouge">Aperçu du contrat-type (PDF)</span> montre le résultat.</p>
+  <div class="duo">
+    <figure><img src="img/admin_contrat_type.jpg"><figcaption>Les articles et annexes du contrat-type.</figcaption></figure>
+    <figure><img src="img/admin_mise_en_page.jpg"><figcaption>La mise en page : image d'en-tête et voile blanc.</figcaption></figure>
+  </div>
+  <div class="encart attention"><span class="t">Les anciens contrats ne changent pas</span>
+    <p>Une modification du contrat-type ne s'applique qu'aux nouveaux contrats. Pour l'appliquer à un contrat existant, ouvrez la réservation et cliquez sur « Modifier et régénérer le contrat ».</p></div>
+</section>
+
+<!-- ============================ 6. ACTUALITÉS ============================ -->
+<section class="chapitre" id="ch6">
+  <div class="bandeau"><div class="num">Chapitre 6</div><h1>Les actualités (News)</h1>
+    <p>Partager un événement, une affiche ou un compte rendu, directement depuis le site.</p></div>
+
+  <h2>Proposer une actualité depuis le site</h2>
+  <ol class="etapes">
+    <li>Connectez-vous et ouvrez la page <strong>News</strong>.</li>
+    <li>Cliquez sur <span class="btn">+ Proposer une actualité</span>.</li>
+    <li>Remplissez le <strong>titre</strong>, le <strong>résumé court</strong> (affiché dans la liste), le <strong>contenu</strong>, l'<strong>image mise en avant</strong> (facultative) et, si besoin, un <strong>lien</strong> (texte + adresse).</li>
+    <li>Cliquez sur <span class="btn">Envoyer pour validation</span> (« Publier l'actualité » pour un administrateur).</li>
+  </ol>
+  <div class="duo">
+    <figure><img src="img/membre_actualites.jpg"><figcaption>Le bouton « Proposer une actualité », visible une fois connecté.</figcaption></figure>
+    <figure><img src="img/membre_ajout_actualite.jpg"><figcaption>Le formulaire simplifié de proposition.</figcaption></figure>
+  </div>
+
+  <h2>Le circuit de validation</h2>
+  <ul>
+    <li>L'actualité d'un <strong>administrateur</strong> est publiée immédiatement.</li>
+    <li>Celle d'un <strong>membre</strong> part en validation : elle n'est visible qu'après approbation. Le membre voit ses actualités en attente sur la page News.</li>
+    <li>Les <strong>modérateurs</strong> (groupe « Moderators » et super-utilisateurs) reçoivent un e-mail et la retrouvent dans le tableau de bord Wagtail, rubrique « En attente de votre relecture », où ils peuvent l'<strong>approuver</strong> ou la <strong>renvoyer</strong> avec un commentaire.</li>
+    <li>Une modification d'une actualité déjà publiée suit le même circuit : la version en ligne reste visible jusqu'à l'approbation.</li>
+  </ul>
+
+  <h2>Modifier ou supprimer</h2>
+  <p>Sur le site, l'auteur voit les boutons <strong>Modifier</strong> et <strong>Supprimer</strong> sur ses propres actualités. Dans Wagtail (<em>Pages → Accueil → News</em>), un éditeur peut modifier toutes les actualités, avec une mise en forme plus riche : date de publication, mots-clés, citations, images dans le texte, encarts.</p>
+  <figure><img src="img/wagtail_edit_actualite.jpg"><figcaption>Édition d'une actualité dans Wagtail.</figcaption></figure>
+  <div class="encart attention"><span class="t">Attention à la mise en forme avancée</span>
+    <p>Une actualité enrichie dans Wagtail (citations, images dans le texte, encarts) doit être modifiée dans Wagtail : le formulaire simplifié du site ne conserve que les paragraphes de texte.</p></div>
+  <div class="encart astuce"><span class="t">Conseils de rédaction</span>
+    <ul><li>Un titre court et précis (« Marché de Noël 2026 » plutôt que « Info »).</li>
+    <li>Un résumé d'une ou deux phrases : c'est lui qui apparaît sur l'accueil et dans les partages.</li>
+    <li>Une image au format paysage ou une affiche : elle sert de vignette.</li>
+    <li>Quelques mots-clés récurrents (#théâtre, #carnaval…) pour que le filtre reste utile.</li></ul></div>
+</section>
+
+<!-- ============================ 7. MÉDIAS ============================ -->
+<section class="chapitre" id="ch7">
+  <div class="bandeau"><div class="num">Chapitre 7</div><h1>Médias : albums photos et vidéos</h1>
+    <p>Publier les photos d'un spectacle ou d'un événement en quelques minutes.</p></div>
+
+  <h2>Créer un album</h2>
+  <ol class="etapes">
+    <li>Dans Wagtail : <em>Pages → Accueil → Médias</em>, cliquez sur <strong>Ajouter une sous-page</strong> → <strong>Album photo</strong>.</li>
+    <li>Indiquez le <strong>titre</strong>, la <strong>date</strong> (sert au classement par année), une <strong>description</strong> et une <strong>image de couverture</strong>.</li>
+    <li>Cliquez sur <strong>Publier</strong> (menu du bouton vert en bas).</li>
+  </ol>
+  <figure><img src="img/wagtail_edit_album.jpg"><figcaption>L'édition d'un album dans Wagtail : titre, date, description, couverture.</figcaption></figure>
+
+  <h2>Ajouter des photos en lot</h2>
+  <p>Les administrateurs voient sur la page de l'album, côté site, les boutons <span class="btn">+ Ajouter des photos</span> et <span class="btn rouge">+ Ajouter une vidéo</span>.</p>
+  <ol class="etapes">
+    <li>Cliquez sur <span class="btn">+ Ajouter des photos</span>.</li>
+    <li>Glissez vos photos dans le cadre, ou cliquez pour les choisir (plusieurs à la fois : JPEG, PNG, WebP, GIF).</li>
+    <li>Choisissez la <strong>collection</strong> où ranger les images (facultatif), puis <span class="btn">Ajouter ces photos</span>.</li>
+    <li>Les photos sont envoyées <strong>par lots</strong> avec une barre de progression : laissez la page ouverte jusqu'à la fin.</li>
+  </ol>
+  <div class="duo">
+    <figure><img src="img/album.jpg"><figcaption>La page d'un album vue par un administrateur.</figcaption></figure>
+    <figure><img src="img/admin_ajout_photos.jpg"><figcaption>L'envoi groupé de photos.</figcaption></figure>
+  </div>
+  <div class="encart exemple"><span class="t">Exemple : les photos de « La Martingale »</span>
+    <p>Après la dernière représentation, créez l'album « La Martingale » (date : 22/11/2026, couverture : la photo de troupe). Sur la page de l'album, cliquez sur « + Ajouter des photos », sélectionnez les 120 photos du dossier de l'appareil, puis patientez pendant l'envoi. Les photos s'ajoutent à la fin de l'album.</p></div>
+
+  <h2>Ajouter une vidéo</h2>
+  <p>Collez l'adresse de la vidéo (YouTube, Vimeo, Facebook, Dailymotion, Instagram ou TikTok — via le bouton « Partager » de la plateforme), ajoutez un titre facultatif, puis <span class="btn">Ajouter la vidéo</span> ou « Ajouter et en ajouter une autre ». La vidéo s'affiche au-dessus des photos et se lit dans la visionneuse.</p>
+  <figure class="basse"><img src="img/admin_ajout_video.jpg"><figcaption>Ajout d'une vidéo par son lien.</figcaption></figure>
+  <div class="encart astuce"><span class="t">Réordonner, renommer, retirer</span>
+    <p>Pour changer l'ordre des photos, leurs légendes ou en retirer, éditez l'album dans Wagtail : chaque photo et vidéo s'y déplace par glisser-déposer.</p></div>
+</section>
+
+<!-- ============================ 8. THÉÂTRE ============================ -->
+<section class="chapitre" id="ch8">
+  <div class="bandeau"><div class="num">Chapitre 8</div><h1>L'application Théâtre</h1>
+    <p>La billetterie interne : représentations, réservations, placement automatique et contrôle des entrées.</p></div>
+
+  <p>L'application se trouve dans le menu <strong>Théâtre</strong> (<span class="url">/theatre/</span>). Elle n'est accessible qu'aux personnes connectées qui ont le droit <em>« Peut accéder à l'application Théâtre »</em> (voir chapitre 11). Les autres reçoivent un message « accès interdit ».</p>
+
+  <h2>Le déroulement type d'une saison</h2>
+  <table>
+    <tr><th style="width:5%">#</th><th style="width:30%">Quand</th><th>Quoi</th></tr>
+    <tr><td>1</td><td>Annonce du spectacle</td><td>Créer une représentation par date, avec les tarifs adulte et enfant.</td></tr>
+    <tr><td>2</td><td>Semaines précédentes</td><td>Encoder les réservations reçues (téléphone, e-mail…), avec préférences de placement.</td></tr>
+    <tr><td>3</td><td>Quelques jours avant</td><td>Générer le plan de salle (placement automatique) et imprimer la liste des places.</td></tr>
+    <tr><td>4</td><td>Le soir même</td><td>Contrôle d'entrée : valider l'arrivée des spectateurs, imprimer les tickets, vendre les places libres (vente flash), déplacer si besoin.</td></tr>
+    <tr><td>5</td><td>Après la représentation</td><td>Consulter l'historique des tickets et le chiffre d'affaires.</td></tr>
+  </table>
+
+  <h2>1. Les représentations</h2>
+  <p>La page d'accueil du théâtre se divise en deux : à gauche le formulaire <strong>Nouvelle représentation</strong> (nom du spectacle, date, prix adulte, prix enfant → <span class="btn rouge">Créer</span>), à droite les <strong>représentations planifiées</strong> avec le nombre d'inscrits et les boutons <strong>Réserver</strong>, <strong>Plan</strong> et 🗑 (supprimer).</p>
+  <figure><img src="img/theatre_representations.jpg"><figcaption>Les représentations de « La Martingale » (20, 21 et 22 novembre) et leurs tarifs.</figcaption></figure>
+
+  <h2>2. Les réservations</h2>
+  <p>Cliquez sur <strong>Réserver</strong> à côté d'une représentation. Indiquez le nom, le prénom, le nombre d'adultes et d'enfants ; le <strong>prix total</strong> se calcule en direct. Les préférences (rangée avant / centre / arrière, côté gauche / milieu / droite, ou une rangée précise de 1 à 6) et une remarque sont facultatives : le placement automatique en tient compte autant que possible.</p>
+  <div class="duo">
+    <figure><img src="img/theatre_reservation_form.jpg"><figcaption>Une nouvelle réservation et son prix estimé.</figcaption></figure>
+    <figure><img src="img/theatre_reservations.jpg"><figcaption>La liste des réservations, avec recherche et filtre par représentation.</figcaption></figure>
+  </div>
+  <div class="encart exemple"><span class="t">Exemple</span>
+    <p>Mme Dubois appelle pour 2 adultes et 1 enfant le vendredi 20 novembre, et précise qu'elle se déplace difficilement. Réservation : Dubois / Anne, 2 adultes, 1 enfant, préférence « Avant », remarque « Personne à mobilité réduite : place en bout de rangée ». Prix affiché : 2 × 12 € + 1 × 6 € = <strong>30 €</strong>.</p></div>
+
+  <h2>3. Le plan de salle</h2>
+  <p>Bouton <strong>Plan</strong> → <span class="btn rouge">Générer le plan</span>. Le site détermine le nombre de rangées nécessaire et place chaque réservation en gardant les groupes ensemble, en respectant au mieux les préférences. Si la salle est complète, les réservations sans place sont signalées.</p>
+  <figure class="basse"><img src="img/theatre_plan_confirm.jpg"><figcaption>Confirmation avant (re)génération du plan.</figcaption></figure>
+  <div class="encart attention"><span class="t">Regénérer efface le placement précédent</span>
+    <p>Si de nouvelles réservations arrivent après la génération, on peut regénérer le plan, mais tout le monde est replacé. Ne regénérez donc plus une fois les places communiquées ou le contrôle d'entrée commencé.</p></div>
+  <figure class="haute"><img src="img/theatre_plan.jpg"><figcaption>Le plan généré (places occupées / libres face à la scène) et le récapitulatif des placements.</figcaption></figure>
+  <p>Le bouton <strong>Imprimer la liste des places</strong> produit une liste alphabétique (nom, prénom, nombre de places, numéros attribués, montant) pratique pour l'accueil du public.</p>
+  <figure><img src="img/theatre_imprimer.jpg"><figcaption>La liste imprimable des places attribuées.</figcaption></figure>
+
+  <h2>4. Le contrôle d'entrée (le soir du spectacle)</h2>
+  <p>Depuis le plan, cliquez sur <strong>Contrôle entrée</strong>. L'écran montre la salle en grand et un panneau de commande à gauche avec trois <strong>modes</strong> :</p>
+  <table>
+    <tr><th style="width:18%">Mode</th><th>Utilisation</th></tr>
+    <tr><td><strong>Entrée</strong></td><td>Cliquez sur les places des spectateurs qui arrivent (elles passent en « sélectionnée »), vérifiez le montant affiché, puis <strong>Valider et imprimer</strong> : les tickets sont créés et une fenêtre d'impression s'ouvre.</td></tr>
+    <tr><td><strong>Flash</strong></td><td>Vente sur place d'une place <strong>libre</strong> : cliquez sur la place, indiquez nom et prénom, choisissez le tarif, puis <strong>Vendre cette place</strong>.</td></tr>
+    <tr><td><strong>Déplacer</strong></td><td>Cliquez sur une réservation pour la mettre en <strong>zone tampon</strong> (ses places sont libérées), puis sélectionnez les nouvelles places et placez-la depuis le tampon. On peut aussi la retirer du tampon pour lui rendre ses places d'origine.</td></tr>
+  </table>
+  <figure class="haute"><img src="img/theatre_entree.jpg"><figcaption>L'écran de contrôle d'entrée : modes, sélection en cours, chiffre d'affaires et zone tampon à gauche ; plan de la salle à droite.</figcaption></figure>
+  <div class="encart exemple"><span class="t">Exemple : la famille Delhaye arrive</span>
+    <ol><li>Mode <strong>Entrée</strong> : cliquez sur les places 27 à 32 réservées au nom de Delhaye (4 adultes, 2 enfants).</li>
+    <li>Le panneau affiche « 6 place(s) — 60,00 € » (4 × 12 € + 2 × 6 €).</li>
+    <li>Encaissez, puis <strong>Valider et imprimer</strong> : les 6 tickets s'impriment, les places passent en « Ticket valide ».</li></ol></div>
+
+  <h2>5. Historique des tickets</h2>
+  <p>Le bouton <strong>Historique tickets</strong> liste tous les tickets imprimés (place, nom, statut, prix, heure) avec le total des tickets valides. Un ticket imprimé par erreur peut être <strong>annulé</strong> : il ne compte plus dans le total, et la place peut être validée à nouveau au contrôle d'entrée.</p>
+  <figure><img src="img/theatre_tickets.jpg"><figcaption>L'historique des tickets d'une représentation et le total encaissé.</figcaption></figure>
+</section>
+
+<!-- ============================ 9. NEWSLETTER ============================ -->
+<section class="chapitre" id="ch9">
+  <div class="bandeau"><div class="num">Chapitre 9</div><h1>La newsletter</h1>
+    <p>Informer régulièrement le public par e-mail, dans le respect du RGPD.</p></div>
+
+  <h2>Les inscriptions</h2>
+  <p>Le public s'inscrit sur la page <strong>Newsletter</strong> du site. Si l'option « confirmation par e-mail » est activée (recommandé), l'abonné reçoit un lien à cliquer pour confirmer : il reste « En attente de confirmation » jusque-là. Chaque newsletter contient un lien personnel de désinscription.</p>
+
+  <h2>Gérer les abonnés</h2>
+  <p>Dans Wagtail : <em>Newsletter → Abonnés</em>. On y voit l'adresse, le nom, le statut (abonné, en attente, désinscrit), l'origine (formulaire du site ou ajout manuel) et la date d'inscription. On peut rechercher, filtrer, ajouter un abonné à la main et <strong>exporter</strong> la liste (CSV / Excel).</p>
+  <figure><img src="img/wagtail_abonnes.jpg"><figcaption>La liste des abonnés dans Wagtail.</figcaption></figure>
+  <div class="encart attention"><span class="t">Consentement</span>
+    <p>N'ajoutez à la main que des personnes qui ont clairement demandé à recevoir la newsletter. Ne supprimez pas un abonné « Désinscrit » : ce statut garantit qu'il ne recevra plus rien.</p></div>
+
+  <h2>Rédiger une newsletter</h2>
+  <ol class="etapes">
+    <li><em>Newsletter → Newsletters → Ajouter</em>.</li>
+    <li>Remplissez l'en-tête : <strong>titre interne</strong> (pour vous repérer), <strong>objet de l'e-mail</strong> (ce que voient les destinataires), <strong>texte d'aperçu</strong> et <strong>formule d'appel</strong> (« Bonjour {prenom}, » : le prénom est inséré automatiquement).</li>
+    <li>Composez le <strong>contenu</strong> par blocs : titre, texte, image, bouton, <em>actualités récentes</em> (reprises automatiquement du site), page mise en avant, encadré, séparateur.</li>
+    <li>Le bouton <strong>Aperçu</strong> (en haut à droite) montre l'e-mail tel qu'il sera reçu, en version ordinateur ou mobile.</li>
+    <li><strong>Enregistrez</strong>.</li>
+  </ol>
+  <figure><img src="img/wagtail_newsletter_edit.jpg"><figcaption>La rédaction d'une newsletter : bouton d'envoi, en-tête de l'e-mail puis contenu.</figcaption></figure>
+
+  <h2>Envoyer</h2>
+  <ol class="etapes">
+    <li>Dans la newsletter enregistrée, cliquez sur <span class="btn" style="background:#007d7e;color:#fff">Préparer l'envoi de cette newsletter</span>.</li>
+    <li><strong>Envoyez un test</strong> à votre adresse (jusqu'à 5 adresses séparées par des virgules) et vérifiez le rendu sur ordinateur et téléphone.</li>
+    <li>Cochez la confirmation, puis <strong>Lancer l'envoi</strong>. Une dernière confirmation est demandée.</li>
+    <li>La page de <strong>suivi</strong> montre la progression : les e-mails partent par petits lots (environ 15 toutes les 5 minutes), ce qui ménage le serveur et évite les filtres anti-spam.</li>
+  </ol>
+  <figure><img src="img/wagtail_newsletter_envoyer.jpg"><figcaption>La page d'envoi : récapitulatif, envoi de test, puis envoi aux abonnés.</figcaption></figure>
+  <div class="encart attention"><span class="t">Un envoi ne se rattrape pas</span>
+    <p>Une fois lancé, l'envoi ne peut plus être annulé pour les messages déjà partis. Relisez toujours l'e-mail de test avant. Un abonné ne reçoit jamais deux fois la même newsletter.</p></div>
+</section>
+
+<!-- ============================ 10. WAGTAIL ============================ -->
+<section class="chapitre" id="ch10">
+  <div class="bandeau"><div class="num">Chapitre 10</div><h1>L'administration Wagtail</h1>
+    <p>Modifier les textes, images, menus et réglages du site (<span class="url">/admin/</span>).</p></div>
+
+  <h2>Le tableau de bord</h2>
+  <p>Après connexion sur <span class="url">/admin/</span>, la colonne de gauche donne accès à : <strong>Pages</strong> (l'arborescence du site), <strong>Newsletter</strong>, <strong>Images</strong>, <strong>Documents</strong>, <strong>Fragments</strong> (menu principal, pied de page), <strong>Formulaires</strong> (messages reçus par la page Contact), <strong>Paramètres</strong> et <strong>Aide</strong>. Les éléments à valider (actualités proposées par les membres) apparaissent sur le tableau de bord.</p>
+  <figure class="basse"><img src="img/wagtail_tableau_de_bord.jpg"><figcaption>Le tableau de bord Wagtail.</figcaption></figure>
+  <div class="encart astuce"><span class="t">Raccourci depuis le site</span>
+    <p>Une fois connecté comme éditeur, une petite icône d'oiseau apparaît en bas à droite de chaque page du site : elle permet d'ouvrir directement la page dans Wagtail pour la modifier.</p></div>
+
+  <h2>Les pages</h2>
+  <p><em>Pages → Accueil</em> affiche les pages du site : Le Blé qui Lève, Newsletter, Info, La pétanque, Politique de confidentialité, Médias (contient les albums), Contact, News (contient les actualités). La flèche › à droite ouvre les sous-pages.</p>
+  <figure><img src="img/wagtail_pages.jpg"><figcaption>L'arborescence des pages sous « Accueil ».</figcaption></figure>
+  <h3>Modifier une page</h3>
+  <ol class="etapes">
+    <li>Cliquez sur le titre de la page.</li>
+    <li>Modifiez les champs dans l'onglet <strong>Contenu</strong> (l'onglet <strong>Promotion</strong> concerne le référencement).</li>
+    <li>Utilisez l'<strong>aperçu</strong> (icône en haut à droite) pour vérifier le rendu.</li>
+    <li>En bas : <strong>Enregistrer le brouillon</strong> (non visible du public) ou, via la petite flèche, <strong>Publier</strong>.</li>
+  </ol>
+  <figure><img src="img/wagtail_edit_accueil.jpg"><figcaption>L'édition de la page d'accueil : titre, sous-titre, image et bouton du bandeau.</figcaption></figure>
+  <div class="encart astuce"><span class="t">Historique et retour en arrière</span>
+    <p>Chaque publication est conservée. L'icône d'historique (horloge) permet de comparer ou de revenir à une version précédente en cas d'erreur.</p></div>
+  <h3>Ajouter une page</h3>
+  <p>Sur la page parente, <strong>Ajouter une sous-page</strong>, puis choisissez le type proposé (actualité sous News, album sous Médias, page d'informations ou page libre sous Accueil…).</p>
+  <figure class="basse"><img src="img/wagtail_ajout_page.jpg"><figcaption>Choix du type de page à créer.</figcaption></figure>
+  <div class="encart attention"><span class="t">Adresses réservées</span>
+    <p>Ne créez pas de page dont l'adresse (slug) serait « theatre », « calendrier », « admin », « recherche » ou « connexion » au premier niveau : ces adresses sont déjà utilisées par les applications du site.</p></div>
+
+  <h2>Les images</h2>
+  <p><em>Images</em> rassemble toutes les photos du site. On peut y ajouter une image, la renommer, la ranger dans une collection et définir son <strong>point d'intérêt</strong> (la zone à garder visible quand l'image est recadrée).</p>
+  <figure class="basse"><img src="img/wagtail_images.jpg"><figcaption>La bibliothèque d'images.</figcaption></figure>
+
+  <h2>Le menu principal et le pied de page</h2>
+  <p>Dans <em>Fragments → Menu principal</em>, chaque élément a un <strong>libellé</strong>, une <strong>page du site</strong> (ou une adresse externe) et, facultativement, un <strong>sous-menu déroulant</strong>. Les flèches ↑ ↓ changent l'ordre. Le lien « Réservations » (calendrier) et le menu « Théâtre » sont ajoutés automatiquement : inutile de les créer. Le pied de page se gère de la même façon dans <em>Fragments → Liens du pied de page</em>.</p>
+  <figure><img src="img/wagtail_menu_edit.jpg"><figcaption>L'édition du menu principal et de ses sous-menus.</figcaption></figure>
+  <div class="encart exemple"><span class="t">Exemple : ajouter « La pétanque » dans un sous-menu « Nos sections »</span>
+    <ol><li>Fragments → Menu principal → Menu principal.</li><li>Ajoutez un élément « Nos sections » sans page ni adresse.</li><li>Dans son « Sous-menu déroulant », ajoutez deux liens : « Le Blé qui Lève » et « La pétanque » (choisis avec le sélecteur de page).</li><li>Enregistrez : le sous-menu s'ouvre au survol.</li></ol></div>
+
+  <h2>Les paramètres du site</h2>
+  <table>
+    <tr><th style="width:36%">Paramètres → …</th><th>Contenu</th></tr>
+    <tr><td><strong>Coordonnées &amp; réseaux sociaux</strong></td><td>Adresse, téléphone, e-mail et liens vers Facebook, Instagram… (plusieurs liens par réseau possibles, avec un libellé). Repris dans le pied de page et la page Contact.</td></tr>
+    <tr><td><strong>Identité visuelle</strong></td><td>L'icône du site affichée dans l'onglet du navigateur.</td></tr>
+    <tr><td><strong>Consentement aux cookies</strong></td><td>Activation, titre et texte du bandeau, lien vers la politique de confidentialité, durée de conservation du choix.</td></tr>
+    <tr><td><strong>SEO</strong></td><td>Informations sur l'organisation pour Google et les réseaux sociaux (logo, image de partage par défaut…).</td></tr>
+  </table>
+  <figure class="basse"><img src="img/wagtail_parametres.jpg"><figcaption>Les coordonnées et les réseaux sociaux.</figcaption></figure>
+
+  <h2>Le référencement (onglet Promotion)</h2>
+  <p>Chaque page a un onglet <strong>Promotion</strong> : adresse de la page (slug), <strong>titre</strong> et <strong>description</strong> pour Google (sinon, le titre et le résumé de la page sont utilisés), et <strong>image de partage</strong> utilisée par Facebook ou WhatsApp quand on partage le lien.</p>
+  <figure class="basse"><img src="img/wagtail_seo.jpg"><figcaption>L'onglet Promotion d'une actualité.</figcaption></figure>
+</section>
+
+<!-- ============================ 11. UTILISATEURS ============================ -->
+<section class="chapitre" id="ch11">
+  <div class="bandeau"><div class="num">Chapitre 11</div><h1>Gestion des utilisateurs et des droits</h1>
+    <p>Réservé aux responsables : se fait dans l'administration Django (<span class="url">/django-admin/</span>).</p></div>
+
+  <figure><img src="img/django_admin.jpg"><figcaption>L'administration Django : utilisateurs et groupes, calendrier et réservations, théâtre, images…</figcaption></figure>
+
+  <h2>Créer un compte</h2>
+  <ol class="etapes">
+    <li><em>Authentification et autorisation → Utilisateurs → Ajouter</em>.</li>
+    <li>Choisissez un <strong>nom d'utilisateur</strong> et un <strong>mot de passe</strong> provisoire, puis enregistrez.</li>
+    <li>Sur la fiche qui s'ouvre, complétez prénom, nom et e-mail, puis attribuez les droits ci-dessous.</li>
+    <li>Communiquez l'identifiant et le mot de passe à la personne, de préférence de vive voix.</li>
+  </ol>
+
+  <h2>Attribuer les droits</h2>
+  <table>
+    <tr><th style="width:30%">Pour…</th><th>Sur la fiche de l'utilisateur</th></tr>
+    <tr><td>Un <strong>membre</strong> simple</td><td>Laissez « Actif » coché, rien d'autre.</td></tr>
+    <tr><td>Un <strong>administrateur</strong> (location, contrats, photos, publication directe)</td><td>Cochez <strong>Statut équipe</strong>. Pour l'accès à Wagtail, ajoutez-le au groupe <strong>Editors</strong> (ou Moderators).</td></tr>
+    <tr><td>Un <strong>modérateur</strong> des actualités</td><td>Groupe <strong>Moderators</strong> : il reçoit un e-mail à chaque actualité proposée et peut l'approuver.</td></tr>
+    <tr><td>L'<strong>accès au Théâtre</strong></td><td>Section « Permissions de l'utilisateur » : ajoutez <em>theatre | acces application | Peut accéder à l'application Théâtre</em>.</td></tr>
+    <tr><td>Un <strong>super-utilisateur</strong></td><td>« Statut super-utilisateur » : tous les droits. À limiter à une ou deux personnes de confiance.</td></tr>
+  </table>
+  <figure class="haute"><img src="img/django_user.jpg"><figcaption>La fiche d'un utilisateur : statuts, groupes et permissions (ici, l'accès au Théâtre).</figcaption></figure>
+  <div class="encart astuce"><span class="t">Donner l'accès Théâtre à toute une équipe</span>
+    <p>Créez un groupe (ex. « Équipe billetterie ») avec la permission Théâtre, puis ajoutez-y les personnes concernées : elles héritent toutes de l'accès, et il suffit de les retirer du groupe pour le leur enlever.</p></div>
+  <div class="encart attention"><span class="t">Départ d'un bénévole</span>
+    <p>Plutôt que de supprimer son compte (ce qui supprimerait aussi les activités qu'il a créées), décochez <strong>Actif</strong> : il ne peut plus se connecter et l'historique est conservé.</p></div>
+</section>
+
+<!-- ============================ 12. FAQ ============================ -->
+<section class="chapitre" id="ch12">
+  <div class="bandeau"><div class="num">Chapitre 12</div><h1>Bonnes pratiques et questions fréquentes</h1>
+    <p>Les réflexes qui évitent les mauvaises surprises.</p></div>
+
+  <h2>Questions fréquentes</h2>
+  <h3>« Je ne vois pas le menu Théâtre. »</h3>
+  <p>Vérifiez que vous êtes connecté. Si c'est le cas, votre compte n'a pas la permission Théâtre : demandez-la à un responsable (chapitre 11).</p>
+  <h3>« Le bouton Valider ne fonctionne pas pour une demande de location. »</h3>
+  <p>Un message rouge indique que la salle est déjà occupée à ces dates (activité ou autre location). Libérez d'abord la date (déplacer l'activité, annuler l'autre location) ou contactez le demandeur pour une autre date.</p>
+  <h3>« Mon actualité n'apparaît pas sur le site. »</h3>
+  <p>Si vous êtes membre, elle attend la validation d'un modérateur : elle apparaît dans « vos actualités en attente » sur la page News. Si elle est publiée mais absente de l'accueil, c'est qu'elle date de plus de 30 jours (la section « Dernière actualité » ne montre que les actualités récentes).</p>
+  <h3>« J'ai modifié une page mais rien n'a changé. »</h3>
+  <p>Vous avez sans doute cliqué sur « Enregistrer le brouillon ». Ouvrez le menu du bouton vert et cliquez sur <strong>Publier</strong>.</p>
+  <h3>« Une activité privée est visible du public ! »</h3>
+  <p>Ouvrez l'activité, cliquez sur Modifier et vérifiez la visibilité « Privée ». Les activités privées s'affichent en orange et uniquement pour les personnes connectées.</p>
+  <h3>« L'envoi des photos s'arrête. »</h3>
+  <p>Gardez la page ouverte pendant tout l'envoi, sur une connexion stable. Les photos déjà envoyées restent dans l'album : relancez seulement avec celles qui manquent. Chaque photo doit faire au maximum 20 Mo (réduisez la taille si besoin).</p>
+  <h3>« J'ai oublié mon mot de passe. »</h3>
+  <p>Demandez à un responsable : il peut définir un nouveau mot de passe depuis votre fiche dans l'administration Django.</p>
+
+  <h2>Bonnes pratiques</h2>
+  <ul>
+    <li><strong>Déconnectez-vous</strong> sur les ordinateurs partagés (salle, bar, ordinateur portable de la billetterie).</li>
+    <li>Ne partagez pas un même compte entre plusieurs personnes : chacun son compte, pour savoir qui a fait quoi.</li>
+    <li>Traitez les demandes de location <strong>rapidement</strong> et prévenez toujours le demandeur (le site ne le fait pas).</li>
+    <li>Le soir d'un spectacle, prévoyez un ordinateur ou une tablette <strong>connecté à Internet</strong> et une imprimante pour les tickets ; imprimez la liste des places à l'avance comme solution de secours.</li>
+    <li>Testez toujours une newsletter en l'envoyant d'abord à vous-même.</li>
+    <li>Nommez clairement les images (« Martingale 2026 – troupe ») : elles seront plus faciles à retrouver.</li>
+    <li>Les données personnelles (locataires, spectateurs, abonnés) sont confidentielles : ne les exportez que si nécessaire et supprimez les fichiers après usage.</li>
+  </ul>
+
+  <h2>Aide-mémoire des adresses</h2>
+  <table>
+    <tr><th style="width:44%">Adresse</th><th>Page</th></tr>
+    <tr><td><span class="url">/connexion/</span> · <span class="url">/deconnexion/</span></td><td>Se connecter / se déconnecter</td></tr>
+    <tr><td><span class="url">/calendrier/</span></td><td>Calendrier des activités et des réservations</td></tr>
+    <tr><td><span class="url">/calendrier/reservation/demander/</span></td><td>Formulaire public de demande de location</td></tr>
+    <tr><td><span class="url">/calendrier/reservations/</span></td><td>Gérer les demandes de location (administrateurs)</td></tr>
+    <tr><td><span class="url">/calendrier/reservation/paiements/</span></td><td>Suivi des paiements et des cautions</td></tr>
+    <tr><td><span class="url">/calendrier/contrat-type/</span></td><td>Contrat-type : articles, annexes, mise en page</td></tr>
+    <tr><td><span class="url">/ajouter-actualite/</span></td><td>Proposer une actualité</td></tr>
+    <tr><td><span class="url">/theatre/</span></td><td>Application Théâtre : représentations</td></tr>
+    <tr><td><span class="url">/theatre/reservations/</span></td><td>Application Théâtre : toutes les réservations</td></tr>
+    <tr><td><span class="url">/admin/</span></td><td>Administration Wagtail (contenu, newsletter)</td></tr>
+    <tr><td><span class="url">/django-admin/</span></td><td>Administration Django (utilisateurs et droits)</td></tr>
+  </table>
+
+  <div class="encart astuce" style="margin-top:8mm"><span class="t">À propos de ce manuel</span>
+    <p>Les captures d'écran ont été réalisées avec des données d'exemple (noms, réservations et montants fictifs). L'apparence peut légèrement varier selon votre navigateur et la taille de votre écran.</p></div>
+</section>
+
+</body>
+</html>
