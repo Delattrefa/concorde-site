@@ -4,6 +4,7 @@ from django.template.response import TemplateResponse
 
 from modelcluster.fields import ParentalKey
 
+from wagtail.admin.forms import WagtailAdminPageForm
 from wagtail.admin.mail import send_mail
 from wagtail.admin.panels import FieldPanel, FieldRowPanel, InlinePanel, MultiFieldPanel
 from wagtail.contrib.forms.models import AbstractEmailForm, AbstractFormField
@@ -24,11 +25,32 @@ class ContactFormField(AbstractFormField):
     )
 
 
+class ContactPageForm(WagtailAdminPageForm):
+    """Sans destinataire, Wagtail enregistre les messages mais n'envoie aucun
+    e-mail, sans rien signaler : le champ est donc obligatoire pour publier
+    (un brouillon peut toujours être enregistré sans)."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if "to_address" in self.fields:
+            self.fields["to_address"].required = True
+            self.fields["to_address"].help_text = (
+                "Boîte qui reçoit les messages du formulaire (ex. : infos@la-concorde.be). "
+                "Plusieurs adresses possibles, séparées par des virgules."
+            )
+        if "from_address" in self.fields:
+            self.fields["from_address"].help_text = (
+                "Boîte avec laquelle le site envoie ses e-mails sur o2switch "
+                "(ex. : infos@la-concorde.be). « Répondre » écrit quand même au visiteur."
+            )
+
+
 class ContactPage(SeoMixin, AbstractEmailForm):
     """Page 'Contactez-nous' : formulaire Wagtail classique (nom, e-mail,
     message…) + coordonnées et carte, avec envoi d'e-mail automatique."""
 
     max_count = 1
+    base_form_class = ContactPageForm
 
     intro = RichTextField(blank=True)
     thank_you_text = RichTextField(

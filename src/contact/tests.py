@@ -1,9 +1,11 @@
 """
 Tests du formulaire de contact : protection anti-spam (champ piège et
-limite par adresse IP) et adresse de réponse des notifications.
+limite par adresse IP), adresse de réponse des notifications et
+destinataire obligatoire dans l'admin.
 
 Lancement : python manage.py test contact
 """
+from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.cache import cache
 from django.test import TestCase, override_settings
@@ -77,3 +79,37 @@ class ContactAntispamTests(TestCase):
     def test_sans_adresse_du_visiteur_pas_d_adresse_de_reponse(self):
         self._envoyer()
         self.assertEqual(mail.outbox[0].reply_to, [])
+
+
+class DestinataireObligatoireTests(TestCase):
+    def setUp(self):
+        self.admin = get_user_model().objects.create_superuser("secretariat", "s@exemple.be", "Un-bon-mot-de-passe")
+        self.client.force_login(self.admin)
+        self.racine = Page.objects.get(depth=1)
+        self.page = self.racine.add_child(instance=ContactPage(title="Contact", slug="contact-test"))
+
+    def _modifier(self, action, to_address):
+        donnees = {
+            "title": "Contact", "slug": "contact-test", "to_address": to_address,
+            "from_address": "site@exemple.be", "subject": "Message du site",
+            "form_fields-TOTAL_FORMS": "0", "form_fields-INITIAL_FORMS": "0",
+            "form_fields-MIN_NUM_FORMS": "0", "form_fields-MAX_NUM_FORMS": "1000",
+        }
+        if action == "publier":
+            donnees["action-publish"] = "action-publish"
+        return self.client.post(f"/admin/pages/{self.page.pk}/edit/", donnees)
+
+    def test_publication_refusee_sans_destinataire(self):
+        reponse = self._modifier("publier", "")
+        self.assertEqual(reponse.status_code, 200)
+        self.assertIn("to_address", reponse.context["form"].errors)
+        self.page.refresh_from_db()
+        self.assertEqual(self.page.to_address, "")
+
+    def test_brouillon_accepte_sans_destinataire(self):
+        self.assertEqual(self._modifier("brouillon", "").status_code, 302)
+
+    def test_publication_avec_destinataire(self):
+        self.assertEqual(self._modifier("publier", "infos@exemple.be").status_code, 302)
+        self.page.refresh_from_db()
+        self.assertEqual(self.page.to_address, "infos@exemple.be")
