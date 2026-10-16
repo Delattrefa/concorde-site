@@ -242,7 +242,7 @@
   <figure class="basse"><img src="img/lightbox.jpg"><figcaption>La visionneuse : photo en grand format, navigation et miniatures.</figcaption></figure>
 
   <h2>Info, Contact et pages libres</h2>
-  <p><strong>Info</strong> présente l'ASBL (historique, informations pratiques) avec des blocs de texte, images, encarts et liens. <strong>Contact</strong> propose un formulaire (nom, e-mail, objet de la demande, message), les coordonnées et une carte. Les messages envoyés arrivent par e-mail et restent consultables dans Wagtail (<em>Formulaires</em>).</p>
+  <p><strong>Info</strong> présente l'ASBL (historique, informations pratiques) avec des blocs de texte, images, encarts et liens. <strong>Contact</strong> propose un formulaire (nom, e-mail, objet de la demande, message), les coordonnées et une carte. Les messages envoyés arrivent par e-mail et restent consultables dans Wagtail (<em>Formulaires</em>). Pour répondre, il suffit de cliquer sur « Répondre » dans l'e-mail reçu : la réponse part directement à l'adresse saisie par le visiteur.</p>
   <div class="duo">
     <figure><img src="img/info.jpg"><figcaption>La page Info.</figcaption></figure>
     <figure><img src="img/contact.jpg"><figcaption>La page Contact et son formulaire.</figcaption></figure>
@@ -562,6 +562,16 @@
   <div class="encart attention"><span class="t">Adresses réservées</span>
     <p>Ne créez pas de page dont l'adresse (slug) serait « theatre », « calendrier », « admin », « recherche » ou « connexion » au premier niveau : ces adresses sont déjà utilisées par les applications du site.</p></div>
 
+  <h3>Les e-mails de la page Contact</h3>
+  <p>Dans <em>Pages → Contact → Modifier</em>, la section <strong>Notification par e-mail</strong> règle l'envoi des messages du formulaire :</p>
+  <table>
+    <tr><th style="width:30%">Champ</th><th>À indiquer</th></tr>
+    <tr><td><strong>Adresse de l'expéditeur</strong></td><td>La boîte avec laquelle le site envoie ses e-mails : <span class="url">infos@la-concorde.be</span>.</td></tr>
+    <tr><td><strong>Adresse du destinataire</strong></td><td>La ou les boîtes qui reçoivent les messages, séparées par des virgules (par exemple <span class="url">infos@la-concorde.be</span>). <strong>Obligatoire</strong> pour publier la page : sans destinataire, aucun e-mail ne partirait.</td></tr>
+    <tr><td><strong>Sujet</strong></td><td>L'objet des e-mails reçus, par exemple « Nouveau message depuis le site ».</td></tr>
+  </table>
+  <p>Après une modification, cliquez sur <strong>Publier</strong> : un brouillon n'a aucun effet sur l'envoi.</p>
+
   <h2>Les images</h2>
   <p><em>Images</em> rassemble toutes les photos du site. On peut y ajouter une image, la renommer, la ranger dans une collection et définir son <strong>point d'intérêt</strong> (la zone à garder visible quand l'image est recadrée).</p>
   <figure class="basse"><img src="img/wagtail_images.jpg"><figcaption>La bibliothèque d'images.</figcaption></figure>
@@ -638,6 +648,8 @@
   <p>Gardez la page ouverte pendant tout l'envoi, sur une connexion stable. Les photos déjà envoyées restent dans l'album : relancez seulement avec celles qui manquent. Chaque photo doit faire au maximum 20 Mo (réduisez la taille si besoin).</p>
   <h3>« L'adresse de ma page a perdu ses accents. »</h3>
   <p>C'est voulu : l'hébergeur du site n'affiche pas les adresses accentuées, le site les retire donc automatiquement (« La pétanque » devient <span class="url">/la-petanque/</span>). Le titre de la page garde bien ses accents. Les liens du menu et du contenu suivent tout seuls.</p>
+  <h3>« Les messages du formulaire de contact n'arrivent pas. »</h3>
+  <p>Regardez d'abord dans les <strong>spams</strong>. Vérifiez ensuite dans Wagtail (<em>Pages → Contact → Modifier → Notification par e-mail</em>) que l'adresse du destinataire est correcte et que la page est bien <strong>publiée</strong>. Les messages restent de toute façon consultables dans <em>Formulaires</em> : aucune demande n'est perdue. Si le problème persiste, prévenez le responsable technique du site (réglages d'envoi chez l'hébergeur).</p>
   <h3>« J'ai oublié mon mot de passe. »</h3>
   <p>Demandez à un responsable : il peut définir un nouveau mot de passe depuis votre fiche dans l'administration Django. Un mot de passe doit compter au moins <strong>10 caractères</strong>, ne pas être composé uniquement de chiffres, ni être trop courant ou trop proche de votre nom ou de votre e-mail.</p>
   <h3>« La page affiche “Connexion bloquée”. »</h3>
