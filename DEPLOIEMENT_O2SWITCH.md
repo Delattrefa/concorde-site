@@ -227,6 +227,7 @@ source ~/virtualenv/concorde/src/3.12/bin/activate
 cd ~/concorde/src
 export DJANGO_SETTINGS_MODULE=concorde_site.settings.production
 python manage.py loaddata data.json
+python manage.py convertir_slugs_ascii
 python manage.py update_index
 python manage.py rebuild_references_index
 python manage.py generer_miniatures
@@ -365,6 +366,7 @@ virtuel) et redémarrer (`touch ~/concorde/src/tmp/restart.txt`).
 | « CSRF verification failed » | Domaine manquant dans `ALLOWED_HOSTS`. |
 | Envoi groupé de photos refusé | Les photos partent par lots de 10 : les fichiers refusés sont listés sous la barre de progression (20 Mo maximum par photo, JPEG, PNG, WebP ou GIF). Sans JavaScript, l'envoi se fait en une fois, limité à 200 fichiers. |
 | Première ouverture d'un album très lente | Miniatures pas encore générées : `python manage.py generer_miniatures` (voir « Galerie : envoi par lots et miniatures »). |
+| Page en erreur 404 alors qu'elle existe | Slug accentué (o2switch ne sert pas les URL accentuées) : `python manage.py convertir_slugs_ascii` (lancé aussi par `deploy.sh`). Les nouveaux slugs sont convertis automatiquement dans l'administration. |
 | Modifications non visibles | `touch ~/concorde/src/tmp/restart.txt`, ou bouton *Restart* dans Setup Python App. |
 
 Sauvegardes : o2switch sauvegarde le compte chaque jour (outil *JetBackup*

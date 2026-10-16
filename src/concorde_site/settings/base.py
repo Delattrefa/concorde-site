@@ -179,6 +179,9 @@ CACHES = {
 # Wagtail
 # -----------------------------------------------------------------------
 WAGTAIL_SITE_NAME = "La Concorde asbl"
+# Slugs sans accents : les serveurs d'o2switch ne servent pas les URL
+# contenant des caractères accentués (« médias » devient « medias »).
+WAGTAIL_ALLOW_UNICODE_SLUGS = False
 WAGTAILADMIN_BASE_URL = "http://localhost:8000"
 
 WAGTAILSEARCH_BACKENDS = {

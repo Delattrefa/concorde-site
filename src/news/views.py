@@ -21,9 +21,9 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.utils.text import slugify
-
 from wagtail.images.models import Image
+
+from home.slugs import slug_ascii
 
 from .forms import NewsPageForm
 from .models import NewsIndexPage, NewsPage
@@ -102,7 +102,7 @@ def ajouter_news(request):
             # Génère un identifiant d'URL (slug) unique à partir du titre,
             # en y ajoutant un horodatage pour éviter toute collision entre
             # deux actualités portant un titre identique ou proche.
-            base_slug = slugify(donnees["titre"])[:180] or "actualite"
+            base_slug = slug_ascii(donnees["titre"])[:180] or "actualite"
             horodatage = timezone.now().strftime("%Y%m%d%H%M%S")
 
             news = NewsPage(

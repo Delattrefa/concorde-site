@@ -24,6 +24,9 @@ cd "$APP"
 python manage.py migrate --noinput
 python manage.py collectstatic --noinput
 
+echo "→ Slugs des pages sans accents (URL accentuées non servies par o2switch)"
+python manage.py convertir_slugs_ascii
+
 echo "→ Index de la recherche du site"
 python manage.py update_index > /dev/null
 
