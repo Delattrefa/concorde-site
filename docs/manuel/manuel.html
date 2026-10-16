@@ -558,6 +558,7 @@
   <h3>Ajouter une page</h3>
   <p>Sur la page parente, <strong>Ajouter une sous-page</strong>, puis choisissez le type proposé (actualité sous News, album sous Médias, page d'informations ou page libre sous Accueil…).</p>
   <figure class="basse"><img src="img/wagtail_ajout_page.jpg"><figcaption>Choix du type de page à créer.</figcaption></figure>
+  <p>L'<strong>adresse</strong> de la page (le « slug », dans l'onglet <strong>Promotion</strong>) est créée automatiquement à partir du titre, <strong>sans accents</strong> : « Marché de Noël » donne <span class="url">marche-de-noel</span>. Les accents tapés à la main sont aussi retirés à l'enregistrement, car l'hébergeur du site ne sait pas afficher les adresses accentuées.</p>
   <div class="encart attention"><span class="t">Adresses réservées</span>
     <p>Ne créez pas de page dont l'adresse (slug) serait « theatre », « calendrier », « admin », « recherche » ou « connexion » au premier niveau : ces adresses sont déjà utilisées par les applications du site.</p></div>
 
@@ -635,8 +636,12 @@
   <p>Ouvrez l'activité, cliquez sur Modifier et vérifiez la visibilité « Privée ». Les activités privées s'affichent en orange et uniquement pour les personnes connectées.</p>
   <h3>« L'envoi des photos s'arrête. »</h3>
   <p>Gardez la page ouverte pendant tout l'envoi, sur une connexion stable. Les photos déjà envoyées restent dans l'album : relancez seulement avec celles qui manquent. Chaque photo doit faire au maximum 20 Mo (réduisez la taille si besoin).</p>
+  <h3>« L'adresse de ma page a perdu ses accents. »</h3>
+  <p>C'est voulu : l'hébergeur du site n'affiche pas les adresses accentuées, le site les retire donc automatiquement (« La pétanque » devient <span class="url">/la-petanque/</span>). Le titre de la page garde bien ses accents. Les liens du menu et du contenu suivent tout seuls.</p>
   <h3>« J'ai oublié mon mot de passe. »</h3>
-  <p>Demandez à un responsable : il peut définir un nouveau mot de passe depuis votre fiche dans l'administration Django.</p>
+  <p>Demandez à un responsable : il peut définir un nouveau mot de passe depuis votre fiche dans l'administration Django. Un mot de passe doit compter au moins <strong>10 caractères</strong>, ne pas être composé uniquement de chiffres, ni être trop courant ou trop proche de votre nom ou de votre e-mail.</p>
+  <h3>« La page affiche “Connexion bloquée”. »</h3>
+  <p>Après <strong>5 mots de passe erronés</strong>, le site bloque les connexions depuis votre adresse pendant <strong>15 minutes</strong>, pour empêcher un robot d'essayer des mots de passe en série. Patientez, puis réessayez avec le bon mot de passe. Les personnes qui utilisent la même connexion Internet (par exemple la wifi de la salle) sont bloquées en même temps. En cas d'urgence, un responsable peut lever le blocage (voir le guide de déploiement).</p>
 
   <h2>Bonnes pratiques</h2>
   <ul>

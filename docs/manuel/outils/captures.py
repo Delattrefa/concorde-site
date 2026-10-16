@@ -134,7 +134,7 @@ with sync_playwright() as p:
     shot(page, "pied_de_page", "/", avant=defiler(99999))
     shot(page, "actualites", "/news/", hauteur=1500)
     shot(page, "actualite_detail", IDS["actualite_url"], hauteur=1400)
-    shot(page, "medias", "/médias/", hauteur=1300)
+    shot(page, "medias", "/medias/", hauteur=1300)
     shot(page, "lightbox", album, avant=ouvrir_visionneuse)
     shot(page, "calendrier_public", "/calendrier/2026/11/", hauteur=1300)
     shot(page, "demande_reservation", "/calendrier/reservation/demander/?date=2026-11-14", hauteur=1500)
@@ -143,7 +143,7 @@ with sync_playwright() as p:
     shot(page, "newsletter_inscription", "/newsletter/", hauteur=1000)
     shot(page, "recherche", "/recherche/?query=Noël", hauteur=1100)
     shot(page, "connexion", "/connexion/")
-    shot(page, "page_libre", "/le-blé-qui-lève/", hauteur=1300)
+    shot(page, "page_libre", "/le-ble-qui-leve/", hauteur=1300)
     ctx.close()
 
     # ---------------- Smartphone ----------------
