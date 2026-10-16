@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Connexion bloquée{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <h1>Connexion bloquée</h1>
+        <p class="page-header__intro">Trop de tentatives de connexion ont échoué.</p>
+    </div>
+</section>
+
+<section class="calendrier-form wrap" style="max-width: 520px;">
+    <p class="message message--error">
+        Après {{ failure_limit }} mots de passe erronés, les connexions depuis
+        votre adresse sont suspendues pendant
+        {% widthratio cooloff_timedelta.total_seconds 60 1 %} minutes.
+    </p>
+    <p>Patientez avant de réessayer. Si vous avez oublié votre
+       mot de passe, demandez-en un nouveau à un responsable de l'ASBL.</p>
+</section>
+{% endblock %}

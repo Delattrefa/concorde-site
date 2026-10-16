@@ -27,3 +27,6 @@ wagtail-seo>=3.1,<4   # 3.1 accepte Wagtail jusqu’à 7.x (pas 8)
 # Génération du contrat de location en PDF (app 'calendrier')
 reportlab>=4.0
 pypdf>=5.0
+
+# Blocage des connexions après plusieurs mots de passe erronés
+django-axes>=8.0

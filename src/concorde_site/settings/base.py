@@ -3,6 +3,7 @@ Réglages communs à tous les environnements (dev / production).
 Projet : Site vitrine ASBL "La Concorde" (théâtre / activités culturelles)
 """
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -64,6 +65,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 
     "django.contrib.sitemaps",
+
+    # Blocage des connexions après plusieurs mots de passe erronés
+    "axes",
 ]
 
 MIDDLEWARE = [
@@ -78,6 +82,8 @@ MIDDLEWARE = [
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     # Bloque les contenus de sites tiers (cartes, vidéos) avant consentement
     "consentement.middleware.BlocageContenusTiersMiddleware",
+    # En dernier (exigence de django-axes) : affiche la page de blocage
+    "axes.middleware.AxesMiddleware",
 ]
 
 ROOT_URLCONF = "concorde_site.urls"
@@ -200,6 +206,39 @@ SEARCH_RESULTS_PER_PAGE = 10
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "calendrier:mois_courant"
 LOGOUT_REDIRECT_URL = "calendrier:mois_courant"
+
+# Mots de passe : 10 caractères minimum, ni trop courants, ni entièrement
+# numériques, ni trop proches du nom ou de l'e-mail. S'applique aux
+# nouveaux mots de passe (création de compte, changement), pas aux anciens.
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 10},
+    },
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
+# Protection contre les essais de mots de passe en série (django-axes) :
+# après 5 échecs depuis une même adresse IP, les connexions (site, Wagtail
+# et administration Django) sont bloquées 15 minutes pour cette adresse.
+# Débloquer plus tôt : python manage.py axes_reset_ip <adresse IP>
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = timedelta(minutes=15)
+AXES_LOCKOUT_PARAMETERS = ["ip_address"]
+AXES_RESET_ON_SUCCESS = True
+AXES_CLIENT_IP_CALLABLE = "concorde_site.antispam.ip_client"
+AXES_LOCKOUT_TEMPLATE = "registration/verrouillage.html"
+# Seuls les échecs sont enregistrés (pas d'historique des connexions réussies)
+AXES_DISABLE_ACCESS_LOG = True
+# Pas de message dans les journaux à chaque échec : les tentatives sont
+# consultables dans l'administration Django (Axes → Access attempts)
+AXES_VERBOSE = False
 
 
 # -----------------------------------------------------------------------

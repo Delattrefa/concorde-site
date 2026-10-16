@@ -103,9 +103,10 @@ WAGTAILIMAGES_MAX_UPLOAD_SIZE = 20 * 1024 * 1024  # 20 Mo par photo
 SECURE_SSL_REDIRECT = os.environ.get("SECURE_SSL_REDIRECT", "1") == "1"
 SESSION_COOKIE_SECURE = SECURE_SSL_REDIRECT
 CSRF_COOKIE_SECURE = SECURE_SSL_REDIRECT
-# HSTS : commencer court (1 heure), puis passer à 31536000 une fois le
-# site validé en HTTPS sur tous les sous-domaines.
-SECURE_HSTS_SECONDS = int(os.environ.get("SECURE_HSTS_SECONDS", "3600"))
+# HSTS : les navigateurs refusent toute connexion non chiffrée au site
+# pendant un an. Mettre SECURE_HSTS_SECONDS=3600 dans .env seulement le
+# temps d'une mise en ligne sur un nouveau domaine.
+SECURE_HSTS_SECONDS = int(os.environ.get("SECURE_HSTS_SECONDS", "31536000"))
 SECURE_HSTS_INCLUDE_SUBDOMAINS = False
 
 WAGTAILADMIN_BASE_URL = os.environ.get("BASE_URL", "https://www.la-concorde.be")

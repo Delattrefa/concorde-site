@@ -353,6 +353,26 @@ virtuel) et redémarrer (`touch ~/concorde/src/tmp/restart.txt`).
 
 ---
 
+## Sécurité des connexions (octobre 2026)
+
+Cette mise à jour bloque pendant 15 minutes une adresse IP après 5 mots
+de passe erronés (sur `/connexion/`, `/admin/` et `/django-admin/`),
+impose des mots de passe d'au moins 10 caractères (pour les nouveaux
+mots de passe seulement) et passe la protection HSTS à un an.
+
+1. **Sur le serveur** : `bash ~/concorde/deploy.sh` (installe
+   `django-axes` et crée ses tables).
+2. **Dans `src/.env`**, remplacer `SECURE_HSTS_SECONDS=3600` par
+   `SECURE_HSTS_SECONDS=31536000` (ou supprimer la ligne), puis
+   `touch ~/concorde/src/tmp/restart.txt`.
+3. **Vérifier** : `curl -sI https://www.la-concorde.be/ | grep -i strict`
+   doit afficher `max-age=31536000`.
+
+Les tentatives échouées sont consultables dans l'administration Django
+(*Axes → Access attempts*).
+
+---
+
 ## Dépannage
 
 | Symptôme | Cause probable / solution |
@@ -367,6 +387,7 @@ virtuel) et redémarrer (`touch ~/concorde/src/tmp/restart.txt`).
 | Envoi groupé de photos refusé | Les photos partent par lots de 10 : les fichiers refusés sont listés sous la barre de progression (20 Mo maximum par photo, JPEG, PNG, WebP ou GIF). Sans JavaScript, l'envoi se fait en une fois, limité à 200 fichiers. |
 | Première ouverture d'un album très lente | Miniatures pas encore générées : `python manage.py generer_miniatures` (voir « Galerie : envoi par lots et miniatures »). |
 | Page en erreur 404 alors qu'elle existe | Slug accentué (o2switch ne sert pas les URL accentuées) : `python manage.py convertir_slugs_ascii` (lancé aussi par `deploy.sh`). Les nouveaux slugs sont convertis automatiquement dans l'administration. |
+| Page « Connexion bloquée » | 5 mots de passe erronés depuis la même adresse IP : patienter 15 minutes, ou débloquer en SSH avec `python manage.py axes_reset_ip <adresse IP>` (`axes_reset` débloque tout le monde). |
 | Modifications non visibles | `touch ~/concorde/src/tmp/restart.txt`, ou bouton *Restart* dans Setup Python App. |
 
 Sauvegardes : o2switch sauvegarde le compte chaque jour (outil *JetBackup*
