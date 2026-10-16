@@ -4,6 +4,7 @@ from django.template.response import TemplateResponse
 
 from modelcluster.fields import ParentalKey
 
+from wagtail.admin.mail import send_mail
 from wagtail.admin.panels import FieldPanel, FieldRowPanel, InlinePanel, MultiFieldPanel
 from wagtail.contrib.forms.models import AbstractEmailForm, AbstractFormField
 from wagtail.fields import RichTextField
@@ -101,6 +102,24 @@ class ContactPage(SeoMixin, AbstractEmailForm):
         if request.method == "POST":
             compter_envoi(request, "contact")
         return super().render_landing_page(request, form_submission, *args, **kwargs)
+
+    def send_mail(self, form):
+        """Comme Wagtail, mais « Répondre » écrit directement au visiteur :
+        l'adresse saisie dans le premier champ de type e-mail du formulaire
+        devient l'adresse de réponse (l'expéditeur reste la boîte du site)."""
+        champs_email = [
+            champ.clean_name for champ in self.get_form_fields() if champ.field_type == "email"
+        ]
+        email_visiteur = next(
+            (form.cleaned_data[nom] for nom in champs_email if form.cleaned_data.get(nom)), None
+        )
+        send_mail(
+            self.subject,
+            self.render_email(form),
+            [adresse.strip() for adresse in self.to_address.split(",")],
+            self.from_address,
+            reply_to=[email_visiteur] if email_visiteur else None,
+        )
 
     def clean(self):
         """Accepte le code <iframe> complet fourni par Google Maps (ou sa

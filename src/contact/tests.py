@@ -1,6 +1,6 @@
 """
 Tests du formulaire de contact : protection anti-spam (champ piège et
-limite par adresse IP).
+limite par adresse IP) et adresse de réponse des notifications.
 
 Lancement : python manage.py test contact
 """
@@ -64,3 +64,16 @@ class ContactAntispamTests(TestCase):
 
     def test_formulaire_contient_le_champ_piege(self):
         self.assertContains(self.client.get(self.page.url), 'name="website"')
+
+    def test_repondre_ecrit_au_visiteur(self):
+        ContactFormField.objects.create(page=self.page, label="Adresse mail", field_type="email", required=False)
+
+        self._envoyer(adresse_mail="visiteur@exemple.be")
+
+        self.assertEqual(mail.outbox[0].from_email, "site@exemple.be")
+        self.assertEqual(mail.outbox[0].to, ["infos@exemple.be"])
+        self.assertEqual(mail.outbox[0].reply_to, ["visiteur@exemple.be"])
+
+    def test_sans_adresse_du_visiteur_pas_d_adresse_de_reponse(self):
+        self._envoyer()
+        self.assertEqual(mail.outbox[0].reply_to, [])
