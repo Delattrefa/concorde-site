@@ -1,0 +1,10 @@
+{% load wagtailimages_tags %}
+{% if value.position == "pleine" %}
+    {% image value.image max-1000x800 as photo %}
+{% else %}
+    {% image value.image max-500x600 as photo %}
+{% endif %}
+<figure class="image-positionnee image-positionnee--{{ value.position }}">
+    <img src="{{ photo.url }}" width="{{ photo.width }}" height="{{ photo.height }}" alt="{{ value.legende|default:value.image.title }}" loading="lazy">
+    {% if value.legende %}<figcaption>{{ value.legende }}</figcaption>{% endif %}
+</figure>

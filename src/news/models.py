@@ -15,7 +15,7 @@ from wagtail.search import index
 from wagtailseo.models import SeoMixin, SeoType, TwitterCard
 
 from info.models import CalloutBlock, LinkBlock
-from news.blocks import QuoteBlock
+from news.blocks import ImagePositionneeBlock, QuoteBlock
 
 
 class NewsIndexPage(SeoMixin, Page):
@@ -112,6 +112,15 @@ class NewsPage(SeoMixin, Page):
         blank=True,
         help_text="Court résumé affiché dans la liste des actualités.",
     )
+    a_la_une = models.BooleanField(
+        "À la une",
+        default=False,
+        help_text=(
+            "Affiche cette actualité sur la page d'accueil à la place de la plus "
+            "récente, quelle que soit sa date. Si plusieurs actualités sont à la "
+            "une, la plus récente l'emporte."
+        ),
+    )
     featured_image = models.ForeignKey(
         "wagtailimages.Image",
         null=True,
@@ -150,6 +159,7 @@ class NewsPage(SeoMixin, Page):
             ("heading", CharBlock(icon="title", form_classname="title")),
             ("paragraph", RichTextBlock(icon="pilcrow")),
             ("image", ImageChooserBlock(icon="image")),
+            ("image_positionnee", ImagePositionneeBlock()),
             ("quote", QuoteBlock()),
             ("callout", CalloutBlock()),
             ("useful_link", LinkBlock()),
@@ -165,6 +175,7 @@ class NewsPage(SeoMixin, Page):
 
     content_panels = Page.content_panels + [
         FieldPanel("date"),
+        FieldPanel("a_la_une"),
         FieldPanel("intro"),
         FieldPanel("featured_image"),
         FieldPanel("author"),
@@ -193,15 +204,21 @@ class NewsPage(SeoMixin, Page):
         )
         # Calculé ici (et non dans le template, qui ne peut pas appeler une
         # méthode avec un argument) : contrôle l'affichage des boutons
-        # Modifier/Supprimer, réservés à l'auteur de l'actualité.
+        # Modifier/Supprimer.
         context["peut_modifier"] = self.peut_etre_modifiee_par(request.user)
+        context["peut_supprimer"] = self.peut_etre_supprimee_par(request.user)
         return context
 
     def peut_etre_modifiee_par(self, user):
-        """Seul l'utilisateur ayant créé l'actualité depuis le site peut la
-        modifier ou la supprimer via les pages publiques. Les actualités
-        créées depuis l'admin Wagtail (cree_par vide) ne sont modifiables
-        que depuis cet admin, pas depuis le site public."""
+        """Depuis le site, un administrateur (is_staff) peut modifier toutes
+        les actualités, y compris celles créées dans l'admin Wagtail ; un
+        autre membre, seulement celles qu'il a créées depuis le site."""
+        return user.is_authenticated and (user.is_staff or self.peut_etre_supprimee_par(user))
+
+    def peut_etre_supprimee_par(self, user):
+        """La suppression depuis le site reste réservée à l'auteur de
+        l'actualité (créée depuis le site). Les autres se suppriment depuis
+        l'admin Wagtail."""
         return (
             user.is_authenticated
             and self.cree_par_id is not None

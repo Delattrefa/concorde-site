@@ -1,10 +1,14 @@
 {% extends "base.html" %}
-{% load static wagtailcore_tags %}
+{% load static wagtailcore_tags wagtailimages_tags %}
 
 {% block title %}{% if mode == "modification" %}Modifier l'actualité{% elif publie_directement %}Publier une actualité{% else %}Proposer une actualité{% endif %}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'news/css/news.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'news/js/editeur.js' %}" defer></script>
 {% endblock %}
 
 {% block content %}
@@ -42,14 +46,31 @@
         </ul>
     {% endif %}
 
-    <form method="post" enctype="multipart/form-data" novalidate>
+    <form method="post" enctype="multipart/form-data" novalidate data-formulaire-actualite>
         {% csrf_token %}
-        {{ form.non_field_errors }}
+        {% if form.non_field_errors %}
+            <ul class="messages">
+                {% for erreur in form.non_field_errors %}<li class="message message--error">{{ erreur }}</li>{% endfor %}
+            </ul>
+        {% endif %}
 
         <div class="form-field">
             {{ form.titre.label_tag }}
             {{ form.titre }}
             {{ form.titre.errors }}
+        </div>
+
+        <div class="form-field-row">
+            <div class="form-field">
+                {{ form.date.label_tag }}
+                {{ form.date }}
+                {{ form.date.errors }}
+            </div>
+            <div class="form-field">
+                {{ form.auteur.label_tag }}
+                {{ form.auteur }}
+                {{ form.auteur.errors }}
+            </div>
         </div>
 
         <div class="form-field">
@@ -59,20 +80,54 @@
         </div>
 
         <div class="form-field">
-            {{ form.contenu.label_tag }}
-            {{ form.contenu }}
-            {{ form.contenu.errors }}
-        </div>
-
-        <div class="form-field">
             {{ form.image.label_tag }}
+            {% if mode == "modification" and news.featured_image %}
+                <div class="news-form__image-actuelle">
+                    {% image news.featured_image max-240x160 %}
+                    <label class="news-form__case">{{ form.retirer_image }} {{ form.retirer_image.label }}</label>
+                </div>
+                <p class="form-field__help">Choisissez une nouvelle image uniquement pour remplacer celle-ci.</p>
+            {% endif %}
             {{ form.image }}
+            <p class="form-field__help">{{ form.image.help_text }}</p>
             {{ form.image.errors }}
         </div>
 
-        {% if mode == "modification" and news.featured_image %}
-            <p class="form-field__help">Une image est déjà associée à cette actualité. Choisissez-en une nouvelle uniquement si vous souhaitez la remplacer.</p>
-        {% endif %}
+        <div class="form-field form-field--case">
+            <label for="{{ form.a_la_une.id_for_label }}">{{ form.a_la_une }} {{ form.a_la_une.label }}</label>
+            <p class="form-field__help">{{ form.a_la_une.help_text }}</p>
+            {{ form.a_la_une.errors }}
+        </div>
+
+        <fieldset class="editeur" data-editeur
+                  data-url-photo="{% url 'news_envoyer_photo' %}">
+            <legend>Contenu de l'article</legend>
+            <p class="form-field__help">
+                L'article est une suite de blocs : texte, intertitre, image, citation, encart, lien.
+                Ajoutez-les avec les boutons du bas, puis déplacez-les avec ↑ et ↓.
+            </p>
+            {{ form.corps }}
+            <noscript>
+                <p class="message message--error">L'éditeur de contenu nécessite JavaScript : activez-le dans votre navigateur.</p>
+            </noscript>
+            <div class="editeur__blocs" data-editeur-blocs></div>
+            <div class="editeur__ajout" data-editeur-ajout>
+                <span>Ajouter :</span>
+                <button type="button" class="editeur__ajouter" data-ajouter="paragraph">¶ Texte</button>
+                <button type="button" class="editeur__ajouter" data-ajouter="heading">H Intertitre</button>
+                <button type="button" class="editeur__ajouter" data-ajouter="image_positionnee">▣ Image</button>
+                <button type="button" class="editeur__ajouter" data-ajouter="quote">❝ Citation</button>
+                <button type="button" class="editeur__ajouter" data-ajouter="callout">ℹ Encart</button>
+                <button type="button" class="editeur__ajouter" data-ajouter="useful_link">🔗 Lien utile</button>
+            </div>
+        </fieldset>
+
+        <div class="form-field">
+            {{ form.mots_cles.label_tag }}
+            {{ form.mots_cles }}
+            <p class="form-field__help">{{ form.mots_cles.help_text }}</p>
+            {{ form.mots_cles.errors }}
+        </div>
 
         <div class="form-field-row">
             <div class="form-field">
@@ -90,7 +145,7 @@
         <button type="submit" class="btn btn--primary">
             {% if not publie_directement %}Envoyer pour validation{% elif mode == "modification" %}Enregistrer les modifications{% else %}Publier l'actualité{% endif %}
         </button>
-        {% if mode == "modification" %}
+        {% if mode == "modification" and peut_supprimer %}
             <a class="btn btn--danger" href="{% url 'news_supprimer' news.pk %}">Supprimer cette actualité</a>
         {% endif %}
     </form>

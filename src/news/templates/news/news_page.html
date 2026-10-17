@@ -43,7 +43,9 @@
     {% if peut_modifier %}
         <div class="news-body__actions">
             <a class="btn btn--secondary" href="{% url 'news_modifier' page.pk %}">Modifier cette actualité</a>
-            <a class="btn btn--danger" href="{% url 'news_supprimer' page.pk %}">Supprimer cette actualité</a>
+            {% if peut_supprimer %}
+                <a class="btn btn--danger" href="{% url 'news_supprimer' page.pk %}">Supprimer cette actualité</a>
+            {% endif %}
         </div>
     {% endif %}
 </article>

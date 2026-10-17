@@ -28,6 +28,7 @@ def extrait_actualite(actualite, nb_mots=45):
     le chapeau (intro) suivi des premiers paragraphes, coupé à nb_mots
     mots (avec « … » si le texte est plus long)."""
     import html
+    import re
 
     from django.utils.html import strip_tags
     from django.utils.text import Truncator
@@ -35,7 +36,9 @@ def extrait_actualite(actualite, nb_mots=45):
     morceaux = [actualite.intro] if actualite.intro else []
     for bloc in actualite.body:
         if bloc.block_type == "paragraph":
-            morceaux.append(strip_tags(bloc.value.source))
+            # Espace à la place des fins de paragraphe et sauts de ligne, pour
+            # ne pas coller les mots de deux paragraphes.
+            morceaux.append(strip_tags(re.sub(r"</p>|<br\s*/?>", " ", bloc.value.source)))
         if len(" ".join(morceaux).split()) > nb_mots:
             break
     texte = " ".join(html.unescape(" ".join(morceaux)).split())
@@ -260,8 +263,8 @@ class HomePage(SeoMixin, Page):
         "Afficher la section 'Dernière actualité'",
         default=True,
         help_text=(
-            "N'apparaît sur la page d'accueil que si une actualité a été "
-            "publiée au cours des 30 derniers jours."
+            "Affiche l'actualité cochée « À la une » ; à défaut, la plus "
+            "récente des 30 derniers jours (rien s'il n'y en a pas)."
         ),
     )
     afficher_section_calendrier = models.BooleanField(
@@ -325,21 +328,27 @@ class HomePage(SeoMixin, Page):
         from calendrier.models import Activite
         from news.models import NewsPage
 
-        # --- Section "Dernière actualité" (30 derniers jours) -------------
+        # --- Section "Dernière actualité" ou "À la une" -------------------
         context["derniere_actualite"] = None
+        context["actualite_a_la_une"] = False
         if self.afficher_section_actualite:
-            # Actualité la plus proche de la date du jour, sans la dépasser :
-            # une actualité datée dans le futur n'apparaît qu'à sa date.
-            # À date égale, la dernière publiée passe en premier.
-            aujourd_hui = date.today()
-            il_y_a_30_jours = aujourd_hui - timedelta(days=30)
-            context["derniere_actualite"] = (
-                NewsPage.objects.live()
-                .public()
-                .filter(date__gte=il_y_a_30_jours, date__lte=aujourd_hui)
-                .order_by("-date", "-first_published_at", "-pk")
-                .first()
+            actualites = NewsPage.objects.live().public().order_by(
+                "-date", "-first_published_at", "-pk"
             )
+            # Une actualité cochée « À la une » passe avant toutes les autres,
+            # quelle que soit sa date (la plus récente s'il y en a plusieurs).
+            context["derniere_actualite"] = actualites.filter(a_la_une=True).first()
+            context["actualite_a_la_une"] = context["derniere_actualite"] is not None
+            if not context["actualite_a_la_une"]:
+                # Sinon, actualité la plus proche de la date du jour (30 jours
+                # au plus), sans la dépasser : une actualité datée dans le
+                # futur n'apparaît qu'à sa date. À date égale, la dernière
+                # publiée passe en premier.
+                aujourd_hui = date.today()
+                il_y_a_30_jours = aujourd_hui - timedelta(days=30)
+                context["derniere_actualite"] = actualites.filter(
+                    date__gte=il_y_a_30_jours, date__lte=aujourd_hui
+                ).first()
             if context["derniere_actualite"]:
                 context["extrait_actualite"] = extrait_actualite(context["derniere_actualite"])
 

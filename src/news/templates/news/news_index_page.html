@@ -55,11 +55,15 @@
                     <span class="news-card__readmore">Lire l'article →</span>
                 </div>
             </a>
-            {% if user.is_authenticated and post.cree_par_id == user.id %}
-                <div class="news-card__owner-actions">
-                    <a href="{% url 'news_modifier' post.pk %}">Modifier</a>
-                    <a href="{% url 'news_supprimer' post.pk %}">Supprimer</a>
-                </div>
+            {% if user.is_authenticated %}
+                {% if post.cree_par_id == user.id or user.is_staff %}
+                    <div class="news-card__owner-actions">
+                        <a href="{% url 'news_modifier' post.pk %}">Modifier</a>
+                        {% if post.cree_par_id == user.id %}
+                            <a href="{% url 'news_supprimer' post.pk %}">Supprimer</a>
+                        {% endif %}
+                    </div>
+                {% endif %}
             {% endif %}
         </article>
     {% empty %}

@@ -49,6 +49,7 @@ urlpatterns = [
     # ces chemins distincts évitent tout conflit avec le routage des pages.
     path("ajouter-actualite/", news_views.ajouter_news, name="news_ajouter"),
     path("modifier-actualite/<int:pk>/", news_views.modifier_news, name="news_modifier"),
+    path("actualite/envoyer-photo/", news_views.envoyer_photo, name="news_envoyer_photo"),
     path("supprimer-actualite/<int:pk>/", news_views.supprimer_news, name="news_supprimer"),
 
     # Ajout de plusieurs photos à la fois dans un album (administrateurs).
