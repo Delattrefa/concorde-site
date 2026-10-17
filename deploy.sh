@@ -40,6 +40,9 @@ python manage.py convertir_slugs_ascii
 echo "→ Index de la recherche du site"
 python manage.py update_index > /dev/null
 
+echo "→ Adresse du site dans Wagtail (liens de partage, aperçus Facebook)"
+python manage.py verifier_adresse_site
+
 echo "→ Redémarrage de l'application"
 mkdir -p "$APP/tmp"
 touch "$APP/tmp/restart.txt"

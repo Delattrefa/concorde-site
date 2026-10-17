@@ -294,6 +294,55 @@ rien). Videz la base (phpMyAdmin → la base → *Structure* → tout cocher →
 « Duplicate entry » signale un doublon pour MySQL : relancez
 `preparer_export_mysql` sur la base locale, puis réexportez.
 
+**Si la base de production n'est pas vide**
+
+L'import **remplace** tout le contenu de la base de production : il ne
+fusionne rien. Commencez par regarder ce qu'elle contient (sur le serveur,
+environnement activé comme à l'étape 3) :
+
+```bash
+python manage.py shell -c "
+from django.contrib.auth import get_user_model
+from wagtail.models import Page
+from calendrier.models import Reservation
+from newsletter.models import Abonne
+from theatre.models import Reservation as Billet
+from wagtail.contrib.forms.models import FormSubmission
+print('Pages :', Page.objects.count(), '| comptes :', get_user_model().objects.count())
+print('Demandes de location :', Reservation.objects.count())
+print('Abonnés newsletter :', Abonne.objects.count())
+print('Réservations théâtre :', Billet.objects.count())
+print('Messages de contact :', FormSubmission.objects.count(), '| dernier :', FormSubmission.objects.order_by('-submit_time').values_list('submit_time', flat=True).first())
+"
+```
+
+*Cas 1 — rien à garder* (page « Welcome » de Wagtail, essais, contenu plus
+ancien que la base locale) :
+
+1. Sauvegardez quand même la base :
+   ```bash
+   mysqldump -u compte_concorde -p compte_concorde > ~/sauvegarde-avant-import-$(date +%F).sql
+   ```
+   (restauration : `mysql -u compte_concorde -p compte_concorde < ~/sauvegarde-avant-import-AAAA-MM-JJ.sql`).
+2. Videz la base : phpMyAdmin → la base → *Structure* → *Tout cocher* →
+   *Supprimer*, en **décochant** « Activer la vérification des clés
+   étrangères ». La base et son utilisateur restent, sans aucune table.
+   N'utilisez pas `python manage.py flush` à la place (il garde les
+   tables ; cas non testé avec l'import).
+3. Reprenez à l'étape 3 ci-dessus (`migrate`, suppression du site
+   « Welcome », `loaddata`), puis l'étape 4. Choisissez un moment calme :
+   le site est en erreur pendant quelques minutes.
+
+*Cas 2 — le site en ligne a reçu des données à garder* (demandes de
+location, abonnés, réservations, messages de contact, comptes, actualités
+publiées en ligne) : **n'importez pas** la base locale, elle effacerait
+ces données. Les deux bases ne peuvent pas être fusionnées
+automatiquement (leurs éléments portent les mêmes numéros internes). Soit
+la production devient la référence et le contenu présent seulement en
+local est ressaisi dans l'admin (recommandé), soit on importe seulement
+certains contenus (par exemple actualités et albums) avec une commande sur
+mesure à développer.
+
 ### Option B — copier la base SQLite
 
 ```bash
@@ -315,6 +364,14 @@ python manage.py createsuperuser
 
 Admin Wagtail → *Paramètres* → *Sites* : remplacez `localhost` par
 `www.la-concorde.be`, port `443`.
+
+Indispensable : Wagtail s'en sert pour toutes les adresses complètes. Avec
+`localhost`, les boutons de partage envoient `http://localhost/...` et
+Facebook ou WhatsApp n'affichent ni la publication ni son image.
+`deploy.sh` avertit (« ⚠ Adresse du site à corriger ») tant que ce n'est
+pas fait. Pour une actualité déjà partagée, faites relire la page par
+Facebook : https://developers.facebook.com/tools/debug/ → *Récupérer à
+nouveau*.
 
 ---
 
@@ -476,6 +533,7 @@ n'importe qui : prévenir le responsable technique.
 | Page en erreur 404 alors qu'elle existe | Slug accentué (o2switch ne sert pas les URL accentuées) : `python manage.py convertir_slugs_ascii` (lancé aussi par `deploy.sh`). Les nouveaux slugs sont convertis automatiquement dans l'administration. |
 | Page « Connexion bloquée » | 5 mots de passe erronés depuis la même adresse IP : patienter 15 minutes, ou débloquer en SSH avec `python manage.py axes_reset_ip <adresse IP>` (`axes_reset` débloque tout le monde). |
 | Un administrateur ne voit plus certaines images dans Wagtail | Images rangées directement dans *Root* ou *Calendrier* : réservées aux super-utilisateurs depuis la protection des signatures. Les déplacer dans une autre collection (ex. « images du site »). |
+| Partage Facebook/WhatsApp sans aperçu, liens en `http://localhost/...` | Adresse du site non réglée dans Wagtail : *Paramètres* → *Sites* → `www.la-concorde.be`, port `443`. Puis https://developers.facebook.com/tools/debug/ → *Récupérer à nouveau* pour les actualités déjà partagées. |
 | Modifications non visibles | `touch ~/concorde/src/tmp/restart.txt`, ou bouton *Restart* dans Setup Python App. |
 
 Sauvegardes : o2switch sauvegarde le compte chaque jour (outil *JetBackup*
