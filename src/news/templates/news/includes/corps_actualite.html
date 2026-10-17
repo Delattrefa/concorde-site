@@ -5,7 +5,7 @@ de l'actualité (news/news_page.html) et la section « Dernière actualité » d
 la page d'accueil, pour un affichage identique aux deux endroits.
 Variable attendue : article (une NewsPage).
 {% endcomment %}
-{% for block in article.body %}
+{% for block in article.corps_affichage %}
     <div class="info-body__block fade-up">
         {% if block.block_type == "heading" %}
             <h2>{{ block.value }}</h2>

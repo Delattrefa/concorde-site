@@ -420,6 +420,31 @@ class EditeurBlocsTests(TestCase):
         self.assertIsNone(news.featured_image)
 
 
+    def _ordre_affichage(self, *blocs):
+        photo = _image_wagtail()
+        news = self.index.add_child(instance=NewsPage(title="Ordre", slug=f"ordre-{NewsPage.objects.count()}", date=date.today()))
+        news.body = [
+            ("image_positionnee", {"image": photo, "position": bloc, "legende": ""}) if bloc in ("gauche", "droite", "pleine")
+            else (bloc, "<p>Texte</p>" if bloc == "paragraph" else "Titre")
+            for bloc in blocs
+        ]
+        return [b.value["position"] if b.block_type == "image_positionnee" else b.block_type for b in news.corps_affichage]
+
+    def test_image_flottante_apres_le_texte_remontee(self):
+        """Image à droite ajoutée après le dernier paragraphe : affichée avant
+        lui, pour que le texte l'entoure (et non à côté du bandeau de partage)."""
+        self.assertEqual(self._ordre_affichage("paragraph", "droite"), ["droite", "paragraph"])
+        self.assertEqual(
+            self._ordre_affichage("heading", "paragraph", "gauche", "droite", "heading"),
+            ["heading", "gauche", "droite", "paragraph", "heading"],
+        )
+
+    def test_ordre_garde_si_texte_apres_ou_pleine_largeur(self):
+        self.assertEqual(self._ordre_affichage("paragraph", "gauche", "paragraph"), ["paragraph", "gauche", "paragraph"])
+        self.assertEqual(self._ordre_affichage("paragraph", "pleine"), ["paragraph", "pleine"])
+        self.assertEqual(self._ordre_affichage("heading", "droite"), ["heading", "droite"])
+
+
 class NettoyeurTexteEnrichiTests(TestCase):
 
     def test_conversions(self):

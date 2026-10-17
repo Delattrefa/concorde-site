@@ -209,6 +209,28 @@ class NewsPage(SeoMixin, Page):
         context["peut_supprimer"] = self.peut_etre_supprimee_par(request.user)
         return context
 
+    @property
+    def corps_affichage(self):
+        """Blocs du corps dans l'ordre d'affichage. Une image à gauche ou à
+        droite (CSS float) ne s'habille que du texte qui la suit : placée
+        après le dernier paragraphe, elle se retrouverait sous le texte, à
+        côté du bandeau de partage. Sans paragraphe juste après elle, elle
+        est donc affichée avant le paragraphe qui la précède."""
+        blocs = list(self.body)
+
+        def flottante(bloc):
+            return bloc.block_type == "image_positionnee" and bloc.value["position"] in ("gauche", "droite")
+
+        resultat = []
+        for index, bloc in enumerate(blocs):
+            suivant = blocs[index + 1] if index + 1 < len(blocs) else None
+            texte_apres = suivant is not None and suivant.block_type == "paragraph"
+            if flottante(bloc) and not texte_apres and resultat and resultat[-1].block_type == "paragraph":
+                resultat.insert(len(resultat) - 1, bloc)
+            else:
+                resultat.append(bloc)
+        return resultat
+
     def peut_etre_modifiee_par(self, user):
         """Depuis le site, un administrateur (is_staff) peut modifier toutes
         les actualités, y compris celles créées dans l'admin Wagtail ; un

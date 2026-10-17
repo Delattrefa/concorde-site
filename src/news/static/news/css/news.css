@@ -132,7 +132,7 @@
 .image-positionnee figcaption { margin-top: 6px; font-size: .85rem; color: #8a7a7a; font-style: italic; }
 .image-positionnee--gauche { float: left; width: 45%; margin: 6px 26px 16px 0; }
 .image-positionnee--droite { float: right; width: 45%; margin: 6px 0 16px 26px; }
-.news-body h2, .news-body .quote-block { clear: both; }
+.news-body h2, .news-body .quote-block, .news-body__lien, .news-body .partage, .news-body__actions { clear: both; }
 @media (max-width: 600px) {
     .image-positionnee--gauche, .image-positionnee--droite { float: none; width: auto; margin: 8px 0 22px; }
 }
