@@ -1,4 +1,6 @@
-# Les contrats de location contiennent des données personnelles.
-# Accès direct interdit : téléchargement uniquement via le site, par un
-# administrateur connecté (/calendrier/reservation/<id>/contrat/pdf/).
+# Les contrats de location contiennent des données personnelles, et le
+# sous-dossier signatures/ les signatures du délégué (collection Wagtail
+# « Calendrier › Signature »). Accès direct interdit : contrats téléchargés
+# uniquement via le site, par un administrateur connecté
+# (/calendrier/reservation/<id>/contrat/pdf/).
 Require all denied

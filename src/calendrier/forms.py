@@ -228,16 +228,14 @@ class ReservationTraitementForm(forms.ModelForm):
         fields = ["statut"]
 
 
-NOM_COLLECTION_SIGNATURES = "Signature"
-
-
 def images_de_signature():
-    """Images de la collection « Signature » de la médiathèque Wagtail."""
+    """Images de la collection « Calendrier › Signature » de la médiathèque
+    Wagtail (voir calendrier/collections.py)."""
     from wagtail.images import get_image_model
 
-    return get_image_model().objects.filter(
-        collection__name__iexact=NOM_COLLECTION_SIGNATURES
-    ).order_by("title")
+    from .collections import collection_signatures
+
+    return get_image_model().objects.filter(collection=collection_signatures()).order_by("title")
 
 
 class ChoixSignatureWidget(forms.RadioSelect):

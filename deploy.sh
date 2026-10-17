@@ -19,9 +19,19 @@ echo "→ Dépendances"
 source "$VENV"
 pip install --quiet -r requirements.txt
 
-echo "→ Base de données et fichiers statiques"
+echo "→ Base de données"
 cd "$APP"
 python manage.py migrate --noinput
+
+echo "→ Protection des contrats et des signatures (dossier interdit depuis Internet)"
+MEDIA_ROOT=$(python -c "from django.conf import settings; import django; django.setup(); print(settings.MEDIA_ROOT)")
+mkdir -p "$MEDIA_ROOT/contrats_location"
+cp "$PROJET/deploiement/htaccess-contrats" "$MEDIA_ROOT/contrats_location/.htaccess"
+
+echo "→ Médiathèque : collections Calendrier › Signature et protection des signatures"
+python manage.py preparer_collections
+
+echo "→ Fichiers statiques"
 python manage.py collectstatic --noinput
 
 echo "→ Slugs des pages sans accents (URL accentuées non servies par o2switch)"
@@ -29,11 +39,6 @@ python manage.py convertir_slugs_ascii
 
 echo "→ Index de la recherche du site"
 python manage.py update_index > /dev/null
-
-echo "→ Protection des contrats de location"
-MEDIA_ROOT=$(python -c "from django.conf import settings; import django; django.setup(); print(settings.MEDIA_ROOT)")
-mkdir -p "$MEDIA_ROOT/contrats_location"
-cp "$PROJET/deploiement/htaccess-contrats" "$MEDIA_ROOT/contrats_location/.htaccess"
 
 echo "→ Redémarrage de l'application"
 mkdir -p "$APP/tmp"

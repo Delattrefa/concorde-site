@@ -373,6 +373,44 @@ Les tentatives échouées sont consultables dans l'administration Django
 
 ---
 
+## Médiathèque : signatures des contrats (octobre 2026)
+
+À chaque déploiement, `deploy.sh` lance `python manage.py preparer_collections`,
+qui ne fait rien si tout est déjà en ordre :
+
+- crée les collections **Calendrier** et **Calendrier › Signature** si elles
+  manquent (une collection « Signature » rangée ailleurs est déplacée, avec
+  ses images) ;
+- réserve **Signature** aux super-utilisateurs dans l'admin Wagtail. Wagtail
+  fait hériter les droits d'une collection à ses sous-collections : les
+  droits des groupes (Editors, Moderators…) sur les images de *Root* ou de
+  *Calendrier* sont donc reportés sur les autres collections. Conséquence :
+  les images rangées directement dans *Root* ou dans *Calendrier* ne sont
+  plus visibles que des super-utilisateurs ;
+- range le fichier de chaque signature dans `media/contrats_location/signatures/`
+  sous un nom aléatoire (dossier interdit depuis Internet par le même
+  `.htaccess` que les contrats). Une image ajoutée plus tard dans la
+  collection Signature est rangée aussitôt.
+
+Une **nouvelle collection** créée plus tard à la racine n'est accessible
+qu'aux super-utilisateurs : donner les droits aux groupes dans
+*Paramètres → Groupes → Editors → Permissions sur les collections d'images*.
+
+**Vérification indispensable** (une fois) : le dossier des contrats doit
+être interdit depuis Internet (réponse 403) :
+
+```bash
+MEDIA_ROOT=$(grep ^MEDIA_ROOT= ~/concorde/src/.env | cut -d= -f2)
+echo test > "$MEDIA_ROOT/contrats_location/test.txt"
+curl -s -o /dev/null -w "%{http_code}\n" https://www.la-concorde.be/media/contrats_location/test.txt
+rm "$MEDIA_ROOT/contrats_location/test.txt"
+```
+
+Si le résultat est 200, les contrats et les signatures sont lisibles par
+n'importe qui : prévenir le responsable technique.
+
+---
+
 ## Dépannage
 
 | Symptôme | Cause probable / solution |
@@ -388,6 +426,7 @@ Les tentatives échouées sont consultables dans l'administration Django
 | Première ouverture d'un album très lente | Miniatures pas encore générées : `python manage.py generer_miniatures` (voir « Galerie : envoi par lots et miniatures »). |
 | Page en erreur 404 alors qu'elle existe | Slug accentué (o2switch ne sert pas les URL accentuées) : `python manage.py convertir_slugs_ascii` (lancé aussi par `deploy.sh`). Les nouveaux slugs sont convertis automatiquement dans l'administration. |
 | Page « Connexion bloquée » | 5 mots de passe erronés depuis la même adresse IP : patienter 15 minutes, ou débloquer en SSH avec `python manage.py axes_reset_ip <adresse IP>` (`axes_reset` débloque tout le monde). |
+| Un administrateur ne voit plus certaines images dans Wagtail | Images rangées directement dans *Root* ou *Calendrier* : réservées aux super-utilisateurs depuis la protection des signatures. Les déplacer dans une autre collection (ex. « images du site »). |
 | Modifications non visibles | `touch ~/concorde/src/tmp/restart.txt`, ou bouton *Restart* dans Setup Python App. |
 
 Sauvegardes : o2switch sauvegarde le compte chaque jour (outil *JetBackup*

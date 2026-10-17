@@ -87,7 +87,14 @@ class AjoutPhotosForm(forms.Form):
         super().__init__(*args, **kwargs)
         from wagtail.models import Collection
 
+        from calendrier.collections import collection_signatures
+
         collections = Collection.objects.all().order_by("path")
+        # Les signatures des contrats ne se rangent pas avec les photos
+        # d'album (leurs fichiers sont inaccessibles depuis Internet).
+        signature = collection_signatures()
+        if signature is not None:
+            collections = collections.exclude(pk=signature.pk)
         self.fields["collection"].queryset = collections
         self.fields["collection"].label_from_instance = lambda c: ("— " * (c.depth - 1)) + c.name
         # Collection « Galerie » proposée par défaut si elle existe

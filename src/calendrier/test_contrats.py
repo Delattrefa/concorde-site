@@ -28,7 +28,7 @@ from .contrats import (
     _ligne_en_balisage, _mise_en_forme_date, _montant, _texte_vers_elements,
     generer_pdf_contrat, nom_fichier_contrat, variables_inconnues,
 )
-from .forms import NOM_COLLECTION_SIGNATURES
+from .collections import preparer_collections, collection_signatures
 from .models import AnnexeContrat, ArticleContrat, ContratLocation, MiseEnPageContrat, Reservation
 
 
@@ -239,8 +239,8 @@ class GenerationPdfTests(TestCase):
         sans_images = _pages(self._generer(annexes=[]))
         self.assertEqual(sum(len(p.images) for p in sans_images), 0)
 
-        racine = Collection.get_first_root_node()
-        collection = racine.add_child(name=NOM_COLLECTION_SIGNATURES)
+        preparer_collections()
+        collection = collection_signatures()
         self.contrat.signature = get_image_model().objects.create(
             title="Signature Jean", collection=collection,
             file=SimpleUploadedFile("signature.png", _png(), content_type="image/png"),
@@ -332,7 +332,8 @@ class VuesContratTests(TestCase):
         self.assertEqual(self.client.get(self.url_pdf).status_code, 404)
 
     def test_nouveau_contrat_propose_la_derniere_signature(self):
-        collection = Collection.get_first_root_node().add_child(name=NOM_COLLECTION_SIGNATURES)
+        preparer_collections()
+        collection = collection_signatures()
         signature = get_image_model().objects.create(
             title="Signature Jean", collection=collection,
             file=SimpleUploadedFile("signature.png", _png(), content_type="image/png"),
