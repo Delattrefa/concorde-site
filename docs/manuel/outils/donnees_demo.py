@@ -127,6 +127,32 @@ if not Newsletter.objects.filter(titre="Newsletter de novembre 2026").exists():
         ],
     )
 
+# --- Actualité composée avec l'éditeur par blocs du site -------------------
+from news.models import NewsIndexPage as _IndexActus, NewsPage as _Actu  # noqa: E402
+from wagtail.images import get_image_model as _modele_image  # noqa: E402
+
+TITRE_ACTU_BLOCS = "Le Blé qui Lève prépare La Martingale"
+if not _Actu.objects.filter(title=TITRE_ACTU_BLOCS).exists():
+    _photo = _modele_image().objects.filter(collection__name__iexact="La bonne adresse").first() or _modele_image().objects.first()
+    _actu = _Actu(
+        title=TITRE_ACTU_BLOCS, slug="ble-qui-leve-prepare-la-martingale", date=dt.date(2026, 10, 5),
+        author="Marie Dupont", intro="Les répétitions battent leur plein avant les représentations de novembre.",
+        cree_par=User.objects.get(username="secretariat"),
+    )
+    _actu.body = [
+        ("paragraph", "<p>Depuis la rentrée, la troupe du <b>Blé qui Lève</b> se retrouve deux soirs par "
+                      "semaine à la salle La Concorde pour préparer <i>La Martingale</i>.</p>"),
+        ("image_positionnee", {"image": _photo, "position": "gauche", "legende": "Répétition du mardi soir"}),
+        ("paragraph", "<p>Décors, costumes, éclairages : chacun met la main à la pâte. Les comédiens "
+                      "peaufinent leurs répliques sous l'œil attentif de la metteuse en scène, et les "
+                      "bénévoles montent le décor du salon bourgeois où se déroule la pièce.</p>"
+                      "<p>Rendez-vous les 20, 21 et 22 novembre pour découvrir le résultat. Les "
+                      "réservations sont ouvertes dès maintenant.</p>"),
+        ("quote", {"text": "On a hâte de retrouver notre public !", "attribution": "La troupe"}),
+    ]
+    _IndexActus.objects.first().add_child(instance=_actu)
+    _actu.save_revision().publish()
+
 # --- Identifiants utiles aux captures (lus par captures.py) -----------------
 from pathlib import Path  # noqa: E402
 
@@ -154,6 +180,8 @@ ids = {
     "accueil": NewsPage.objects.first().get_parent().get_parent().pk,
     "activite_privee": activite_privee.pk if activite_privee else None,
     "menu": MainMenu.objects.first().pk,
+    "actualite_blocs": NewsPage.objects.get(title=TITRE_ACTU_BLOCS).pk,
+    "actualite_blocs_url": NewsPage.objects.get(title=TITRE_ACTU_BLOCS).url,
 }
 fichier = Path(connection.settings_dict["NAME"]).parent / "ids.json"
 fichier.write_text(json.dumps(ids, indent=2, ensure_ascii=False))

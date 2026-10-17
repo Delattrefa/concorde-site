@@ -122,7 +122,7 @@
     <li><a href="#ch3">Le site public, page par page</a><span class="desc">Accueil, News, Médias, Info, Contact, Newsletter, recherche, pages libres</span></li>
     <li><a href="#ch4">Calendrier et activités</a><span class="desc">Consulter le calendrier, ajouter, modifier ou supprimer une activité</span></li>
     <li><a href="#ch5">Location de la salle</a><span class="desc">Demandes, validation, contrat de location PDF, suivi des paiements, contrat-type</span></li>
-    <li><a href="#ch6">Les actualités (News)</a><span class="desc">Proposer, valider, modifier et supprimer une actualité</span></li>
+    <li><a href="#ch6">Les actualités (News)</a><span class="desc">Rédiger avec l'éditeur par blocs, placer les images, mettre à la une, valider, modifier</span></li>
     <li><a href="#ch7">Médias : albums photos et vidéos</a><span class="desc">Créer un album, envoyer des photos par lots, ajouter une vidéo</span></li>
     <li><a href="#ch8">L'application Théâtre</a><span class="desc">Représentations, réservations, plan de salle, contrôle d'entrée, ventes flash, tickets</span></li>
     <li><a href="#ch9">La newsletter</a><span class="desc">Inscriptions, abonnés, rédaction, envoi de test et envoi aux abonnés</span></li>
@@ -336,6 +336,8 @@
     <li>le <strong>montant de la location</strong> et le <strong>montant de la caution</strong> ;</li>
     <li>facultativement, la <strong>signature</strong> scannée du délégué (sinon : signature à la main).</li>
   </ul>
+  <div class="encart astuce"><span class="t">Les signatures scannées</span>
+    <p>Les signatures proposées sont les images de la collection <em>Calendrier › Signature</em> de la médiathèque Wagtail. Pour en ajouter une, un <strong>super-utilisateur</strong> l'envoie dans Wagtail (<em>Images → Ajouter une image</em>, collection « Signature »). Ces images sont protégées : seuls les super-utilisateurs les voient dans Wagtail, et leur fichier n'est pas accessible depuis Internet.</p></div>
   <figure><img src="img/admin_contrat_form.jpg"><figcaption>Le formulaire du contrat de location, pré-rempli à partir de la réservation.</figcaption></figure>
   <p>À l'enregistrement, le site produit un <strong>PDF complet</strong> (parties, dates, locaux, montants, articles, puis les annexes : mobilier, vaisselle, conditions de bruit), nommé par exemple <code>Contrat de location - Vandenberghe Sarah - 2026-11-07.pdf</code>. Il reste téléchargeable depuis la fiche de la réservation, et peut être modifié puis régénéré à tout moment.</p>
   <div class="duo">
@@ -370,17 +372,48 @@
   <div class="bandeau"><div class="num">Chapitre 6</div><h1>Les actualités (News)</h1>
     <p>Partager un événement, une affiche ou un compte rendu, directement depuis le site.</p></div>
 
-  <h2>Proposer une actualité depuis le site</h2>
+  <p>Les actualités se rédigent et se modifient <strong>entièrement depuis le site</strong>, sans passer par Wagtail. Seule la page « News » elle-même (et sa place dans le menu) se gère dans Wagtail.</p>
+
+  <h2>Proposer ou publier une actualité</h2>
   <ol class="etapes">
     <li>Connectez-vous et ouvrez la page <strong>News</strong>.</li>
     <li>Cliquez sur <span class="btn">+ Proposer une actualité</span>.</li>
-    <li>Remplissez le <strong>titre</strong>, le <strong>résumé court</strong> (affiché dans la liste), le <strong>contenu</strong>, l'<strong>image mise en avant</strong> (facultative) et, si besoin, un <strong>lien</strong> (texte + adresse).</li>
+    <li>Remplissez le <strong>titre</strong>, la <strong>date de publication</strong> (aujourd'hui par défaut ; elle sert à trier les actualités), l'<strong>auteur</strong> (votre nom par défaut) et le <strong>résumé court</strong> (affiché dans la liste, sur l'accueil et dans les partages).</li>
+    <li>Ajoutez si besoin l'<strong>image mise en avant</strong> : grande image en haut de l'article et vignette dans la liste.</li>
+    <li>Composez le <strong>contenu de l'article</strong> avec l'éditeur par blocs (ci-dessous).</li>
+    <li>Ajoutez éventuellement des <strong>mots-clés</strong> (séparés par des virgules) et un <strong>lien</strong> mis en avant (texte + adresse, par exemple vers la billetterie).</li>
     <li>Cliquez sur <span class="btn">Envoyer pour validation</span> (« Publier l'actualité » pour un administrateur).</li>
   </ol>
   <div class="duo">
     <figure><img src="img/membre_actualites.jpg"><figcaption>Le bouton « Proposer une actualité », visible une fois connecté.</figcaption></figure>
-    <figure><img src="img/membre_ajout_actualite.jpg"><figcaption>Le formulaire simplifié de proposition.</figcaption></figure>
+    <figure><img src="img/membre_ajout_actualite.jpg"><figcaption>Le formulaire d'une actualité.</figcaption></figure>
   </div>
+
+  <h2>Composer l'article : l'éditeur par blocs</h2>
+  <p>L'article est une <strong>suite de blocs</strong>. Les boutons <strong>Ajouter</strong>, en bas de l'éditeur, en ajoutent un à la fin ; les flèches <strong>↑ ↓</strong> le déplacent, la croix <strong>✕</strong> le retire.</p>
+  <table>
+    <tr><th style="width:22%">Bloc</th><th>Contenu</th></tr>
+    <tr><td><strong>Texte</strong></td><td>Paragraphes, avec la barre d'outils : <strong>G</strong> (gras), <em>I</em> (italique), listes à puces ou numérotées, <strong>Lien</strong> (sélectionnez d'abord le texte, puis indiquez l'adresse). Entrée crée un nouveau paragraphe. Un texte collé depuis un autre site perd sa mise en forme.</td></tr>
+    <tr><td><strong>Intertitre</strong></td><td>Un titre de section à l'intérieur de l'article.</td></tr>
+    <tr><td><strong>Image</strong></td><td><span class="btn">Choisir une photo</span> l'envoie aussitôt (20 Mo au maximum). Choisissez sa <strong>position</strong> et, si vous le souhaitez, une <strong>légende</strong>.</td></tr>
+    <tr><td><strong>Citation</strong></td><td>Une phrase mise en valeur, avec son auteur ou sa source.</td></tr>
+    <tr><td><strong>Encart</strong></td><td>Un cadre coloré avec un titre et un texte : horaires, tarifs, informations pratiques.</td></tr>
+    <tr><td><strong>Lien utile</strong></td><td>Un lien présenté comme un bouton (texte + adresse complète, commençant par https://).</td></tr>
+  </table>
+  <figure class="haute"><img src="img/admin_editeur_actualite.jpg"><figcaption>L'éditeur par blocs : texte, image placée à gauche avec sa légende, texte, citation.</figcaption></figure>
+
+  <h3>Placer les images</h3>
+  <ul>
+    <li><strong>Pleine largeur</strong> : l'image occupe toute la largeur de l'article.</li>
+    <li><strong>À gauche</strong> ou <strong>À droite</strong> : l'image occupe un peu moins de la moitié de la largeur, et le <strong>bloc de texte qui la suit</strong> l'entoure. Placez donc le bloc Image juste <em>avant</em> le texte qui doit l'entourer.</li>
+    <li>Sur téléphone, toutes les images s'affichent en pleine largeur.</li>
+  </ul>
+  <figure><img src="img/actualite_blocs.jpg"><figcaption>Le résultat sur le site : le texte entoure l'image placée à gauche.</figcaption></figure>
+  <div class="encart exemple"><span class="t">Exemple : un compte rendu avec trois photos</span>
+    <ol><li>Bloc Texte : l'introduction.</li><li>Bloc Image « À droite », puis un bloc Texte qui l'entoure.</li><li>Bloc Image « À gauche », puis un autre bloc Texte.</li><li>Bloc Image « Pleine largeur » pour la photo de groupe finale, avec sa légende.</li></ol></div>
+
+  <h2>Mettre une actualité « À la une »</h2>
+  <p>La page d'accueil montre normalement la <strong>dernière actualité</strong> des 30 derniers jours. Cochez <strong>À la une</strong> pour y afficher une actualité précise à la place, <strong>quelle que soit sa date</strong> ; la section s'intitule alors « À la une ». Si plusieurs actualités sont cochées, la plus récente l'emporte : pour en mettre une autre en avant, il suffit de la cocher. Décochez-la pour revenir à l'affichage habituel.</p>
 
   <h2>Le circuit de validation</h2>
   <ul>
@@ -388,17 +421,21 @@
     <li>Celle d'un <strong>membre</strong> part en validation : elle n'est visible qu'après approbation. Le membre voit ses actualités en attente sur la page News.</li>
     <li>Les <strong>modérateurs</strong> (groupe « Moderators » et super-utilisateurs) reçoivent un e-mail et la retrouvent dans le tableau de bord Wagtail, rubrique « En attente de votre relecture », où ils peuvent l'<strong>approuver</strong> ou la <strong>renvoyer</strong> avec un commentaire.</li>
     <li>Une modification d'une actualité déjà publiée suit le même circuit : la version en ligne reste visible jusqu'à l'approbation.</li>
+    <li>Un administrateur qui modifie depuis le site l'actualité d'un membre en attente la <strong>publie</strong> : sa modification vaut validation.</li>
   </ul>
 
   <h2>Modifier ou supprimer</h2>
-  <p>Sur le site, l'auteur voit les boutons <strong>Modifier</strong> et <strong>Supprimer</strong> sur ses propres actualités. Dans Wagtail (<em>Pages → Accueil → News</em>), un éditeur peut modifier toutes les actualités, avec une mise en forme plus riche : date de publication, mots-clés, citations, images dans le texte, encarts.</p>
-  <figure><img src="img/wagtail_edit_actualite.jpg"><figcaption>Édition d'une actualité dans Wagtail.</figcaption></figure>
-  <div class="encart attention"><span class="t">Attention à la mise en forme avancée</span>
-    <p>Une actualité enrichie dans Wagtail (citations, images dans le texte, encarts) doit être modifiée dans Wagtail : le formulaire simplifié du site ne conserve que les paragraphes de texte.</p></div>
+  <ul>
+    <li><strong>Modifier</strong> : l'auteur voit le lien sur ses propres actualités ; un <strong>administrateur</strong> le voit sur <strong>toutes</strong> les actualités, y compris les plus anciennes créées dans Wagtail. Tout se retrouve dans l'éditeur (les anciennes images deviennent des images en pleine largeur).</li>
+    <li><strong>Supprimer</strong> : depuis le site, seul l'auteur peut supprimer son actualité. Les autres se suppriment dans Wagtail (<em>Pages → Accueil → News</em>).</li>
+  </ul>
+  <div class="encart astuce"><span class="t">Et Wagtail ?</span>
+    <p>L'édition dans Wagtail reste possible en secours (<em>Pages → Accueil → News</em>), avec les mêmes blocs. Le site reste toutefois l'outil habituel : plus simple, il gère aussi l'envoi des photos.</p></div>
   <div class="encart astuce"><span class="t">Conseils de rédaction</span>
     <ul><li>Un titre court et précis (« Marché de Noël 2026 » plutôt que « Info »).</li>
     <li>Un résumé d'une ou deux phrases : c'est lui qui apparaît sur l'accueil et dans les partages.</li>
     <li>Une image au format paysage ou une affiche : elle sert de vignette.</li>
+    <li>Des photos légères (quelques Mo) : elles s'envoient plus vite, surtout depuis un téléphone.</li>
     <li>Quelques mots-clés récurrents (#théâtre, #carnaval…) pour que le filtre reste utile.</li></ul></div>
 </section>
 
@@ -575,6 +612,8 @@
   <h2>Les images</h2>
   <p><em>Images</em> rassemble toutes les photos du site. On peut y ajouter une image, la renommer, la ranger dans une collection et définir son <strong>point d'intérêt</strong> (la zone à garder visible quand l'image est recadrée).</p>
   <figure class="basse"><img src="img/wagtail_images.jpg"><figcaption>La bibliothèque d'images.</figcaption></figure>
+  <div class="encart attention"><span class="t">Collections réservées</span>
+    <p>La collection <em>Calendrier › Signature</em> contient les signatures des contrats : elle n'est visible que des super-utilisateurs, et ses fichiers ne sont pas accessibles depuis Internet. N'y rangez jamais de photos destinées au site. Les images rangées directement dans <em>Root</em> ou <em>Calendrier</em> ne sont, elles aussi, visibles que des super-utilisateurs : rangez les photos du site dans une autre collection (par exemple « images du site »).</p></div>
 
   <h2>Le menu principal et le pied de page</h2>
   <p>Dans <em>Fragments → Menu principal</em>, chaque élément a un <strong>libellé</strong>, une <strong>page du site</strong> (ou une adresse externe) et, facultativement, un <strong>sous-menu déroulant</strong>. Les flèches ↑ ↓ changent l'ordre. Le lien « Réservations » (calendrier) et le menu « Théâtre » sont ajoutés automatiquement : inutile de les créer. Le pied de page se gère de la même façon dans <em>Fragments → Liens du pied de page</em>.</p>
@@ -639,7 +678,7 @@
   <h3>« Le bouton Valider ne fonctionne pas pour une demande de location. »</h3>
   <p>Un message rouge indique que la salle est déjà occupée à ces dates (activité ou autre location). Libérez d'abord la date (déplacer l'activité, annuler l'autre location) ou contactez le demandeur pour une autre date.</p>
   <h3>« Mon actualité n'apparaît pas sur le site. »</h3>
-  <p>Si vous êtes membre, elle attend la validation d'un modérateur : elle apparaît dans « vos actualités en attente » sur la page News. Si elle est publiée mais absente de l'accueil, c'est qu'elle date de plus de 30 jours (la section « Dernière actualité » ne montre que les actualités récentes).</p>
+  <p>Si vous êtes membre, elle attend la validation d'un modérateur : elle apparaît dans « vos actualités en attente » sur la page News. Si elle est publiée mais absente de l'accueil, c'est qu'elle date de plus de 30 jours (la section « Dernière actualité » ne montre que les actualités récentes), ou qu'une autre actualité est cochée « À la une ». Cochez « À la une » pour l'y afficher quelle que soit sa date.</p>
   <h3>« J'ai modifié une page mais rien n'a changé. »</h3>
   <p>Vous avez sans doute cliqué sur « Enregistrer le brouillon ». Ouvrez le menu du bouton vert et cliquez sur <strong>Publier</strong>.</p>
   <h3>« Une activité privée est visible du public ! »</h3>

@@ -55,6 +55,26 @@ def shot(page, nom, url=None, hauteur=None, avant=None):
     print("ok", nom)
 
 
+def shot_element(page, nom, url, selecteur, marge=12):
+    """Capture un seul élément de la page (avec une petite marge)."""
+    if not voulu(nom):
+        return
+    page.goto(BASE + quote(url, safe="/?=&%#"), wait_until="networkidle")
+    element = page.locator(selecteur).first
+    # Défilement jusqu'à l'élément (chargement des images), puis retour en
+    # haut : la barre de menu fixe ne recouvre plus l'élément capturé.
+    element.scroll_into_view_if_needed()
+    page.wait_for_timeout(1200)
+    page.evaluate("window.scrollTo(0, 0)")
+    page.wait_for_timeout(500)
+    boite = element.bounding_box()
+    page.screenshot(path=BRUT / f"{nom}.png", full_page=True, clip={
+        "x": max(0, boite["x"] - marge), "y": max(0, boite["y"] - marge),
+        "width": boite["width"] + 2 * marge, "height": boite["height"] + 2 * marge,
+    })
+    print("ok", nom)
+
+
 def connecter(ctx, utilisateur):
     page = ctx.new_page()
     page.goto(BASE + "/connexion/")
@@ -134,6 +154,7 @@ with sync_playwright() as p:
     shot(page, "pied_de_page", "/", avant=defiler(99999))
     shot(page, "actualites", "/news/", hauteur=1500)
     shot(page, "actualite_detail", IDS["actualite_url"], hauteur=1400)
+    shot_element(page, "actualite_blocs", IDS["actualite_blocs_url"], ".news-body")
     shot(page, "medias", "/medias/", hauteur=1300)
     shot(page, "lightbox", album, avant=ouvrir_visionneuse)
     shot(page, "calendrier_public", "/calendrier/2026/11/", hauteur=1300)
@@ -186,6 +207,9 @@ with sync_playwright() as p:
     shot(page, "admin_paiements", "/calendrier/reservation/paiements/", hauteur=1100)
     shot(page, "admin_contrat_type", "/calendrier/contrat-type/", hauteur=1500)
     shot(page, "admin_mise_en_page", "/calendrier/contrat-type/mise-en-page/", hauteur=1300)
+
+    # Actualités : éditeur par blocs
+    shot_element(page, "admin_editeur_actualite", f"/modifier-actualite/{IDS['actualite_blocs']}/", "[data-editeur]")
 
     # Médias
     shot(page, "album", album, hauteur=1500)
