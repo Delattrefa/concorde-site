@@ -68,6 +68,9 @@ class NewsIndexPage(SeoMixin, Page):
             all_tags.extend([t.name for t in post.tags.all()])
         context["all_tags"] = sorted(set(all_tags), key=str.lower)
 
+        # Libellé du bouton : « Publier » (droit de publier) ou « Proposer »
+        context["publie_directement"] = self.permissions_for_user(request.user).can_publish_subpage()
+
         # Actualités de l'utilisateur connecté en attente de validation :
         # nouvelles (hors ligne) ou modifiées (version en ligne inchangée).
         if request.user.is_authenticated:

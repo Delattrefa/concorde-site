@@ -15,6 +15,7 @@ import json
 from datetime import date, timedelta
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core import mail
 from django.test import TestCase, override_settings
@@ -53,6 +54,8 @@ class ValidationActualitesTests(TestCase):
         self.membre = Utilisateur.objects.create_user("membre", "membre@exemple.be", "mdp")
         self.autre_membre = Utilisateur.objects.create_user("autre", "autre@exemple.be", "mdp")
         self.admin = Utilisateur.objects.create_user("admin", "admin@exemple.be", "mdp", is_staff=True)
+        # Droit Wagtail de publier (groupe créé par les migrations de Wagtail)
+        self.admin.groups.add(Group.objects.get(name="Moderators"))
         self.superadmin = Utilisateur.objects.create_superuser("super", "super@exemple.be", "mdp")
 
         racine = Page.objects.get(depth=1)
@@ -103,6 +106,23 @@ class ValidationActualitesTests(TestCase):
         self.assertRedirects(reponse, news.url, fetch_redirect_response=False)
         self.assertIsNone(news.current_workflow_state)
         self.assertTrue(self._visible_sur_le_site(news))
+
+    def test_administrateur_du_calendrier_sans_droit_de_publier_passe_par_la_validation(self):
+        """is_staff (calendrier, modification de toutes les actualités depuis
+        le site) sans le droit Wagtail de publier : ses actualités et ses
+        modifications attendent la validation."""
+        gestionnaire = get_user_model().objects.create_user("calendrier", "cal@exemple.be", "mdp", is_staff=True)
+        _reponse, la_sienne = self._proposer(gestionnaire, titre="Souper")
+        self.assertFalse(la_sienne.live)
+        self.assertEqual(la_sienne.current_workflow_state.status, WorkflowState.STATUS_IN_PROGRESS)
+        self.assertContains(self.client.get(self.index.url), "Proposer une actualité")
+
+        _reponse, news = self._proposer(self.admin)
+        self.client.force_login(gestionnaire)
+        self._modifier(news, "Titre corrigé")
+        news.refresh_from_db()
+        self.assertEqual(news.title, "Fête du village")  # version en ligne inchangée
+        self.assertEqual(news.current_workflow_state.status, WorkflowState.STATUS_IN_PROGRESS)
 
     # ── Membre : validation obligatoire ───────────────────────────────────
 
@@ -273,6 +293,8 @@ class ALaUneTests(TestCase):
         Site.objects.all().delete()
         Site.objects.create(hostname="testserver", root_page=self.accueil, is_default_site=True)
         self.admin = get_user_model().objects.create_user("admin", "admin@exemple.be", "mdp", is_staff=True)
+        # Droit Wagtail de publier (groupe créé par les migrations de Wagtail)
+        self.admin.groups.add(Group.objects.get(name="Moderators"))
 
     def _actualite(self, titre, il_y_a_jours, a_la_une=False):
         return self.index.add_child(instance=NewsPage(
@@ -330,6 +352,8 @@ class EditeurBlocsTests(TestCase):
         Site.objects.create(hostname="testserver", root_page=self.index, is_default_site=True)
         Utilisateur = get_user_model()
         self.admin = Utilisateur.objects.create_user("admin", "admin@exemple.be", "mdp", is_staff=True)
+        # Droit Wagtail de publier (groupe créé par les migrations de Wagtail)
+        self.admin.groups.add(Group.objects.get(name="Moderators"))
         self.client.force_login(self.admin)
 
     def _publier(self, **champs):

@@ -417,11 +417,11 @@
 
   <h2>Le circuit de validation</h2>
   <ul>
-    <li>L'actualité d'un <strong>administrateur</strong> est publiée immédiatement.</li>
-    <li>Celle d'un <strong>membre</strong> part en validation : elle n'est visible qu'après approbation. Le membre voit ses actualités en attente sur la page News.</li>
+    <li>L'actualité d'un <strong>modérateur</strong> (groupe « Moderators » ou super-utilisateur) est publiée immédiatement.</li>
+    <li>Celle d'un <strong>membre</strong>, ou d'un administrateur du calendrier qui n'est pas modérateur, part en validation : elle n'est visible qu'après approbation. Le membre voit ses actualités en attente sur la page News.</li>
     <li>Les <strong>modérateurs</strong> (groupe « Moderators » et super-utilisateurs) reçoivent un e-mail et la retrouvent dans le tableau de bord Wagtail, rubrique « En attente de votre relecture », où ils peuvent l'<strong>approuver</strong> ou la <strong>renvoyer</strong> avec un commentaire.</li>
     <li>Une modification d'une actualité déjà publiée suit le même circuit : la version en ligne reste visible jusqu'à l'approbation.</li>
-    <li>Un administrateur qui modifie depuis le site l'actualité d'un membre en attente la <strong>publie</strong> : sa modification vaut validation.</li>
+    <li>Un modérateur qui modifie depuis le site l'actualité d'un membre en attente la <strong>publie</strong> : sa modification vaut validation.</li>
   </ul>
 
   <h2>Modifier ou supprimer</h2>
@@ -655,7 +655,8 @@
   <table>
     <tr><th style="width:30%">Pour…</th><th>Sur la fiche de l'utilisateur</th></tr>
     <tr><td>Un <strong>membre</strong> simple</td><td>Laissez « Actif » coché, rien d'autre.</td></tr>
-    <tr><td>Un <strong>administrateur</strong> (location, contrats, photos, publication directe)</td><td>Cochez <strong>Statut équipe</strong>. Pour l'accès à Wagtail, ajoutez-le au groupe <strong>Editors</strong> (ou Moderators).</td></tr>
+    <tr><td>Un <strong>administrateur</strong> (calendrier, location, contrats, photos, publication directe des actualités)</td><td>Cochez <strong>Statut équipe</strong> et ajoutez-le au groupe <strong>Moderators</strong>.</td></tr>
+    <tr><td>Un <strong>administrateur du calendrier</strong> dont les actualités passent par la validation</td><td>Cochez <strong>Statut équipe</strong>, sans le groupe Moderators. Il gère tout le calendrier (demandes de location, contrats, activités) et peut modifier toutes les actualités depuis le site, mais ses actualités et ses modifications attendent l'approbation d'un modérateur. Pour l'accès à Wagtail, ajoutez-le au groupe <strong>Editors</strong> (facultatif).</td></tr>
     <tr><td>Un <strong>modérateur</strong> des actualités</td><td>Groupe <strong>Moderators</strong> : il reçoit un e-mail à chaque actualité proposée et peut l'approuver.</td></tr>
     <tr><td>L'<strong>accès au Théâtre</strong></td><td>Section « Permissions de l'utilisateur » : ajoutez <em>theatre | acces application | Peut accéder à l'application Théâtre</em>.</td></tr>
     <tr><td>Un <strong>super-utilisateur</strong></td><td>« Statut super-utilisateur » : tous les droits. À limiter à une ou deux personnes de confiance.</td></tr>

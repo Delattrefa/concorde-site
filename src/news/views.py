@@ -7,9 +7,11 @@ citations, encarts, liens), composé avec l'éditeur par blocs.
 
 Règle de permission (CREATE/UPDATE/DELETE) :
 - Tout utilisateur connecté peut proposer une actualité.
-- Celle d'un administrateur (is_staff) est publiée immédiatement. Celle d'un
-  autre membre est soumise à validation : elle n'est visible sur le site
-  qu'après approbation par un administrateur, depuis l'admin Wagtail
+- Celle d'un membre qui a le droit Wagtail de publier les actualités
+  (super-utilisateur, groupe « Moderators ») est publiée immédiatement.
+  Celle d'un autre membre, même administrateur (is_staff) du calendrier,
+  est soumise à validation : elle n'est visible sur le site qu'après
+  approbation par un modérateur, depuis l'admin Wagtail
   (circuit de validation « Moderators approval », tableau de bord
   « En attente de votre relecture »). Il en va de même pour ses
   modifications : la version en ligne reste affichée jusqu'à l'approbation.
@@ -39,25 +41,24 @@ from .forms import NewsPageForm, PhotoArticleForm
 from .models import NewsIndexPage, NewsPage
 
 
-def _publie_directement(user):
-    """Les administrateurs publient directement ; les autres membres
-    soumettent leurs actualités à validation."""
-    return user.is_staff
+def _publie_directement(user, page_index):
+    """Publient directement ceux qui ont le droit Wagtail de publier dans la
+    page des actualités (super-utilisateurs, groupe « Moderators ») ; les
+    autres membres, administrateurs (is_staff) compris, soumettent leurs
+    actualités à validation."""
+    return page_index.permissions_for_user(user).can_publish_subpage()
 
 
 def _enregistrer(news, user):
     """Enregistre une nouvelle version de l'actualité, puis la publie
-    (administrateur) ou la soumet à validation (autre membre).
+    (droit de publier) ou la soumet à validation (autre membre).
     Renvoie True si elle a été publiée."""
     revision = news.save_revision(user=user, log_action=True)
-    if _publie_directement(user):
+    if _publie_directement(user, news.get_parent()):
         # Actualité d'un membre en cours de relecture : la publication par
-        # un administrateur vaut validation, la relecture est close.
+        # un modérateur vaut validation, la relecture est close.
         if news.current_workflow_state is not None:
             news.current_workflow_state.cancel(user=user)
-        # Le droit de publier vient de is_staff (règle du site), pas des
-        # groupes Wagtail : un administrateur sans groupe Wagtail doit pouvoir
-        # publier depuis le site.
         revision.publish(user=user, skip_permission_checks=True)
         return True
 
@@ -112,7 +113,7 @@ def _appliquer(news, donnees, corps, user):
 def _contexte_formulaire(request, form, page_index, **extra):
     return {
         "form": form, "page_index": page_index,
-        "publie_directement": _publie_directement(request.user),
+        "publie_directement": _publie_directement(request.user, page_index),
         **extra,
     }
 
@@ -147,7 +148,7 @@ def ajouter_news(request):
 
             news = NewsPage(
                 # Hors ligne tant qu'elle n'est pas publiée (voir _enregistrer)
-                live=_publie_directement(request.user),
+                live=_publie_directement(request.user, page_index),
                 slug=f"{base_slug}-{horodatage}",
                 cree_par=request.user,
             )
