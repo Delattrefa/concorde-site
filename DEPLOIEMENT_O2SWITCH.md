@@ -112,6 +112,14 @@ cPanel → **Bases de données PostgreSQL** : créez une base, un utilisateur,
 puis associez l'utilisateur à la base avec tous les privilèges. cPanel
 préfixe les noms (`compte_concorde`) : notez-les tels quels.
 
+**Option A bis — MySQL / MariaDB.**
+cPanel → **Bases de données MySQL** : créez une base, un utilisateur avec
+un mot de passe solide, puis *Ajouter l'utilisateur à la base* avec
+**tous les privilèges**. Notez les noms préfixés (`compte_concorde`).
+Dans phpMyAdmin, onglet *Opérations* de la base, vérifiez que
+l'interclassement est **utf8mb4_general_ci** (ou `utf8mb4_unicode_ci`) ;
+sinon choisissez-le et validez, *avant* le premier `migrate`.
+
 **Option B — SQLite (le plus simple).**
 Aucune base à créer : on réutilise le fichier `db.sqlite3` actuel, avec
 tout le contenu déjà saisi. Suffisant pour un site associatif à trafic
@@ -166,6 +174,9 @@ chemins avec votre identifiant cPanel). Pour générer la clé secrète :
 python3 -c "import secrets; print(secrets.token_urlsafe(50))"
 ```
 
+Pour MySQL : `DB_ENGINE=mysql`, `DB_PORT=3306`, et `DB_NAME`, `DB_USER`,
+`DB_PASSWORD` créés à l'étape 5 (`DB_HOST=localhost`).
+
 Pour l'option B (SQLite) : `DB_ENGINE=sqlite` et
 `DB_NAME=/home/compte/concorde/src/db.sqlite3`.
 
@@ -205,45 +216,83 @@ fichiers* de cPanel dans `public_html/`, puis « Extraire ».)
 Relancez ensuite `bash ~/concorde/deploy.sh` pour remettre en place la
 protection du dossier `contrats_location`.
 
-### Option A — contenu vers PostgreSQL
+### Option A — contenu vers MySQL / MariaDB (ou PostgreSQL)
 
-Sur votre ordinateur (réglages de développement, base SQLite) :
+Procédure testée de bout en bout vers MariaDB 10.11 (version
+d'o2switch) : tout le contenu est repris à l'identique.
+
+**1. Sur votre ordinateur : préparer la base locale**
+
+Travaillez sur une copie de sécurité, puis préparez la base :
 
 ```bash
 cd src
-python manage.py dumpdata --natural-foreign --natural-primary \
+cp db.sqlite3 db-avant-export.sqlite3
+python manage.py preparer_export_mysql
+```
+
+Cette commande corrige ce que MySQL refuserait : elle fusionne les
+mots-clés qui ne diffèrent que par les majuscules ou les accents
+(« Theatre » / « théâtre »), retire les redirections automatiques depuis
+d'anciennes adresses accentuées et l'historique des pages supprimées. Elle
+s'arrête en listant tout autre doublon à corriger (rien n'est alors
+modifié). Ajoutez `--dry-run` pour voir ce qu'elle ferait.
+
+**2. Exporter le contenu**
+
+```bash
+python manage.py dumpdata --natural-foreign \
   -e contenttypes -e auth.permission -e sessions -e admin.logentry \
   -e wagtailcore.groupcollectionpermission -e wagtailcore.grouppagepermission \
-  -e wagtailimages.rendition -e wagtailsearch.indexentry \
-  -e wagtailcore.referenceindex \
+  -e wagtailimages.rendition -e wagtailsearch -e wagtailcore.referenceindex \
+  -e wagtailadmin.editingsession -e axes -e theatre.accesapplication \
   --indent 2 -o data.json
 scp data.json compte@la-concorde.be:~/concorde/src/
 ```
 
-Sur le serveur (la base PostgreSQL doit avoir reçu les migrations, étape 8) :
+Pas de `--natural-primary` : il fait échouer l'import des collections
+d'images. Les éléments exclus sont recréés sur le serveur (miniatures,
+index de recherche, droits des groupes) ou sans intérêt (sessions,
+tentatives de connexion).
+
+**3. Sur le serveur : base vide, puis import**
+
+`src/.env` doit contenir les réglages MySQL (étape 7). Puis :
 
 ```bash
-source ~/virtualenv/concorde/src/3.12/bin/activate
+source ~/virtualenv/concorde/src/3.11/bin/activate   # même chemin que dans deploy.sh
 cd ~/concorde/src
 export DJANGO_SETTINGS_MODULE=concorde_site.settings.production
+python manage.py migrate
+python manage.py shell -c "from wagtail.models import Site, Page; Site.objects.all().delete(); Page.objects.filter(depth__gt=1).delete()"
 python manage.py loaddata data.json
-python manage.py convertir_slugs_ascii
+```
+
+La deuxième commande supprime le site et la page « Welcome » créés par
+Wagtail lors du `migrate` : sans elle, `loaddata` échoue (deux sites
+« localhost » par défaut). `loaddata` annonce à la fin le nombre d'objets
+installés.
+
+**4. Remettre en place ce qui n'est pas exporté**
+
+```bash
+python manage.py preparer_collections
 python manage.py update_index
 python manage.py rebuild_references_index
 python manage.py generer_miniatures
 rm data.json
 ```
 
-Les miniatures ne sont pas exportées (`-e wagtailimages.rendition`) :
-`generer_miniatures` les recrée pour tous les albums, sans quoi la
-première ouverture de chaque album serait très lente.
+`generer_miniatures` recrée les miniatures de tous les albums (plusieurs
+minutes) : sans elle, la première ouverture de chaque album serait très
+lente. Enfin, relancez `bash ~/concorde/deploy.sh`, puis réglez l'adresse
+du site dans Wagtail (ci-dessous).
 
-Si `loaddata` signale un conflit sur la page d'accueil ou le site par
-défaut créés par Wagtail lors des migrations, videz la base
-(cPanel → phpPgAdmin, ou supprimez et recréez la base), relancez
-`python manage.py migrate`, supprimez le site et la page de bienvenue par
-défaut, puis relancez `loaddata`. En cas de blocage, l'option B reste
-possible à tout moment.
+**En cas d'échec de `loaddata`** : rien n'est à moitié importé (tout ou
+rien). Videz la base (phpMyAdmin → la base → *Structure* → tout cocher →
+*Supprimer*), corrigez la cause, puis reprenez à l'étape 3. Un message
+« Duplicate entry » signale un doublon pour MySQL : relancez
+`preparer_export_mysql` sur la base locale, puis réexportez.
 
 ### Option B — copier la base SQLite
 
