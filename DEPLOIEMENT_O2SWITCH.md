@@ -574,11 +574,18 @@ GOOGLE_AGENDA_CLE=/home/compte/concorde/google-agenda.json
 touch ~/concorde/src/tmp/restart.txt
 ```
 
-**7. Première recopie** (environnement activé comme dans `deploy.sh`) :
+**7. Première recopie :**
 
 ```bash
+source ~/virtualenv/concorde/src/3.11/bin/activate
+cd ~/concorde/src
+export DJANGO_SETTINGS_MODULE=concorde_site.settings.production
 python manage.py synchroniser_agenda_google
 ```
+
+Sans la ligne `export`, Django prend les réglages de développement et
+s'arrête sur « no such table: calendrier_activite » (il ouvre une base
+SQLite vide au lieu de celle du site).
 
 Pour ne recopier que le présent et l'avenir, ajoutez par exemple
 `--depuis 2026-01-01`.
