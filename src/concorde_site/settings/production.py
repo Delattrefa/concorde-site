@@ -126,5 +126,7 @@ LOGGING = {
         "django": {"handlers": ["fichier"], "level": "ERROR", "propagate": True},
         # Erreurs d'envoi de la newsletter (serveur SMTP, e-mails de confirmation)
         "newsletter": {"handlers": ["fichier"], "level": "ERROR", "propagate": False},
+        # Échecs de la recopie vers l'agenda Google
+        "calendrier": {"handlers": ["fichier"], "level": "ERROR", "propagate": False},
     },
 }

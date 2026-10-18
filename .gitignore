@@ -17,6 +17,8 @@ data.json
 src/.env
 src/concorde_site/settings/.env
 src/concorde_site/settings/local.py
+google-agenda*.json
+*-compte-de-service*.json
 
 # Fichiers générés / téléversés (le projet est dans src/, d'où les chemins)
 src/media/

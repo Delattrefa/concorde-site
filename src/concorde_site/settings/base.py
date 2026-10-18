@@ -280,3 +280,12 @@ NEWSLETTER_LOT_TAILLE = int(os.environ.get("NEWSLETTER_LOT_TAILLE", "15"))
 NEWSLETTER_PAUSE_SECONDES = float(os.environ.get("NEWSLETTER_PAUSE_SECONDES", "2"))
 NEWSLETTER_MAX_PAR_HEURE = int(os.environ.get("NEWSLETTER_MAX_PAR_HEURE", "150"))
 NEWSLETTER_TENTATIVES_MAX = 3
+
+# -----------------------------------------------------------------------
+# Agenda Google Workspace partagé (application 'calendrier')
+# -----------------------------------------------------------------------
+# Activités et locations validées recopiées dans un agenda Google (voir
+# calendrier/google_agenda.py). Désactivé si l'une des deux valeurs manque.
+GOOGLE_AGENDA_ID = os.environ.get("GOOGLE_AGENDA_ID", "")
+# Chemin de la clé JSON du compte de service, HORS du dossier public
+GOOGLE_AGENDA_CLE = os.environ.get("GOOGLE_AGENDA_CLE", "")

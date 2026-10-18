@@ -517,6 +517,88 @@ n'importe qui : prévenir le responsable technique.
 
 ---
 
+## Agenda Google Workspace partagé (octobre 2026)
+
+Les activités du calendrier (publiques et privées) et les locations
+**validées** sont recopiées automatiquement dans un agenda Google partagé.
+Le sens est unique : le site reste la référence, et une modification faite
+dans Google est écrasée à la synchronisation suivante. Une location refusée,
+annulée (statut ou contrat annulé) ou supprimée est retirée de l'agenda.
+Seul le nom du client y figure : ses coordonnées restent sur le site.
+Les événements ajoutés à la main dans l'agenda ne sont jamais touchés.
+
+**1. L'agenda.** Dans Google Agenda (compte Workspace) : *Autres agendas* →
+**+** → *Créer un agenda* (ex. « La Concorde — Calendrier »), puis
+partagez-le avec l'équipe.
+
+**2. Le compte de service** (le « robot » qui écrit dans l'agenda), sur
+https://console.cloud.google.com :
+
+1. Créez un projet (ex. « site-la-concorde »).
+2. *API et services* → *Bibliothèque* → **Google Calendar API** → *Activer*.
+3. *IAM et administration* → *Comptes de service* → *Créer un compte de
+   service* (ex. « agenda-site »), sans rôle. Notez son adresse,
+   `agenda-site@site-la-concorde.iam.gserviceaccount.com`.
+4. Ouvrez-le → *Clés* → *Ajouter une clé* → *Créer une clé* → **JSON**. Le
+   fichier téléchargé est un **secret** : il donne accès à l'agenda.
+
+**3. Autoriser le partage externe** (le robot est extérieur au domaine) :
+console d'administration Workspace → *Applications* → *Google Workspace* →
+*Agenda* → *Paramètres de partage* → *Options de partage externe* :
+« Partager toutes les informations, et autoriser les personnes externes à
+modifier les agendas ».
+
+**4. Partager l'agenda avec le robot** : paramètres de l'agenda → *Partager
+avec des personnes* → l'adresse du robot, droit **« Apporter des
+modifications aux événements »**. Dans la même page, rubrique *Intégrer
+l'agenda*, copiez l'**ID de l'agenda** (`…@group.calendar.google.com`).
+
+**5. La clé sur le serveur**, hors du dossier public :
+
+```bash
+scp cle-telechargee.json compte@la-concorde.be:~/concorde/google-agenda.json
+ssh compte@la-concorde.be chmod 600 ~/concorde/google-agenda.json
+```
+
+Supprimez ensuite la clé de votre ordinateur. Elle ne doit pas aller sur
+GitHub : `google-agenda*.json` est ignoré par git.
+
+**6. Le `.env`**, puis le redémarrage :
+
+```ini
+GOOGLE_AGENDA_ID=abc123…@group.calendar.google.com
+GOOGLE_AGENDA_CLE=/home/compte/concorde/google-agenda.json
+```
+
+```bash
+touch ~/concorde/src/tmp/restart.txt
+```
+
+**7. Première recopie** (environnement activé comme dans `deploy.sh`) :
+
+```bash
+python manage.py synchroniser_agenda_google
+```
+
+Pour ne recopier que le présent et l'avenir, ajoutez par exemple
+`--depuis 2026-01-01`.
+
+**8. Tâche cron de nuit**, qui rattrape les échecs : si Google est
+injoignable au moment d'un enregistrement, le site fonctionne normalement
+et l'erreur va dans `django-erreurs.log`. Dans cPanel → *Tâches Cron*,
+ajoutez par exemple chaque jour à 3 h 15 :
+
+```bash
+cd ~/concorde/src && DJANGO_SETTINGS_MODULE=concorde_site.settings.production ~/virtualenv/concorde/src/3.11/bin/python manage.py synchroniser_agenda_google --depuis $(date -d '-1 year' +\%F) > /dev/null
+```
+
+(`\%` : cron interprète `%` comme un retour à la ligne.)
+
+Pour arrêter la recopie, videz `GOOGLE_AGENDA_ID` dans le `.env` et
+redémarrez. Les événements déjà créés restent dans l'agenda.
+
+---
+
 ## Dépannage
 
 | Symptôme | Cause probable / solution |
@@ -534,6 +616,7 @@ n'importe qui : prévenir le responsable technique.
 | Page « Connexion bloquée » | 5 mots de passe erronés depuis la même adresse IP : patienter 15 minutes, ou débloquer en SSH avec `python manage.py axes_reset_ip <adresse IP>` (`axes_reset` débloque tout le monde). |
 | Un administrateur ne voit plus certaines images dans Wagtail | Images rangées directement dans *Root* ou *Calendrier* : réservées aux super-utilisateurs depuis la protection des signatures. Les déplacer dans une autre collection (ex. « images du site »). |
 | Partage Facebook/WhatsApp sans aperçu, liens en `http://localhost/...` | Adresse du site non réglée dans Wagtail : *Paramètres* → *Sites* → `www.la-concorde.be`, port `443`. Puis https://developers.facebook.com/tools/debug/ → *Récupérer à nouveau* pour les actualités déjà partagées. |
+| Activité ou location absente de l'agenda Google | Voir `django-erreurs.log` (lignes « Agenda Google »). « invalid_grant » : clé JSON supprimée ou mauvais fichier. « 403 » / « 404 » : agenda non partagé avec l'adresse du robot (droit « Apporter des modifications aux événements ») ou mauvais `GOOGLE_AGENDA_ID`. Puis `python manage.py synchroniser_agenda_google`. |
 | Modifications non visibles | `touch ~/concorde/src/tmp/restart.txt`, ou bouton *Restart* dans Setup Python App. |
 
 Sauvegardes : o2switch sauvegarde le compte chaque jour (outil *JetBackup*

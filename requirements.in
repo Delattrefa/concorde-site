@@ -30,3 +30,7 @@ pypdf>=5.0
 
 # Blocage des connexions après plusieurs mots de passe erronés
 django-axes>=8.0
+
+# Recopie des activités et des locations dans un agenda Google Workspace
+# partagé (compte de service, app 'calendrier')
+google-auth>=2.30

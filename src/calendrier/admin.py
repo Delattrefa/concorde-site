@@ -6,6 +6,7 @@ from django.contrib import admin
 from django.utils import timezone
 from django.utils.html import format_html
 
+from . import google_agenda
 from .models import Activite, AnnexeContrat, ArticleContrat, ContratLocation, Reservation
 
 
@@ -73,20 +74,32 @@ class ReservationAdmin(admin.ModelAdmin):
 
     @admin.action(description="Valider les réservations sélectionnées")
     def valider_les_reservations(self, request, queryset):
+        # Numéros relevés avant update() : un filtre « en attente » de la
+        # liste ne retrouverait plus les réservations modifiées.
+        numeros = list(queryset.values_list("pk", flat=True))
         nb_maj = queryset.update(
             statut=Reservation.STATUT_VALIDEE,
             traite_par=request.user,
             date_traitement=timezone.now(),
         )
+        # update() ne déclenche pas les signaux : recopie dans l'agenda Google
+        for reservation in Reservation.objects.filter(pk__in=numeros):
+            google_agenda.synchroniser(reservation)
         self.message_user(request, f"{nb_maj} réservation(s) validée(s).")
 
     @admin.action(description="Refuser les réservations sélectionnées")
     def refuser_les_reservations(self, request, queryset):
+        # Numéros relevés avant update() : un filtre « en attente » de la
+        # liste ne retrouverait plus les réservations modifiées.
+        numeros = list(queryset.values_list("pk", flat=True))
         nb_maj = queryset.update(
             statut=Reservation.STATUT_REFUSEE,
             traite_par=request.user,
             date_traitement=timezone.now(),
         )
+        # update() ne déclenche pas les signaux : recopie dans l'agenda Google
+        for reservation in Reservation.objects.filter(pk__in=numeros):
+            google_agenda.synchroniser(reservation)
         self.message_user(request, f"{nb_maj} réservation(s) refusée(s).")
 
 

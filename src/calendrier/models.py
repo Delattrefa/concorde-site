@@ -72,6 +72,10 @@ class Activite(models.Model):
         verbose_name="Créée par",
     )
     date_creation = models.DateTimeField("Créée le", auto_now_add=True)
+    google_event_id = models.CharField(
+        "Événement Google Agenda", max_length=1024, blank=True, editable=False,
+        help_text="Identifiant de l'événement recopié dans l'agenda Google partagé.",
+    )
 
     class Meta:
         verbose_name = "Activité"
@@ -187,6 +191,10 @@ class Reservation(models.Model):
         verbose_name="Traitée par",
     )
     date_traitement = models.DateTimeField("Traitée le", null=True, blank=True)
+    google_event_id = models.CharField(
+        "Événement Google Agenda", max_length=1024, blank=True, editable=False,
+        help_text="Identifiant de l'événement recopié dans l'agenda Google partagé.",
+    )
 
     class Meta:
         verbose_name = "Demande de réservation de salle"
