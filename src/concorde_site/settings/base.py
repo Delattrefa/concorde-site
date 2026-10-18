@@ -288,4 +288,5 @@ NEWSLETTER_TENTATIVES_MAX = 3
 # calendrier/google_agenda.py). Désactivé si l'une des deux valeurs manque.
 GOOGLE_AGENDA_ID = os.environ.get("GOOGLE_AGENDA_ID", "")
 # Chemin de la clé JSON du compte de service, HORS du dossier public
-GOOGLE_AGENDA_CLE = os.environ.get("GOOGLE_AGENDA_CLE", "")
+# (« ~ » accepté : remplacé par le dossier personnel)
+GOOGLE_AGENDA_CLE = os.path.expanduser(os.environ.get("GOOGLE_AGENDA_CLE", ""))
