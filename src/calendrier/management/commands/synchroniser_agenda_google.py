@@ -58,5 +58,8 @@ class Command(BaseCommand):
             f"{len(objets)} élément(s) vérifié(s), {len(orphelins)} événement(s) orphelin(s) supprimé(s)."
         )
         if echecs:
-            raise CommandError(f"{echecs} échec(s) : voir le journal des erreurs (django-erreurs.log).")
+            raise CommandError(
+                f"{echecs} échec(s), dont le dernier : {google_agenda.derniere_erreur}\n"
+                "Détails dans le journal des erreurs (django-erreurs.log)."
+            )
         self.stdout.write(self.style.SUCCESS("Agenda Google à jour."))

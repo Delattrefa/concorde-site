@@ -35,6 +35,7 @@ COULEUR_LOCATION = "11"  # rouge tomate (palette fixe de Google Agenda)
 COULEUR_PRIVEE = "8"  # graphite
 
 _session = None
+derniere_erreur = ""
 
 
 def actif():
@@ -101,6 +102,20 @@ def evenement(objet):
     return donnees
 
 
+class ErreurGoogle(Exception):
+    pass
+
+
+def _verifier(reponse):
+    """Comme raise_for_status(), avec l'explication donnée par Google."""
+    if reponse.status_code >= 400:
+        try:
+            detail = reponse.json()["error"]["message"]
+        except Exception:
+            detail = reponse.text[:300]
+        raise ErreurGoogle(f"HTTP {reponse.status_code} : {detail}")
+
+
 def _enregistrer_id(objet, event_id):
     objet.google_event_id = event_id
     # update() plutôt que save() : ne relance pas la synchronisation
@@ -117,18 +132,18 @@ def _envoyer(objet):
         reponse = session().put(_url(objet.google_event_id), json=evenement(objet), timeout=DELAI)
         # Supprimé à la main dans Google : recréé ci-dessous
         if reponse.status_code not in (404, 410):
-            reponse.raise_for_status()
+            _verifier(reponse)
             if reponse.json().get("status") != "cancelled":
                 return
     reponse = session().post(_url(), json=evenement(objet), timeout=DELAI)
-    reponse.raise_for_status()
+    _verifier(reponse)
     _enregistrer_id(objet, reponse.json()["id"])
 
 
 def _supprimer(event_id):
     reponse = session().delete(_url(event_id), timeout=DELAI)
     if reponse.status_code not in (404, 410):  # déjà supprimé
-        reponse.raise_for_status()
+        _verifier(reponse)
 
 
 def synchroniser(objet):
@@ -136,10 +151,12 @@ def synchroniser(objet):
     cas d'échec (journalisé), True sinon."""
     if not actif():
         return True
+    global derniere_erreur
     try:
         _envoyer(objet)
         return True
-    except Exception:
+    except Exception as erreur:
+        derniere_erreur = f"{objet} : {erreur}"
         logger.exception("Agenda Google : échec de la synchronisation de « %s »", objet)
         return False
 
@@ -148,10 +165,12 @@ def supprimer(event_id):
     """Retire un événement (objet supprimé du site)."""
     if not (actif() and event_id):
         return True
+    global derniere_erreur
     try:
         _supprimer(event_id)
         return True
-    except Exception:
+    except Exception as erreur:
+        derniere_erreur = f"événement {event_id} : {erreur}"
         logger.exception("Agenda Google : échec de la suppression de l'événement %s", event_id)
         return False
 
@@ -166,7 +185,7 @@ def evenements_du_site():
         if page:
             parametres["pageToken"] = page
         reponse = session().get(_url(), params=parametres, timeout=DELAI)
-        reponse.raise_for_status()
+        _verifier(reponse)
         donnees = reponse.json()
         for item in donnees.get("items", []):
             marque = item.get("extendedProperties", {}).get("private", {}).get(MARQUE)

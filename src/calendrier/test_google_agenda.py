@@ -161,6 +161,13 @@ class AgendaGoogleTests(TestCase):
         activite.refresh_from_db()
         self.assertEqual(set(self.agenda.evenements), {activite.google_event_id, "a-la-main"})
 
+    def test_commande_affiche_l_explication_de_google(self):
+        refus = Reponse(403, {"error": {"message": "You need to have writer access to this calendar."}})
+        with mock.patch.object(self.agenda, "post", return_value=refus), self.assertLogs("calendrier", level="ERROR"):
+            self._activite()
+            with self.assertRaisesMessage(CommandError, "HTTP 403 : You need to have writer access"):
+                call_command("synchroniser_agenda_google", stdout=StringIO())
+
     @override_settings(GOOGLE_AGENDA_ID="")
     def test_desactive_sans_reglages(self):
         self._activite()
