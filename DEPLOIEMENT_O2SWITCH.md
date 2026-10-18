@@ -553,6 +553,27 @@ avec des personnes* → l'adresse du robot, droit **« Apporter des
 modifications aux événements »**. Dans la même page, rubrique *Intégrer
 l'agenda*, copiez l'**ID de l'agenda** (`…@group.calendar.google.com`).
 
+**4 bis. Si Google refuse le partage avec le robot** (fréquent avec
+Workspace) : utilisez la **délégation au niveau du domaine**. Le robot agit
+alors au nom d'un utilisateur du domaine qui a déjà accès à l'agenda, sans
+partage :
+
+1. Google Cloud → *IAM et administration* → *Comptes de service* → le
+   robot → copiez son **ID client** (un long nombre, « OAuth 2 Client ID »).
+2. Console d'administration Workspace → *Sécurité* → *Accès et contrôle
+   des données* → *Commandes des API* → *Gérer la délégation au niveau du
+   domaine* → *Ajouter* : l'ID client, et le champ d'application
+   `https://www.googleapis.com/auth/calendar.events`. Autorisez.
+3. Vérifiez que l'utilisateur choisi (ex. `infos@la-concorde.be`) peut
+   **modifier les événements** de l'agenda (il en est propriétaire, ou il
+   y a le droit « Apporter des modifications aux événements »).
+4. Ajoutez au `.env` (étape 6) :
+   `GOOGLE_AGENDA_UTILISATEUR=infos@la-concorde.be`.
+
+La délégation peut mettre quelques minutes (parfois jusqu'à une heure) à
+s'appliquer. « unauthorized_client » signale qu'elle n'est pas encore
+active, ou que l'ID client ou le champ d'application est incorrect.
+
 **5. La clé sur le serveur**, hors du dossier public :
 
 ```bash
@@ -568,6 +589,8 @@ GitHub : `google-agenda*.json` est ignoré par git.
 ```ini
 GOOGLE_AGENDA_ID=abc123…@group.calendar.google.com
 GOOGLE_AGENDA_CLE=/home/compte/concorde/google-agenda.json
+# seulement avec la délégation (4 bis) :
+GOOGLE_AGENDA_UTILISATEUR=infos@la-concorde.be
 ```
 
 ```bash
@@ -623,7 +646,7 @@ redémarrez. Les événements déjà créés restent dans l'agenda.
 | Page « Connexion bloquée » | 5 mots de passe erronés depuis la même adresse IP : patienter 15 minutes, ou débloquer en SSH avec `python manage.py axes_reset_ip <adresse IP>` (`axes_reset` débloque tout le monde). |
 | Un administrateur ne voit plus certaines images dans Wagtail | Images rangées directement dans *Root* ou *Calendrier* : réservées aux super-utilisateurs depuis la protection des signatures. Les déplacer dans une autre collection (ex. « images du site »). |
 | Partage Facebook/WhatsApp sans aperçu, liens en `http://localhost/...` | Adresse du site non réglée dans Wagtail : *Paramètres* → *Sites* → `www.la-concorde.be`, port `443`. Puis https://developers.facebook.com/tools/debug/ → *Récupérer à nouveau* pour les actualités déjà partagées. |
-| Activité ou location absente de l'agenda Google | Voir `django-erreurs.log` (lignes « Agenda Google »). « invalid_grant » : clé JSON supprimée ou mauvais fichier. « 403 » / « 404 » : agenda non partagé avec l'adresse du robot (droit « Apporter des modifications aux événements ») ou mauvais `GOOGLE_AGENDA_ID`. Puis `python manage.py synchroniser_agenda_google`. |
+| Activité ou location absente de l'agenda Google | Voir `django-erreurs.log` (lignes « Agenda Google »). « invalid_grant » : clé JSON supprimée ou mauvais fichier. « unauthorized_client » : délégation au niveau du domaine pas encore active ou mal réglée (étape 4 bis). « 403 » / « 404 » : agenda non partagé avec l'adresse du robot (droit « Apporter des modifications aux événements ») ou mauvais `GOOGLE_AGENDA_ID`. Puis `python manage.py synchroniser_agenda_google`. |
 | Modifications non visibles | `touch ~/concorde/src/tmp/restart.txt`, ou bouton *Restart* dans Setup Python App. |
 
 Sauvegardes : o2switch sauvegarde le compte chaque jour (outil *JetBackup*

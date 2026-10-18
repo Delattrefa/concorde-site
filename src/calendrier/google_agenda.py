@@ -7,8 +7,10 @@ journée » de l'agenda ; une location refusée, annulée (statut ou contrat
 annulé) ou supprimée en est retirée. Un événement modifié ou supprimé à la
 main dans Google est remis en état à la synchronisation suivante.
 
-L'écriture passe par un compte de service Google (clé JSON) avec lequel
-l'agenda est partagé, voir DEPLOIEMENT_O2SWITCH.md. Sans GOOGLE_AGENDA_ID
+L'écriture passe par un compte de service Google (clé JSON) : soit
+l'agenda est partagé avec lui, soit (délégation au niveau du domaine,
+GOOGLE_AGENDA_UTILISATEUR) il agit au nom d'un utilisateur Workspace qui a
+accès à l'agenda. Voir DEPLOIEMENT_O2SWITCH.md. Sans GOOGLE_AGENDA_ID
 ou GOOGLE_AGENDA_CLE dans le .env, rien n'est envoyé.
 
 Une panne de Google n'empêche jamais d'enregistrer sur le site : l'erreur
@@ -52,6 +54,11 @@ def session():
         identifiants = service_account.Credentials.from_service_account_file(
             settings.GOOGLE_AGENDA_CLE, scopes=[PORTEE]
         )
+        if settings.GOOGLE_AGENDA_UTILISATEUR:
+            # Délégation au niveau du domaine : le robot agit au nom de cet
+            # utilisateur Workspace, qui a accès à l'agenda (pas besoin de
+            # partager l'agenda avec le robot).
+            identifiants = identifiants.with_subject(settings.GOOGLE_AGENDA_UTILISATEUR)
         _session = AuthorizedSession(identifiants)
     return _session
 

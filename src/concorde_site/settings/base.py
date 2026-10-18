@@ -290,3 +290,7 @@ GOOGLE_AGENDA_ID = os.environ.get("GOOGLE_AGENDA_ID", "")
 # Chemin de la clé JSON du compte de service, HORS du dossier public
 # (« ~ » accepté : remplacé par le dossier personnel)
 GOOGLE_AGENDA_CLE = os.path.expanduser(os.environ.get("GOOGLE_AGENDA_CLE", ""))
+# Facultatif, délégation au niveau du domaine : adresse Workspace au nom de
+# laquelle le robot écrit (ex. infos@la-concorde.be), à la place du partage
+# de l'agenda avec le robot
+GOOGLE_AGENDA_UTILISATEUR = os.environ.get("GOOGLE_AGENDA_UTILISATEUR", "")

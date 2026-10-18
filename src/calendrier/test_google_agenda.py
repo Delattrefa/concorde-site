@@ -16,6 +16,9 @@ from django.test import TestCase, override_settings
 from . import google_agenda
 from .models import Activite, Reservation
 
+# Vraie fonction, avant son remplacement par le faux agenda dans setUp()
+SESSION_REELLE = google_agenda.session
+
 
 class Reponse:
     def __init__(self, statut=200, donnees=None):
@@ -167,6 +170,18 @@ class AgendaGoogleTests(TestCase):
             self._activite()
             with self.assertRaisesMessage(CommandError, "HTTP 403 : You need to have writer access"):
                 call_command("synchroniser_agenda_google", stdout=StringIO())
+
+    def test_delegation_au_nom_d_un_utilisateur(self):
+        """GOOGLE_AGENDA_UTILISATEUR : le robot agit au nom de cet utilisateur."""
+        identifiants = mock.Mock()
+        google_agenda._session = None
+        self.addCleanup(setattr, google_agenda, "_session", None)
+        with mock.patch("google.oauth2.service_account.Credentials.from_service_account_file", return_value=identifiants), \
+                mock.patch("google.auth.transport.requests.AuthorizedSession") as session_autorisee, \
+                override_settings(GOOGLE_AGENDA_UTILISATEUR="infos@la-concorde.be"):
+            SESSION_REELLE()
+        identifiants.with_subject.assert_called_once_with("infos@la-concorde.be")
+        session_autorisee.assert_called_once_with(identifiants.with_subject.return_value)
 
     @override_settings(GOOGLE_AGENDA_ID="")
     def test_desactive_sans_reglages(self):
