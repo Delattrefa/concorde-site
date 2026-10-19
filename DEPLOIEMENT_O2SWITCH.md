@@ -385,6 +385,32 @@ nouveau*.
   `https://www.la-concorde.be/media/contrats_location/...` doit renvoyer
   une erreur 403.
 
+### Tâche cron : envoi des newsletters
+
+Le bouton « Envoyer » de l'admin ne fait que mettre la newsletter en file
+d'attente. Les e-mails partent ensuite **par petits lots**, pour respecter
+les limites d'envoi du serveur. C'est une tâche cron qui expédie ces lots :
+**sans elle, la newsletter reste « Envoi en cours »**, à moins de cliquer
+sans arrêt sur « Envoyer un lot maintenant » dans la page de suivi.
+
+Dans cPanel → *Tâches Cron*, choisissez « Toutes les 5 minutes »
+(`*/5 * * * *`) avec la commande :
+
+```
+cd ~/concorde/src && DJANGO_SETTINGS_MODULE=concorde_site.settings.production ~/virtualenv/concorde/src/3.11/bin/python manage.py envoyer_newsletters >> ~/concorde/src/newsletter-cron.log 2>&1
+```
+
+Quand aucune newsletter n'attend, la commande s'arrête aussitôt sans rien
+faire. Si un lot est déjà en cours (lancé par le cron précédent ou par
+l'admin), elle ne fait rien non plus : deux lots ne tournent jamais en même
+temps. Le compte rendu de chaque passage est ajouté à
+`~/concorde/src/newsletter-cron.log`.
+
+Pour vérifier, après un envoi réel : la page de suivi de la newsletter
+doit avancer toute seule toutes les 5 minutes, et `newsletter-cron.log` se
+remplir. L'e-mail de test (« [TEST] ») ne prouve rien : il part
+immédiatement, sans passer par le cron.
+
 ---
 
 ## Mises à jour courantes
@@ -635,6 +661,7 @@ redémarrez. Les événements déjà créés restent dans l'agenda.
 |---|---|
 | Page « Incomplete response » ou erreur 500 | Lire `~/concorde/src/passenger.log` et `django-erreurs.log`. Souvent une valeur manquante dans `.env` ou un module absent (`pip install -r requirements.txt` dans le bon environnement). |
 | `KeyError: 'SECRET_KEY'` | Le fichier `src/.env` est absent ou mal placé. |
+| Newsletter restée « en cours d'envoi » | La tâche cron `envoyer_newsletters` est absente ou en échec (voir « Tâche cron : envoi des newsletters », étape 10). Lire `~/concorde/src/newsletter-cron.log`. |
 | Les commandes `manage.py` utilisent SQLite / DEBUG | Oubli de `export DJANGO_SETTINGS_MODULE=concorde_site.settings.production` (le script `deploy.sh` le fait). |
 | Site sans mise en forme | `collectstatic` non exécuté : relancer `deploy.sh`. |
 | Photos en erreur 404 | Vérifier que `MEDIA_ROOT` est bien dans le dossier public du domaine. En dernier recours : `SERVE_MEDIA=1` dans `.env`, puis redémarrer. |
