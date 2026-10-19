@@ -182,3 +182,43 @@ class CacheTests(TestCase):
             settings.CACHES["default"]["BACKEND"],
             "django.core.cache.backends.locmem.LocMemCache",
         )
+
+
+class ActualitesChoisiesTests(TestCase):
+    """Bloc « Actualités choisies » : les actualités sélectionnées, dans
+    l'ordre choisi, sans celles qui ne sont plus publiées."""
+
+    def setUp(self):
+        from datetime import date
+
+        from home.slugs import slug_ascii
+        from news.models import NewsIndexPage, NewsPage
+
+        racine = Page.objects.get(depth=1)
+        index = racine.add_child(instance=NewsIndexPage(title="Actualités", slug="actualites"))
+        Site.objects.all().delete()
+        Site.objects.create(hostname="testserver", root_page=index, is_default_site=True)
+        self.actus = {}
+        for titre in ("Souper raclette", "Marché de Noël", "Théâtre", "Brocante"):
+            self.actus[titre] = index.add_child(
+                instance=NewsPage(title=titre, slug=slug_ascii(titre), date=date(2026, 10, 1), intro=f"Résumé {titre}")
+            )
+        self.actus["Brocante"].unpublish()
+
+    def test_ordre_choisi_sans_les_depubliees(self):
+        from .rendu import rendre_newsletter
+
+        a = self.actus
+        newsletter = Newsletter.objects.create(titre="Lettre", objet="Nouvelles", contenu=[
+            ("actualites_choisies", {"titre": "À ne pas manquer", "actualites": [
+                a["Théâtre"], a["Brocante"], a["Souper raclette"], a["Théâtre"],
+            ]}),
+        ])
+        html, texte = rendre_newsletter(newsletter)
+
+        self.assertIn("À ne pas manquer", html)
+        self.assertLess(html.index("Résumé Théâtre"), html.index("Résumé Souper raclette"))
+        self.assertEqual(html.count("Résumé Théâtre"), 1)
+        self.assertNotIn("Brocante", html)
+        self.assertNotIn("Marché de Noël", html)
+        self.assertIn("Souper raclette", texte)

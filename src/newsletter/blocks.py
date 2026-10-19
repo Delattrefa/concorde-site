@@ -76,6 +76,22 @@ class ActualitesRecentesBlock(blocks.StructBlock):
         help_text = "Les dernières actualités publiées sur le site, au moment de l'envoi."
 
 
+class ActualitesChoisiesBlock(blocks.StructBlock):
+    titre = blocks.CharBlock(label="Titre", default="À la une", required=False)
+    actualites = blocks.ListBlock(
+        blocks.PageChooserBlock(page_type="news.NewsPage", label="Actualité"),
+        label="Actualités",
+        min_num=1,
+        help_text="Dans l'ordre d'affichage (flèches pour les déplacer). Une actualité "
+        "dépubliée entre-temps n'est pas envoyée.",
+    )
+
+    class Meta:
+        icon = "list-ul"
+        label = "Actualités choisies"
+        help_text = "Les actualités que vous sélectionnez, présentées comme les actualités récentes."
+
+
 class PageEnAvantBlock(blocks.StructBlock):
     page = blocks.PageChooserBlock(label="Page à mettre en avant")
     titre = blocks.CharBlock(label="Titre (vide : titre de la page)", required=False)
@@ -110,6 +126,7 @@ CONTENU_NEWSLETTER = [
     ("image", ImageNewsletterBlock()),
     ("bouton", BoutonBlock()),
     ("actualites", ActualitesRecentesBlock()),
+    ("actualites_choisies", ActualitesChoisiesBlock()),
     ("page_en_avant", PageEnAvantBlock()),
     ("encadre", EncadreBlock()),
     ("separateur", SeparateurBlock()),

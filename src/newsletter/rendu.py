@@ -177,6 +177,16 @@ def _image_page(page):
     return None
 
 
+def _element_actualite(actu):
+    return {
+        "titre": actu.title,
+        "url": _url_page(actu),
+        "date": actu.date.strftime("%d/%m/%Y") if actu.date else "",
+        "resume": (actu.intro or _resume_page(actu))[:220],
+        "image": _image(actu.featured_image, 160, actu.title) if actu.featured_image else None,
+    }
+
+
 def _preparer_blocs(newsletter):
     from datetime import date
 
@@ -212,21 +222,23 @@ def _preparer_blocs(newsletter):
                 "couleur": "#1a1414" if dore else "#ffffff",
             })
 
-        elif t == "actualites":
-            actualites = (
-                NewsPage.objects.live().public()
-                .filter(date__lte=date.today())
-                .order_by("-date", "-first_published_at")[: v.get("nombre") or 3]
-            )
-            elements = []
-            for actu in actualites:
-                elements.append({
-                    "titre": actu.title,
-                    "url": _url_page(actu),
-                    "date": actu.date.strftime("%d/%m/%Y") if actu.date else "",
-                    "resume": (actu.intro or _resume_page(actu))[:220],
-                    "image": _image(actu.featured_image, 160, actu.title) if actu.featured_image else None,
-                })
+        elif t in ("actualites", "actualites_choisies"):
+            if t == "actualites":
+                actualites = (
+                    NewsPage.objects.live().public()
+                    .filter(date__lte=date.today())
+                    .order_by("-date", "-first_published_at")[: v.get("nombre") or 3]
+                )
+            else:
+                # Ordre choisi ; sans les actualités dépubliées, privées ou
+                # supprimées depuis (ni doublons)
+                visibles = set(NewsPage.objects.live().public().values_list("pk", flat=True))
+                actualites, vues = [], set()
+                for page in v["actualites"]:
+                    if page is not None and page.pk in visibles and page.pk not in vues:
+                        vues.add(page.pk)
+                        actualites.append(page.specific)
+            elements = [_element_actualite(actu) for actu in actualites]
             if elements:
                 blocs.append({"type": "actualites", "titre": v.get("titre"), "elements": elements})
 
