@@ -15,7 +15,7 @@ L'envoi est donc découpé :
    fois au même abonné.
 
 Réglages (settings) :
-    NEWSLETTER_LOT_TAILLE          messages par lot (défaut 15)
+    NEWSLETTER_LOT_TAILLE          messages par lot (défaut 20)
     NEWSLETTER_PAUSE_SECONDES      pause entre deux messages (défaut 2)
     NEWSLETTER_MAX_PAR_HEURE       plafond sur une heure glissante (défaut 150)
     NEWSLETTER_TENTATIVES_MAX      essais avant d'abandonner une adresse (défaut 3)
@@ -183,7 +183,7 @@ def traiter_lot(taille=None, pause=None, journal=None):
 
 def _traiter_lot(taille, pause, journal):
     journal = journal or (lambda texte: logger.info(texte))
-    taille = taille if taille is not None else _reglage("NEWSLETTER_LOT_TAILLE", 15)
+    taille = taille if taille is not None else _reglage("NEWSLETTER_LOT_TAILLE", 20)
     pause = pause if pause is not None else _reglage("NEWSLETTER_PAUSE_SECONDES", 2)
     max_heure = _reglage("NEWSLETTER_MAX_PAR_HEURE", 150)
     tentatives_max = _reglage("NEWSLETTER_TENTATIVES_MAX", 3)

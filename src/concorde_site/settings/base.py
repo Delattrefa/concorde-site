@@ -276,7 +276,7 @@ NEWSLETTER_REPLY_TO = os.environ.get("NEWSLETTER_REPLY_TO", "")
 # Adresse du site utilisée dans les e-mails (liens, images) ; à défaut WAGTAILADMIN_BASE_URL
 NEWSLETTER_BASE_URL = os.environ.get("NEWSLETTER_BASE_URL", "")
 # Cadence d'envoi, prudente pour le serveur SMTP mutualisé d'o2switch
-NEWSLETTER_LOT_TAILLE = int(os.environ.get("NEWSLETTER_LOT_TAILLE", "15"))
+NEWSLETTER_LOT_TAILLE = int(os.environ.get("NEWSLETTER_LOT_TAILLE", "20"))
 NEWSLETTER_PAUSE_SECONDES = float(os.environ.get("NEWSLETTER_PAUSE_SECONDES", "2"))
 NEWSLETTER_MAX_PAR_HEURE = int(os.environ.get("NEWSLETTER_MAX_PAR_HEURE", "150"))
 NEWSLETTER_TENTATIVES_MAX = 3
