@@ -1,6 +1,11 @@
 {% load wagtailcore_tags wagtailimages_tags %}
 {% if section.type_section == "colonnes" %}
-    <section class="cols-section cols-section--taille-{{ section.taille_image|default:'moyen' }} fade-target">
+    <section class="cols-section cols-section--taille-{{ section.taille_image|default:'moyen' }}{% if section.image_fond_colonnes %} cols-section--fond{% endif %} fade-target">
+        {% if section.image_fond_colonnes %}
+            {% image section.image_fond_colonnes fill-1600x900 as fond %}
+            <div class="scroll-section__bg" style="background-image:url('{{ fond.url }}');"></div>
+            <div class="scroll-section__overlay"></div>
+        {% endif %}
         <div class="wrap">
             {% if section.titre_colonnes %}<h2 class="cols-section__titre fade-up">{{ section.titre_colonnes }}</h2>{% endif %}
             <div class="cols-section__grid cols-section__grid--{{ section.nombre_colonnes }}">
@@ -17,7 +22,7 @@
             {% if section.liens %}
                 <div class="cols-section__liens fade-up">
                     {% for bloc_lien in section.liens %}
-                        <a class="btn btn--secondary" href="{{ bloc_lien.value.url }}">{{ bloc_lien.value.texte }}</a>
+                        <a class="btn {% if section.image_fond_colonnes %}btn--outline{% else %}btn--secondary{% endif %}" href="{{ bloc_lien.value.url }}">{{ bloc_lien.value.texte }}</a>
                     {% endfor %}
                 </div>
             {% endif %}

@@ -53,7 +53,8 @@ class SectionDefilementAbstraite(Orderable):
 
     Chaque section a un TYPE au choix :
     - 'normal'   : image + texte, image à gauche/droite/pleine largeur ;
-    - 'colonnes' : 1 à 3 colonnes, chacune avec son propre titre/texte/image.
+    - 'colonnes' : 1 à 3 colonnes, chacune avec son propre titre/texte/image,
+      et une image de fond facultative pour toute la section.
 
     Les deux jeux de champs coexistent sur le même modèle (comme
     'image_position' existait déjà pour le type normal) : seuls les champs
@@ -132,6 +133,15 @@ class SectionDefilementAbstraite(Orderable):
     nombre_colonnes = models.PositiveSmallIntegerField(
         "Nombre de colonnes", choices=NOMBRE_COLONNES_CHOICES, default=2,
     )
+    image_fond_colonnes = models.ForeignKey(
+        "wagtailimages.Image", null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="+", verbose_name="Image de fond (facultatif)",
+        help_text=(
+            "Photo affichée derrière toute la section, assombrie pour la lisibilité ; "
+            "les colonnes apparaissent alors sur des cartes claires. Indépendante des "
+            "images de chaque colonne."
+        ),
+    )
 
     colonne_1_titre = models.CharField("Titre", max_length=200, blank=True)
     colonne_1_texte = RichTextField("Texte", blank=True)
@@ -181,6 +191,7 @@ class SectionDefilementAbstraite(Orderable):
             [
                 FieldPanel("titre_colonnes"),
                 FieldPanel("nombre_colonnes"),
+                FieldPanel("image_fond_colonnes"),
                 MultiFieldPanel(
                     [FieldPanel("colonne_1_titre"), FieldPanel("colonne_1_texte"), FieldPanel("colonne_1_image")],
                     heading="Colonne 1",
