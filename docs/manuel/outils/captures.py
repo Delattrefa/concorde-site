@@ -245,6 +245,7 @@ with sync_playwright() as p:
     shot(page, "wagtail_newsletter_envoyer", f"/admin/newsletter/{nl}/envoyer/", hauteur=1200)
     shot(page, "wagtail_abonnes", "/admin/snippets/newsletter/abonne/", hauteur=900)
     shot(page, "wagtail_seo", f"/admin/pages/{actu}/edit/#tab-promotion", hauteur=1300)
+    shot(page, "wagtail_statistiques", "/admin/statistiques/", hauteur=1500)
 
     # Administration Django
     shot(page, "django_admin", "/django-admin/", hauteur=1200)

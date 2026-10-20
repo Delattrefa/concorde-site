@@ -10,14 +10,15 @@ Chaque élément est (type de bloc, contenu) pour le StreamField de InfoPage :
 "heading" (texte), "paragraph" (HTML), "callout" (titre, HTML).
 """
 
-DATE_MISE_A_JOUR = "8 octobre 2026"
+DATE_MISE_A_JOUR = "20 octobre 2026"
 
 CONTENU = [
     ("callout", ("En résumé",
         "<p>La Concorde asbl ne collecte que les données nécessaires pour répondre "
         "à vos messages, gérer les locations de la salle et les réservations de "
         "spectacles. Elles ne sont jamais vendues ni utilisées à des fins publicitaires. "
-        "Le site n'utilise aucun outil de mesure d'audience ni de publicité.</p>")),
+        "Le site ne fait aucune publicité ; il compte ses visites lui-même, de façon "
+        "anonyme et sans cookie.</p>")),
 
     ("heading", "1. Qui est responsable de vos données ?"),
     ("paragraph",
@@ -81,7 +82,17 @@ CONTENU = [
         "Notre hébergeur conserve des journaux techniques (adresse IP, pages consultées, date "
         "et heure) pour assurer la sécurité et le bon fonctionnement du serveur, pendant une "
         "durée limitée. Les mots recherchés avec la recherche du site sont enregistrés sans "
-        "aucun lien avec votre identité, pour améliorer les résultats.</p>"),
+        "aucun lien avec votre identité, pour améliorer les résultats.</p>"
+        "<p><b>Statistiques de fréquentation</b><br/>"
+        "Le site compte lui-même ses visites, sans cookie ni service extérieur : nombre de "
+        "pages vues, de visiteurs par jour, site d'où vous venez (par exemple un moteur de "
+        "recherche ou un réseau social), et type d'appareil (ordinateur ou mobile). Pour ne "
+        "pas compter deux fois la même personne dans la journée, une empreinte "
+        "irréversible de votre adresse IP et de votre navigateur est calculée avec une "
+        "clé qui change chaque jour ; empreintes et clés sont effacées le lendemain. "
+        "Votre adresse IP n'est jamais enregistrée et seuls des totaux anonymes sont "
+        "conservés (25 mois). Cette mesure, limitée au fonctionnement du site, ne "
+        "nécessite pas votre consentement.</p>"),
 
     ("heading", "3. Cookies"),
     ("paragraph",

@@ -153,6 +153,32 @@ if not _Actu.objects.filter(title=TITRE_ACTU_BLOCS).exists():
     _IndexActus.objects.first().add_child(instance=_actu)
     _actu.save_revision().publish()
 
+# --- Statistiques de fréquentation : un an de chiffres fictifs ---------------
+from django.utils import timezone
+
+from statistiques.models import Jour, PageJour, ProvenanceJour
+
+PAGES_STATS = [("/", 1.0), ("/news/", .45), ("/calendrier/", .4), ("/medias/", .3), ("/contact/", .18),
+               ("/info/", .12), ("/news/marche-de-noel-2026/", .2), ("/newsletter/", .06)]
+PROVENANCES_STATS = [("Facebook", .22), ("Google", .18), ("Gmail", .05), ("honnelles.be", .02), ("Instagram", .03)]
+Jour.objects.all().delete()
+PageJour.objects.all().delete()
+ProvenanceJour.objects.all().delete()
+aujourdhui = timezone.localdate()
+jours, pages_jour, provenances_jour = [], [], []
+for ecart in range(365):
+    date = aujourdhui - dt.timedelta(days=ecart)
+    # Plus de monde le week-end et à l'approche des fêtes de fin d'année
+    visiteurs = int((40 + 25 * (date.weekday() >= 4) + 30 * (date.month in (11, 12))) * random.uniform(.7, 1.3))
+    vues = int(visiteurs * random.uniform(2.1, 2.9))
+    jours.append(Jour(date=date, vues=vues, visiteurs=visiteurs, vues_mobiles=int(vues * random.uniform(.55, .7))))
+    pages_jour += [PageJour(date=date, chemin=c, vues=max(1, int(vues * p / 2.7))) for c, p in PAGES_STATS]
+    provenances_jour += [ProvenanceJour(date=date, source=s, vues=max(1, int(visiteurs * p)))
+                         for s, p in PROVENANCES_STATS]
+Jour.objects.bulk_create(jours)
+PageJour.objects.bulk_create(pages_jour)
+ProvenanceJour.objects.bulk_create(provenances_jour)
+
 # --- Identifiants utiles aux captures (lus par captures.py) -----------------
 from pathlib import Path  # noqa: E402
 

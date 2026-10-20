@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "page_libre",
     "consentement",
     "newsletter",
+    "statistiques",
 
     # Wagtail
     "wagtail.contrib.forms",
@@ -78,6 +79,8 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    # Statistiques de fréquentation, sans cookie (application 'statistiques')
+    "statistiques.middleware.MesureAudienceMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
     # Bloque les contenus de sites tiers (cartes, vidéos) avant consentement
@@ -280,6 +283,13 @@ NEWSLETTER_LOT_TAILLE = int(os.environ.get("NEWSLETTER_LOT_TAILLE", "20"))
 NEWSLETTER_PAUSE_SECONDES = float(os.environ.get("NEWSLETTER_PAUSE_SECONDES", "2"))
 NEWSLETTER_MAX_PAR_HEURE = int(os.environ.get("NEWSLETTER_MAX_PAR_HEURE", "150"))
 NEWSLETTER_TENTATIVES_MAX = 3
+
+# -----------------------------------------------------------------------
+# Statistiques de fréquentation (application 'statistiques')
+# -----------------------------------------------------------------------
+# Durée de conservation des totaux par jour (25 mois : comparaison d'une
+# année sur l'autre)
+STATISTIQUES_CONSERVATION_JOURS = 760
 
 # -----------------------------------------------------------------------
 # Agenda Google Workspace partagé (application 'calendrier')

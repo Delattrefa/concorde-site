@@ -655,6 +655,33 @@ redémarrez. Les événements déjà créés restent dans l'agenda.
 
 ---
 
+## Statistiques de fréquentation (octobre 2026)
+
+Le site compte lui-même ses visites (application `statistiques`) : sans
+cookie, sans service extérieur, sans enregistrer d'adresse IP. Les chiffres
+se consultent dans Wagtail, menu **Statistiques** (`/admin/statistiques/`).
+Ce menu est visible des super-utilisateurs et des comptes ayant la
+permission « Peut consulter les statistiques de fréquentation ».
+
+Mise en service : `bash ~/concorde/deploy.sh` (crée les tables). Les
+chiffres commencent le jour du déploiement : il n'y a pas d'historique.
+
+**Rien d'autre à installer.** Pas de tâche cron : le premier visiteur de
+chaque jour efface les empreintes de la veille, et les totaux de plus de
+25 mois (`STATISTIQUES_CONSERVATION_JOURS`).
+
+**Politique de confidentialité.** Le texte d'origine disait « aucun outil
+de mesure d'audience ». La commande `creer_page_confidentialite` ne modifie
+jamais une page existante : il faut donc mettre à jour la page en ligne
+à la main dans Wagtail.
+- Dans « En résumé », remplacer la dernière phrase par : « Le site ne fait
+  aucune publicité ; il compte ses visites lui-même, de façon anonyme et sans
+  cookie. »
+- Au point 2, sous « Navigation sur le site », ajouter le paragraphe
+  « Statistiques de fréquentation » de `src/consentement/politique.py`.
+
+---
+
 ## Dépannage
 
 | Symptôme | Cause probable / solution |

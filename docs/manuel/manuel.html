@@ -126,7 +126,7 @@
     <li><a href="#ch7">Médias : albums photos et vidéos</a><span class="desc">Créer un album, envoyer des photos par lots, ajouter une vidéo</span></li>
     <li><a href="#ch8">L'application Théâtre</a><span class="desc">Représentations, réservations, plan de salle, contrôle d'entrée, ventes flash, tickets</span></li>
     <li><a href="#ch9">La newsletter</a><span class="desc">Inscriptions, abonnés, rédaction, envoi de test et envoi aux abonnés</span></li>
-    <li><a href="#ch10">L'administration Wagtail (contenu du site)</a><span class="desc">Pages, images, menus, pied de page, paramètres, référencement</span></li>
+    <li><a href="#ch10">L'administration Wagtail (contenu du site)</a><span class="desc">Pages, images, menus, pied de page, paramètres, référencement, statistiques de fréquentation</span></li>
     <li><a href="#ch11">Gestion des utilisateurs et des droits</a><span class="desc">Créer un compte, donner les droits d'administration, d'accès au théâtre, de modération</span></li>
     <li><a href="#ch12">Bonnes pratiques et questions fréquentes</a><span class="desc">Dépannage, réflexes à adopter, aide-mémoire des adresses</span></li>
   </ol>
@@ -658,6 +658,20 @@
   <h2>Le référencement (onglet Promotion)</h2>
   <p>Chaque page a un onglet <strong>Promotion</strong> : adresse de la page (slug), <strong>titre</strong> et <strong>description</strong> pour Google (sinon, le titre et le résumé de la page sont utilisés), et <strong>image de partage</strong> utilisée par Facebook ou WhatsApp quand on partage le lien.</p>
   <figure class="basse"><img src="img/wagtail_seo.jpg"><figcaption>L'onglet Promotion d'une actualité.</figcaption></figure>
+
+  <h2>Les statistiques de fréquentation</h2>
+  <p>Le menu <strong>Statistiques</strong> montre combien de personnes visitent le site. Il n'apparaît qu'aux super-utilisateurs, et aux personnes à qui la permission a été donnée (chapitre 11).</p>
+  <ul>
+    <li>Choisissez la période en haut : <strong>7 jours</strong>, <strong>30 jours</strong>, <strong>3 mois</strong> ou <strong>12 mois</strong> (graphique par mois).</li>
+    <li>Les quatre chiffres clés : <strong>visiteurs</strong>, <strong>pages vues</strong> (avec l'évolution par rapport à la période précédente de même durée), pages vues par visiteur, et part des pages vues sur téléphone ou tablette.</li>
+    <li>Le graphique donne les visiteurs jour par jour : passez la souris sur une barre pour lire les chiffres, ou ouvrez « Voir les chiffres » pour le tableau complet.</li>
+    <li><strong>Pages les plus vues</strong> : idéal pour voir quelles actualités ou quelles activités intéressent.</li>
+    <li><strong>Venus d'un autre site</strong> : combien de visiteurs arrivent par Facebook, Google, un e-mail (Gmail)… Utile pour mesurer l'effet d'une publication sur les réseaux sociaux.</li>
+  </ul>
+  <figure><img src="img/wagtail_statistiques.jpg"><figcaption>Les statistiques de fréquentation (chiffres d'exemple).</figcaption></figure>
+  <div class="encart astuce"><span class="t">Une mesure respectueuse de la vie privée</span>
+    <p>Le site compte lui-même ses visites, sans cookie ni service extérieur (pas de Google Analytics) : aucun bandeau d'accord n'est donc nécessaire, et aucune adresse IP n'est conservée. Ne sont pas comptés : les robots des moteurs de recherche et les membres de l'équipe connectés (« Statut équipe »), pour ne pas gonfler les chiffres en travaillant sur le site.</p>
+    <p>Un visiteur est reconnu pendant une journée seulement : s'il revient le lendemain, il compte à nouveau. Sur un mois, « Visiteurs » additionne donc les visiteurs de chaque jour. Les chiffres sont conservés 25 mois, pour comparer d'une année sur l'autre.</p></div>
 </section>
 
 <!-- ============================ 11. UTILISATEURS ============================ -->
@@ -683,6 +697,7 @@
     <tr><td>Un <strong>administrateur du calendrier</strong> dont les actualités passent par la validation</td><td>Cochez <strong>Statut équipe</strong>, sans le groupe Moderators. Il gère tout le calendrier (demandes de location, contrats, activités) et peut modifier toutes les actualités depuis le site, mais ses actualités et ses modifications attendent l'approbation d'un modérateur. Pour l'accès à Wagtail, ajoutez-le au groupe <strong>Editors</strong> (facultatif).</td></tr>
     <tr><td>Un <strong>modérateur</strong> des actualités</td><td>Groupe <strong>Moderators</strong> : il reçoit un e-mail à chaque actualité proposée et peut l'approuver.</td></tr>
     <tr><td>L'<strong>accès au Théâtre</strong></td><td>Section « Permissions de l'utilisateur » : ajoutez <em>theatre | acces application | Peut accéder à l'application Théâtre</em>.</td></tr>
+    <tr><td>La consultation des <strong>statistiques</strong> de fréquentation</td><td>Les super-utilisateurs les voient d'office. Pour un autre administrateur : section « Permissions de l'utilisateur », ajoutez <em>statistiques | Journée | Peut consulter les statistiques de fréquentation</em>. Il doit aussi avoir accès à Wagtail (groupe Editors ou Moderators). La même permission se coche aussi pour un groupe, dans Wagtail (Paramètres → Groupes).</td></tr>
     <tr><td>Un <strong>super-utilisateur</strong></td><td>« Statut super-utilisateur » : tous les droits. À limiter à une ou deux personnes de confiance.</td></tr>
   </table>
   <figure class="haute"><img src="img/django_user.jpg"><figcaption>La fiche d'un utilisateur : statuts, groupes et permissions (ici, l'accès au Théâtre).</figcaption></figure>
@@ -745,6 +760,7 @@
     <tr><td><span class="url">/theatre/</span></td><td>Application Théâtre : représentations</td></tr>
     <tr><td><span class="url">/theatre/reservations/</span></td><td>Application Théâtre : toutes les réservations</td></tr>
     <tr><td><span class="url">/admin/</span></td><td>Administration Wagtail (contenu, newsletter)</td></tr>
+    <tr><td><span class="url">/admin/statistiques/</span></td><td>Statistiques de fréquentation</td></tr>
     <tr><td><span class="url">/django-admin/</span></td><td>Administration Django (utilisateurs et droits)</td></tr>
   </table>
 
