@@ -381,9 +381,10 @@ nouveau*.
 - `/admin/` : connexion, ajout d'une image.
 - Page Médias : les albums et les miniatures s'affichent.
 - Un administrateur peut télécharger un contrat depuis une réservation
-  validée, mais l'adresse directe
-  `https://www.la-concorde.be/media/contrats_location/...` doit renvoyer
-  une erreur 403.
+  validée, mais l'adresse directe d'un fichier du dossier
+  `media/contrats_location/` doit être refusée. Faites le test avec un vrai
+  fichier, décrit dans « Médiathèque : signatures des contrats » : une
+  adresse inventée donne toujours « Page not found » et ne prouve rien.
 
 ### Tâche cron : envoi des newsletters
 
@@ -529,17 +530,26 @@ qu'aux super-utilisateurs : donner les droits aux groupes dans
 *Paramètres → Groupes → Editors → Permissions sur les collections d'images*.
 
 **Vérification indispensable** (une fois) : le dossier des contrats doit
-être interdit depuis Internet (réponse 403) :
+être interdit depuis Internet. Le test pose un fichier dans le dossier
+réellement utilisé par le site, puis essaie de le lire depuis Internet :
 
 ```bash
-MEDIA_ROOT=$(grep ^MEDIA_ROOT= ~/concorde/src/.env | cut -d= -f2)
+cd ~/concorde/src
+source ~/virtualenv/concorde/src/3.11/bin/activate
+export DJANGO_SETTINGS_MODULE=concorde_site.settings.production
+MEDIA_ROOT=$(python -c "import django; django.setup(); from django.conf import settings; print(settings.MEDIA_ROOT)")
 echo test > "$MEDIA_ROOT/contrats_location/test.txt"
 curl -s -o /dev/null -w "%{http_code}\n" https://www.la-concorde.be/media/contrats_location/test.txt
 rm "$MEDIA_ROOT/contrats_location/test.txt"
 ```
 
-Si le résultat est 200, les contrats et les signatures sont lisibles par
-n'importe qui : prévenir le responsable technique.
+- **403** : Apache sert le dossier `media` et applique le `.htaccess`
+  posé par `deploy.sh` ;
+- **404** (page « Page not found » du site) : Apache ne voit pas ce
+  dossier, et c'est le site qui sert les médias (`SERVE_MEDIA=1`). Le site
+  refuse de servir `contrats_location/`. C'est aussi sûr ;
+- **200** : les contrats et les signatures sont lisibles par n'importe
+  qui. Prévenir le responsable technique.
 
 ---
 
