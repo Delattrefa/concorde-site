@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "consentement",
     "newsletter",
     "statistiques",
+    "planning",
 
     # Wagtail
     "wagtail.contrib.forms",
@@ -283,6 +284,13 @@ NEWSLETTER_LOT_TAILLE = int(os.environ.get("NEWSLETTER_LOT_TAILLE", "20"))
 NEWSLETTER_PAUSE_SECONDES = float(os.environ.get("NEWSLETTER_PAUSE_SECONDES", "2"))
 NEWSLETTER_MAX_PAR_HEURE = int(os.environ.get("NEWSLETTER_MAX_PAR_HEURE", "150"))
 NEWSLETTER_TENTATIVES_MAX = 3
+
+# -----------------------------------------------------------------------
+# Planning des membres (application 'planning')
+# -----------------------------------------------------------------------
+# Un créneau qui manque de bénévoles et commence dans moins de ce délai est
+# signalé à tous les membres (commande planning_taches, toutes les 5 min)
+PLANNING_URGENCE_HEURES = 72
 
 # -----------------------------------------------------------------------
 # Statistiques de fréquentation (application 'statistiques')

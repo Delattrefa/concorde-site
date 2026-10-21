@@ -1,0 +1,46 @@
+{% extends "planning/base.html" %}
+{% load planning_tags %}
+{% block title %}Mes disponibilités — Planning{% endblock %}
+
+{% block planning %}
+<div class="pl-detail">
+    <div>
+        <h2>Mes disponibilités</h2>
+        <p class="pl-muet">Indiquez les jours où vous pouvez donner un coup de main : les responsables le voient en organisant les créneaux.
+            Vous pouvez aussi vous inscrire directement sur un <a href="{% url 'planning:couverture' %}">créneau à combler</a>.</p>
+        {% for d in mes_disponibilites %}
+            <div class="pl-carte" style="display:flex; justify-content:space-between; gap:10px; align-items:center">
+                <span><strong>{{ d.date|date:"l j F Y" }}</strong> — {{ d.plage }}{% if d.note %}<br><span class="pl-muet">{{ d.note }}</span>{% endif %}</span>
+                <form method="post" action="{% url 'planning:disponibilite_supprimer' d.pk %}">{% csrf_token %}
+                    <button type="submit" class="btn btn--clair btn--small">Retirer</button></form>
+            </div>
+        {% empty %}
+            <p class="pl-vide-message">Aucune disponibilité indiquée.</p>
+        {% endfor %}
+    </div>
+    <aside>
+        <h2>Ajouter</h2>
+        <form method="post" class="calendrier-form pl-carte" style="margin:0" novalidate>
+            {% csrf_token %}
+            {% include "planning/_champ.html" with champ=form.date %}
+            <div class="form-field-row">
+                {% include "planning/_champ.html" with champ=form.heure_debut %}
+                {% include "planning/_champ.html" with champ=form.heure_fin %}
+            </div>
+            <p class="form-field__help">Laissez les heures vides si vous êtes disponible toute la journée.</p>
+            {% include "planning/_champ.html" with champ=form.note %}
+            <button type="submit" class="btn btn--primary btn--small">Ajouter</button>
+        </form>
+    </aside>
+</div>
+
+{% if est_responsable %}
+    <h2 style="margin-top:30px">Disponibilités de tous les membres (60 prochains jours)</h2>
+    {% for jour in toutes %}
+        <h3 class="pl-groupe-date">{{ jour.nom }} {{ jour.date|date:"j F" }}</h3>
+        <p>{% for d in jour.disponibilites %}<strong>{{ d.membre|nom_membre }}</strong> {{ d.plage }}{% if d.note %} ({{ d.note }}){% endif %}{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+    {% empty %}
+        <p class="pl-muet">Aucun membre n'a indiqué de disponibilité.</p>
+    {% endfor %}
+{% endif %}
+{% endblock %}

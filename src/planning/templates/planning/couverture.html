@@ -1,0 +1,74 @@
+{% extends "planning/base.html" %}
+{% load planning_tags %}
+{% block title %}Créneaux à combler — Planning{% endblock %}
+
+{% block planning %}
+<div class="pl-barre">
+    <h2>{% if tout_voir %}Couverture des besoins{% else %}Créneaux à combler{% endif %}</h2>
+    <nav class="pl-filtres" aria-label="Période">
+        {% for valeur, jours in periodes.items %}
+            <a href="?jours={{ valeur }}{% if tout_voir %}&tout=1{% endif %}"{% if valeur == periode %} aria-current="page"{% endif %}>{{ jours }} jours</a>
+        {% endfor %}
+        {% if est_responsable %}
+            <a href="?jours={{ periode }}{% if not tout_voir %}&tout=1{% endif %}"{% if tout_voir %} aria-current="page"{% endif %}>Tous les créneaux</a>
+        {% endif %}
+    </nav>
+</div>
+
+<div class="pl-stats">
+    <div class="pl-stat{% if stats.manque %} pl-stat--alerte{% endif %}"><strong>{{ stats.manque }}</strong><span>bénévole{{ stats.manque|pluralize }} manquant{{ stats.manque|pluralize }}</span></div>
+    <div class="pl-stat{% if stats.urgents %} pl-stat--alerte{% endif %}"><strong>{{ stats.urgents }}</strong><span>créneau{{ stats.urgents|pluralize:"x" }} urgent{{ stats.urgents|pluralize }} (moins de 3 jours)</span></div>
+    <div class="pl-stat"><strong>{{ stats.vides }}</strong><span>créneau{{ stats.vides|pluralize:"x" }} sans personne</span></div>
+    <div class="pl-stat"><strong>{{ stats.creneaux }}</strong><span>créneau{{ stats.creneaux|pluralize:"x" }} {% if tout_voir %}au total{% else %}incomplet{{ stats.creneaux|pluralize }}{% endif %}</span></div>
+</div>
+
+{% for bloc in evenements %}
+    {% with e=bloc.evenement %}
+    <article class="pl-carte pl-carte--{{ e.type }}">
+        <div class="pl-carte__meta">
+            <span class="pl-type pl-type--{{ e.type }}">{{ e.get_type_display }}</span>
+            <span><strong>{{ e.debut|date:"l j F" }}</strong>, {{ e.debut|date:"H:i" }}–{{ e.fin|date:"H:i" }}</span>
+            {% if e.lieu %}<span>📍 {{ e.lieu }}</span>{% endif %}
+        </div>
+        <h3><a href="{{ e.get_absolute_url }}">{{ e.titre }}</a></h3>
+        <table class="pl-creneaux">
+            <thead><tr><th>Horaire</th><th>Poste</th><th>Effectif</th><th>Inscrits</th><th><span class="visually-hidden">Action</span></th></tr></thead>
+            <tbody>
+            {% for c in bloc.creneaux %}
+                <tr>
+                    <td><strong>{{ c.debut|date:"H:i" }}–{{ c.fin|date:"H:i" }}</strong>{% if c.urgent %} <span class="pl-etiquette pl-etiquette--urgent">Urgent</span>{% endif %}</td>
+                    <td>{{ c.libelle|default:"—" }}</td>
+                    <td>{% jauge c.nb_inscrits c.besoin %}</td>
+                    <td class="pl-inscrits">{% for m in c.inscrits %}{{ m|nom_membre }}{% if not forloop.last %}, {% endif %}{% empty %}<span class="pl-muet">Personne</span>{% endfor %}
+                        {% if est_responsable and c.manque %}
+                            <form method="post" action="{% url 'planning:creneau_inscrire' c.pk %}" class="pl-affecter">{% csrf_token %}
+                                <input type="hidden" name="retour" value="{{ request.get_full_path }}">
+                                <select name="membre" aria-label="Inscrire un membre"><option value="">Inscrire…</option>
+                                    {% for m in membres %}{% if m not in c.inscrits %}<option value="{{ m.pk }}">{{ m|nom_membre }}</option>{% endif %}{% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn--clair btn--small">OK</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if c.je_suis_inscrit %}<span class="pl-etiquette pl-etiquette--ok">Vous y êtes</span>
+                        {% elif c.manque %}
+                            <form method="post" action="{% url 'planning:creneau_inscrire' c.pk %}">{% csrf_token %}
+                                <input type="hidden" name="retour" value="{{ request.get_full_path }}">
+                                <button type="submit" class="btn btn--ok btn--small">Je prends</button></form>
+                        {% else %}<span class="pl-etiquette pl-etiquette--ok">Complet</span>{% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% if bloc.disponibles %}
+            <div class="pl-dispos"><strong>Disponibles ce jour-là :</strong>
+                {% for d in bloc.disponibles %}{{ d.membre|nom_membre }} ({{ d.plage }}){% if not forloop.last %} · {% endif %}{% endfor %}</div>
+        {% endif %}
+    </article>
+    {% endwith %}
+{% empty %}
+    <p class="pl-vide-message">{% if tout_voir %}Aucun créneau sur cette période.{% else %}Bravo : tous les créneaux de cette période sont couverts !{% endif %}</p>
+{% endfor %}
+{% endblock %}

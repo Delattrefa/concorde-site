@@ -1,0 +1,14 @@
+{% extends "planning/base.html" %}
+{% block title %}# {{ canal.nom }} — Discussions{% endblock %}
+
+{% block planning %}
+<p class="breadcrumb"><a href="{% url 'planning:canaux' %}">← Discussions</a></p>
+<div class="pl-barre">
+    <div><h2># {{ canal.nom }}</h2>{% if canal.description %}<p class="pl-muet">{{ canal.description }}</p>{% endif %}</div>
+    {% if est_responsable %}
+        <form method="post" action="{% url 'planning:canal_archiver' canal.pk %}">{% csrf_token %}
+            <button type="submit" class="btn btn--clair btn--small">{% if canal.archive %}Rétablir le canal{% else %}Archiver le canal{% endif %}</button></form>
+    {% endif %}
+</div>
+{% include "planning/_discussion.html" with pleine_page=True %}
+{% endblock %}

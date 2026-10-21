@@ -121,14 +121,15 @@
     <li><a href="#ch2">Premiers pas</a><span class="desc">Se connecter, naviguer dans le menu, le bandeau cookies, la version mobile</span></li>
     <li><a href="#ch3">Le site public, page par page</a><span class="desc">Accueil, News, Médias, Info, Contact, Newsletter, recherche, pages libres</span></li>
     <li><a href="#ch4">Calendrier et activités</a><span class="desc">Consulter le calendrier, ajouter, modifier ou supprimer une activité</span></li>
-    <li><a href="#ch5">Location de la salle</a><span class="desc">Demandes, validation, contrat de location PDF, suivi des paiements, contrat-type</span></li>
-    <li><a href="#ch6">Les actualités (News)</a><span class="desc">Rédiger avec l'éditeur par blocs, placer les images, mettre à la une, valider, modifier</span></li>
-    <li><a href="#ch7">Médias : albums photos et vidéos</a><span class="desc">Créer un album, envoyer des photos par lots, ajouter une vidéo</span></li>
-    <li><a href="#ch8">L'application Théâtre</a><span class="desc">Représentations, réservations, plan de salle, contrôle d'entrée, ventes flash, tickets</span></li>
-    <li><a href="#ch9">La newsletter</a><span class="desc">Inscriptions, abonnés, rédaction, envoi de test et envoi aux abonnés</span></li>
-    <li><a href="#ch10">L'administration Wagtail (contenu du site)</a><span class="desc">Pages, images, menus, pied de page, paramètres, référencement, statistiques de fréquentation</span></li>
-    <li><a href="#ch11">Gestion des utilisateurs et des droits</a><span class="desc">Créer un compte, donner les droits d'administration, d'accès au théâtre, de modération</span></li>
-    <li><a href="#ch12">Bonnes pratiques et questions fréquentes</a><span class="desc">Dépannage, réflexes à adopter, aide-mémoire des adresses</span></li>
+    <li><a href="#ch5">Le planning des membres</a><span class="desc">Agenda privé, créneaux de bénévoles, « À combler », invitations, sondages, discussions, notifications</span></li>
+    <li><a href="#ch6">Location de la salle</a><span class="desc">Demandes, validation, contrat de location PDF, suivi des paiements, contrat-type</span></li>
+    <li><a href="#ch7">Les actualités (News)</a><span class="desc">Rédiger avec l'éditeur par blocs, placer les images, mettre à la une, valider, modifier</span></li>
+    <li><a href="#ch8">Médias : albums photos et vidéos</a><span class="desc">Créer un album, envoyer des photos par lots, ajouter une vidéo</span></li>
+    <li><a href="#ch9">L'application Théâtre</a><span class="desc">Représentations, réservations, plan de salle, contrôle d'entrée, ventes flash, tickets</span></li>
+    <li><a href="#ch10">La newsletter</a><span class="desc">Inscriptions, abonnés, rédaction, envoi de test et envoi aux abonnés</span></li>
+    <li><a href="#ch11">L'administration Wagtail (contenu du site)</a><span class="desc">Pages, images, menus, pied de page, paramètres, référencement, statistiques de fréquentation</span></li>
+    <li><a href="#ch12">Gestion des utilisateurs et des droits</a><span class="desc">Créer un compte, donner les droits d'administration, d'accès au théâtre, de modération</span></li>
+    <li><a href="#ch13">Bonnes pratiques et questions fréquentes</a><span class="desc">Dépannage, réflexes à adopter, aide-mémoire des adresses</span></li>
   </ol>
 </section>
 
@@ -155,7 +156,7 @@
   <p>Chaque personne de l'équipe dispose d'un compte personnel (identifiant + mot de passe). Ce que l'on peut faire dépend des droits attachés à ce compte.</p>
   <div class="profils">
     <div class="profil"><h4>Visiteur (non connecté)</h4><p>Consulte le site et les activités publiques, demande la location de la salle, écrit via le formulaire de contact, s'inscrit à la newsletter.</p></div>
-    <div class="profil"><h4>Membre</h4><p>Compte simple. Voit en plus les activités privées, ajoute ses propres activités au calendrier, propose des actualités (publiées après validation).</p></div>
+    <div class="profil"><h4>Membre</h4><p>Compte simple. Voit en plus les activités privées, ajoute ses propres activités au calendrier, propose des actualités (publiées après validation), et utilise le planning des membres.</p></div>
     <div class="profil"><h4>Administrateur</h4><p>Compte avec le statut « équipe » (<em>staff</em>). Traite les demandes de location, rédige les contrats, suit les paiements, publie directement les actualités, ajoute des photos aux albums.</p></div>
     <div class="profil"><h4>Accès Théâtre</h4><p>Droit spécifique, cumulable avec les autres profils : donne accès à la billetterie et au plan de salle du théâtre (menu « Théâtre »).</p></div>
   </div>
@@ -169,9 +170,10 @@
     <tr><td>Proposer une actualité</td><td class="non">—</td><td class="oui">✓ (après validation)</td><td class="oui">✓ (publiée tout de suite)</td></tr>
     <tr><td>Valider / refuser les demandes de location, contrats, paiements</td><td class="non">—</td><td class="non">—</td><td class="oui">✓</td></tr>
     <tr><td>Envoyer des photos et vidéos dans un album</td><td class="non">—</td><td class="non">—</td><td class="oui">✓</td></tr>
+    <tr><td>Planning des membres (agenda, créneaux, sondages, discussions)</td><td class="non">—</td><td class="oui">✓</td><td class="oui">✓ (responsable)</td></tr>
     <tr><td>Application Théâtre</td><td class="non">—</td><td colspan="2" style="text-align:center">uniquement avec le droit « Accès Théâtre »</td></tr>
   </table>
-  <p class="petit">La gestion de ces droits est expliquée au chapitre 11.</p>
+  <p class="petit">La gestion de ces droits est expliquée au chapitre 12.</p>
 </section>
 
 <!-- ============================ 2. PREMIERS PAS ============================ -->
@@ -224,7 +226,7 @@
   <figure><img src="img/accueil_sections.jpg"><figcaption>Les sections automatiques : dernière actualité (à gauche) et prochaines activités du calendrier (à droite).</figcaption></figure>
   <div class="encart exemple"><span class="t">Exemple</span>
     <p>Vous ajoutez au calendrier « Souper de la pétanque — 24 octobre ». Sans rien faire d'autre, l'activité apparaît dans « Prochaines activités » sur l'accueil, puis en disparaît d'elle-même une fois la date passée.</p></div>
-  <p class="petit">Pour modifier l'accueil : Wagtail → Pages → Accueil → Modifier (voir chapitre 10).</p>
+  <p class="petit">Pour modifier l'accueil : Wagtail → Pages → Accueil → Modifier (voir chapitre 11).</p>
 
   <h2>News (actualités)</h2>
   <p>La page <strong>News</strong> présente les actualités de la plus récente à la plus ancienne, avec image, date et résumé. Les <strong>mots-clés</strong> en haut de page (#carnaval, #théâtre, #raclette…) filtrent la liste. Chaque actualité a sa propre page avec boutons de partage (Facebook, WhatsApp, e-mail…).</p>
@@ -251,7 +253,7 @@
   <figure class="basse"><img src="img/page_libre.jpg"><figcaption>Une page libre : « L'histoire du BQL ».</figcaption></figure>
 
   <h2>Newsletter, recherche et pied de page</h2>
-  <p>La page <strong>Newsletter</strong> permet à chacun de s'inscrire (voir chapitre 9). La <strong>recherche</strong> du menu trouve les pages et actualités contenant un mot. Le <strong>pied de page</strong> reprend l'adresse, l'e-mail, les liens utiles (politique de confidentialité) et les réseaux sociaux.</p>
+  <p>La page <strong>Newsletter</strong> permet à chacun de s'inscrire (voir chapitre 10). La <strong>recherche</strong> du menu trouve les pages et actualités contenant un mot. Le <strong>pied de page</strong> reprend l'adresse, l'e-mail, les liens utiles (politique de confidentialité) et les réseaux sociaux.</p>
   <div class="duo">
     <figure><img src="img/newsletter_inscription.jpg"><figcaption>La page d'inscription à la newsletter.</figcaption></figure>
     <figure><img src="img/recherche.jpg"><figcaption>Résultats d'une recherche sur « Noël ».</figcaption></figure>
@@ -302,9 +304,111 @@
     <p>Le site est la référence : une activité modifiée ou supprimée directement dans Google Agenda est remise comme sur le site lors de la vérification de la nuit. Les événements ajoutés à la main dans l'agenda, eux, ne sont jamais touchés.</p></div>
 </section>
 
-<!-- ============================ 5. LOCATION ============================ -->
+<!-- ============================ 5. PLANNING ============================ -->
 <section class="chapitre" id="ch5">
-  <div class="bandeau"><div class="num">Chapitre 5</div><h1>Location de la salle</h1>
+  <div class="bandeau"><div class="num">Chapitre 5</div><h1>Le planning des membres</h1>
+    <p>Agenda privé de l'ASBL : réunions, tâches, activités, créneaux de bénévoles, sondages et discussions. Menu <strong>Réservations → Planning</strong>, réservé aux membres connectés.</p></div>
+
+  <figure class="basse"><img src="img/planning_menu.jpg"><figcaption>Le planning se trouve dans le menu Réservations, à côté du calendrier. La pastille indique les notifications non lues.</figcaption></figure>
+
+  <h2>Vue d'ensemble</h2>
+  <p>Le planning n'est visible que des membres connectés : rien n'apparaît sur le site public ni dans Google. Il réunit trois types d'événements, chacun avec sa couleur :</p>
+  <table>
+    <tr><th style="width:30%">Type</th><th>Pour…</th></tr>
+    <tr><td><strong style="color:#1f4f7a">Réunion</strong></td><td>Comité, assemblée, réunion de préparation, avec invitations et réponses (accepté / refusé).</td></tr>
+    <tr><td><strong style="color:#2e7d32">Tâche de l'ASBL</strong></td><td>Ménage, courses, entretien… ponctuelle ou répétée chaque semaine ou chaque mois.</td></tr>
+    <tr><td><strong style="color:#a0522d">Activité / événement spécial</strong></td><td>Souper, marché de Noël, ducasse… avec des créneaux pour organiser les bénévoles (bar, caisse, montage…).</td></tr>
+  </table>
+  <p>Les rubriques se trouvent dans les onglets en haut de chaque page : <strong>Agenda</strong>, <strong>À combler</strong>, <strong>Invitations</strong>, <strong>Sondages</strong>, <strong>Discussions</strong>, <strong>Mes disponibilités</strong> et <strong>Notifications</strong>.</p>
+
+  <h2>Les vues de l'agenda</h2>
+  <ul>
+    <li><strong>Mois</strong>, <strong>Semaine</strong>, <strong>Jour</strong> et <strong>Liste</strong> (les trois prochains mois) : boutons en haut à gauche ; les flèches changent de période, « Aujourd'hui » y revient.</li>
+    <li>Les boutons <strong>Réunion</strong>, <strong>Tâche</strong>, <strong>Activité</strong> n'affichent qu'un type d'événement.</li>
+    <li>Dans la vue Liste, <strong>Mes engagements</strong> ne garde que ce qui vous concerne : vos invitations, vos créneaux, vos événements.</li>
+    <li>Le drapeau <strong style="color:#b23a3a">⚑ 2</strong> signale un événement où il manque encore 2 bénévoles.</li>
+    <li>Les activités du calendrier du site apparaissent en gris italique, pour mémoire.</li>
+  </ul>
+  <figure><img src="img/planning_mois.jpg"><figcaption>La vue mensuelle : un clic sur un événement l'ouvre, le <strong>+</strong> d'une case en ajoute un à cette date.</figcaption></figure>
+
+  <h2>Créer un événement</h2>
+  <ol class="etapes">
+    <li><strong>+ Nouvel événement</strong> (ou le + d'un jour). Choisissez le type, le titre, le début et la fin, le lieu et une description.</li>
+    <li><strong>Répétition</strong> (facultatif) : chaque semaine, toutes les deux semaines ou chaque mois, jusqu'à une date. Chaque date devient un événement à part, avec ses propres inscriptions.</li>
+    <li><strong>Créneaux</strong> (facultatif) : indiquez une durée, par exemple 120 minutes, et le nombre de bénévoles par créneau. La plage est découpée automatiquement.</li>
+    <li><strong>Invitations</strong> : cochez des groupes ou des membres. Cochez « Réservé aux invités » pour qu'un événement (réunion du CA…) ne soit vu que par les invités, son auteur et les responsables.</li>
+  </ol>
+  <figure class="haute"><img src="img/planning_formulaire.jpg"><figcaption>Le formulaire d'un événement : répétition, créneaux et invitations.</figcaption></figure>
+  <div class="encart exemple"><span class="t">Exemple : le ménage du lundi</span>
+    <ol><li>Type « Tâche de l'ASBL », titre « Ménage de la salle », lundi 9 h – 11 h.</li><li>Répétition : chaque semaine, jusqu'au 21 décembre.</li><li>Créneaux de 120 minutes, 2 bénévoles. Chaque lundi apparaît dans l'agenda, avec 2 places à prendre.</li></ol></div>
+  <p>Seuls l'auteur d'un événement et les responsables peuvent le modifier, l'annuler ou le supprimer. Pour une série, le site demande si le changement vaut pour cette date seulement ou aussi pour les suivantes. Un événement <strong>annulé</strong> reste visible, barré, et peut être rétabli ; un événement <strong>supprimé</strong> disparaît avec ses inscriptions et sa discussion.</p>
+
+  <h2>Les créneaux et l'inscription en un clic</h2>
+  <p>La page d'un événement présente ses créneaux : horaire, poste, jauge de remplissage (vert : complet, orange : partiel, rouge : vide) et inscrits. Un clic sur <strong>Je m'inscris</strong> suffit ; <strong>Me désinscrire</strong> libère la place, et l'auteur de l'événement est prévenu.</p>
+  <figure class="haute"><img src="img/planning_evenement.jpg"><figcaption>Un événement découpé en créneaux, avec sa discussion.</figcaption></figure>
+  <ul>
+    <li><strong>Découper en créneaux</strong> : plusieurs découpages peuvent coexister, un par poste (ex. « Bar » toutes les 2 h et « Caisse » toutes les 3 h).</li>
+    <li><strong>Ajouter un créneau</strong> : pour un horaire particulier (montage, rangement).</li>
+    <li>L'auteur et les responsables peuvent <strong>inscrire un membre</strong> (liste « Inscrire… ») ou retirer un inscrit (×) ; la personne est prévenue.</li>
+  </ul>
+
+  <h2>« À combler » : les trous du planning</h2>
+  <p>L'onglet <strong>À combler</strong> rassemble tous les créneaux où il manque du monde, sur 7, 30 ou 90 jours : nombre de bénévoles manquants, créneaux urgents (moins de 3 jours), créneaux sans personne. Le bouton <strong>Je prends</strong> inscrit directement.</p>
+  <figure><img src="img/planning_couverture.jpg"><figcaption>Le tableau des créneaux à combler.</figcaption></figure>
+  <p>Les responsables voient en plus <strong>Tous les créneaux</strong> (y compris complets) et, sous chaque événement, les membres qui se sont déclarés <strong>disponibles</strong> ce jour-là, pour les contacter. Un créneau qui manque de bénévoles moins de 3 jours avant est signalé une fois à tous les membres.</p>
+
+  <h2>Mes disponibilités</h2>
+  <p>Indiquez les jours où vous pouvez aider : toute la journée ou entre deux heures, avec une remarque éventuelle. Les responsables les retrouvent dans « À combler » et dans la liste de toutes les disponibilités.</p>
+
+  <h2>Invitations</h2>
+  <p>Chaque invité reçoit une notification. Sur la page de l'événement ou dans l'onglet <strong>Invitations</strong>, il répond <strong>J'accepte</strong> ou <strong>Je ne peux pas</strong>, avec un commentaire facultatif ; la réponse peut être changée. L'auteur voit le décompte (acceptés, refusés, en attente) et peut inviter d'autres personnes à tout moment.</p>
+
+  <h2>Sondages</h2>
+  <ul>
+    <li><strong>Trouver une date</strong> (comme Doodle) : proposez plusieurs dates ; chacun répond « oui », « si nécessaire » ou « non » pour chacune. La meilleure date est surlignée en vert.</li>
+    <li><strong>Prendre une décision</strong> : proposez des réponses ; chacun vote pour une réponse (ou plusieurs si vous l'autorisez). La réponse la plus votée l'emporte.</li>
+    <li>Laissez la liste des destinataires vide pour consulter tous les membres, ou choisissez des groupes et des membres. Une date limite est possible ; l'auteur peut clôturer le sondage.</li>
+  </ul>
+  <figure class="basse"><img src="img/planning_sondage.jpg"><figcaption>Un sondage de date : chaque ligne est un participant, la vôtre est modifiable.</figcaption></figure>
+  <p>Une fois la date choisie, l'auteur clique sur <strong>Planifier le…</strong> : le formulaire d'événement s'ouvre avec la date retenue, et les participants du sondage sont déjà cochés pour l'invitation.</p>
+
+  <h2>Discussions</h2>
+  <ul>
+    <li>Les <strong>canaux</strong> (« Général », « Bénévoles du bar »…) sont ouverts à tous les membres ; les responsables les créent et les archivent.</li>
+    <li>Chaque événement a son propre <strong>fil de discussion</strong>, en bas de sa page : ses invités, ses inscrits et ceux qui y écrivent sont prévenus des nouveaux messages.</li>
+    <li>Tapez <strong>@</strong> puis le début d'un prénom : le site propose les membres ; la personne mentionnée est prévenue.</li>
+    <li><strong>Entrée</strong> envoie le message, <strong>Maj + Entrée</strong> va à la ligne. Les nouveaux messages arrivent seuls, en quelques secondes, tant que la page est ouverte.</li>
+  </ul>
+  <figure class="basse"><img src="img/planning_discussion.jpg"><figcaption>Le canal « Général », avec une mention.</figcaption></figure>
+
+  <h2>Notifications</h2>
+  <p>Le planning vous prévient : nouvel événement, modification ou annulation, invitation, nouveau sondage, message ou mention, créneau urgent. Les notifications non lues sont comptées dans le menu Réservations et dans l'onglet <strong>Notifications</strong> ; un clic ouvre la page concernée.</p>
+  <p>Elles peuvent aussi arriver <strong>par e-mail</strong>, regroupées (au plus un e-mail toutes les 5 minutes). Chacun choisit dans l'onglet Notifications ce qu'il reçoit par e-mail ; par défaut, tout sauf les messages des discussions, qui ne sont envoyés que si l'on vous mentionne.</p>
+  <figure class="basse"><img src="img/planning_notifications.jpg"><figcaption>Les notifications et le choix des e-mails.</figcaption></figure>
+  <div class="encart attention"><span class="t">Pas d'e-mail ?</span>
+    <p>Vérifiez que votre compte a une adresse e-mail (fiche de l'utilisateur, chapitre 12) et regardez dans les indésirables. Les e-mails partent par une tâche planifiée sur le serveur : si personne ne reçoit rien, prévenez le responsable technique.</p></div>
+
+  <h2>Qui peut faire quoi ?</h2>
+  <table>
+    <tr><th>Action</th><th style="width:14%">Membre</th><th style="width:18%">Auteur de l'événement</th><th style="width:15%">Responsable</th></tr>
+    <tr><td>Voir l'agenda, s'inscrire, répondre, voter, discuter</td><td class="oui">✓</td><td class="oui">✓</td><td class="oui">✓</td></tr>
+    <tr><td>Créer un événement ou un sondage</td><td class="oui">✓</td><td class="oui">✓</td><td class="oui">✓</td></tr>
+    <tr><td>Modifier, annuler, supprimer un événement ; gérer ses créneaux et ses invitations</td><td class="non">—</td><td class="oui">✓</td><td class="oui">✓ (tous)</td></tr>
+    <tr><td>Voir les événements « réservés aux invités »</td><td class="non">si invité</td><td class="oui">✓</td><td class="oui">✓</td></tr>
+    <tr><td>Tous les créneaux et les disponibilités de chacun ; créer un canal</td><td class="non">—</td><td class="non">—</td><td class="oui">✓</td></tr>
+  </table>
+  <p class="petit">Est responsable : un compte avec le « Statut équipe », ou qui a reçu la permission « Peut gérer le planning (responsable) » (chapitre 12).</p>
+
+  <h2>Sur téléphone</h2>
+  <div class="duo">
+    <figure class="mobile"><img src="img/planning_mobile.jpg"><figcaption>Sur smartphone, les créneaux s'empilent et l'inscription reste à un clic.</figcaption></figure>
+    <div><p>Le planning s'utilise aussi bien sur téléphone : la vue mensuelle devient une liste des jours occupés, et chaque page s'adapte à la largeur de l'écran.</p></div>
+  </div>
+</section>
+
+<!-- ============================ 5. LOCATION ============================ -->
+<section class="chapitre" id="ch6">
+  <div class="bandeau"><div class="num">Chapitre 6</div><h1>Location de la salle</h1>
     <p>De la demande en ligne au contrat signé et au remboursement de la caution.</p></div>
 
   <h2>Vue d'ensemble</h2>
@@ -378,8 +482,8 @@
 </section>
 
 <!-- ============================ 6. ACTUALITÉS ============================ -->
-<section class="chapitre" id="ch6">
-  <div class="bandeau"><div class="num">Chapitre 6</div><h1>Les actualités (News)</h1>
+<section class="chapitre" id="ch7">
+  <div class="bandeau"><div class="num">Chapitre 7</div><h1>Les actualités (News)</h1>
     <p>Partager un événement, une affiche ou un compte rendu, directement depuis le site.</p></div>
 
   <p>Les actualités se rédigent et se modifient <strong>entièrement depuis le site</strong>, sans passer par Wagtail. Seule la page « News » elle-même (et sa place dans le menu) se gère dans Wagtail.</p>
@@ -450,8 +554,8 @@
 </section>
 
 <!-- ============================ 7. MÉDIAS ============================ -->
-<section class="chapitre" id="ch7">
-  <div class="bandeau"><div class="num">Chapitre 7</div><h1>Médias : albums photos et vidéos</h1>
+<section class="chapitre" id="ch8">
+  <div class="bandeau"><div class="num">Chapitre 8</div><h1>Médias : albums photos et vidéos</h1>
     <p>Publier les photos d'un spectacle ou d'un événement en quelques minutes.</p></div>
 
   <h2>Créer un album</h2>
@@ -485,11 +589,11 @@
 </section>
 
 <!-- ============================ 8. THÉÂTRE ============================ -->
-<section class="chapitre" id="ch8">
-  <div class="bandeau"><div class="num">Chapitre 8</div><h1>L'application Théâtre</h1>
+<section class="chapitre" id="ch9">
+  <div class="bandeau"><div class="num">Chapitre 9</div><h1>L'application Théâtre</h1>
     <p>La billetterie interne : représentations, réservations, placement automatique et contrôle des entrées.</p></div>
 
-  <p>L'application se trouve dans le menu <strong>Théâtre</strong> (<span class="url">/theatre/</span>). Elle n'est accessible qu'aux personnes connectées qui ont le droit <em>« Peut accéder à l'application Théâtre »</em> (voir chapitre 11). Les autres reçoivent un message « accès interdit ».</p>
+  <p>L'application se trouve dans le menu <strong>Théâtre</strong> (<span class="url">/theatre/</span>). Elle n'est accessible qu'aux personnes connectées qui ont le droit <em>« Peut accéder à l'application Théâtre »</em> (voir chapitre 12). Les autres reçoivent un message « accès interdit ».</p>
 
   <h2>Le déroulement type d'une saison</h2>
   <table>
@@ -543,8 +647,8 @@
 </section>
 
 <!-- ============================ 9. NEWSLETTER ============================ -->
-<section class="chapitre" id="ch9">
-  <div class="bandeau"><div class="num">Chapitre 9</div><h1>La newsletter</h1>
+<section class="chapitre" id="ch10">
+  <div class="bandeau"><div class="num">Chapitre 10</div><h1>La newsletter</h1>
     <p>Informer régulièrement le public par e-mail, dans le respect du RGPD.</p></div>
 
   <h2>Les inscriptions</h2>
@@ -584,8 +688,8 @@
 </section>
 
 <!-- ============================ 10. WAGTAIL ============================ -->
-<section class="chapitre" id="ch10">
-  <div class="bandeau"><div class="num">Chapitre 10</div><h1>L'administration Wagtail</h1>
+<section class="chapitre" id="ch11">
+  <div class="bandeau"><div class="num">Chapitre 11</div><h1>L'administration Wagtail</h1>
     <p>Modifier les textes, images, menus et réglages du site (<span class="url">/admin/</span>).</p></div>
 
   <h2>Le tableau de bord</h2>
@@ -660,7 +764,7 @@
   <figure class="basse"><img src="img/wagtail_seo.jpg"><figcaption>L'onglet Promotion d'une actualité.</figcaption></figure>
 
   <h2>Les statistiques de fréquentation</h2>
-  <p>Le menu <strong>Statistiques</strong> montre combien de personnes visitent le site. Il n'apparaît qu'aux super-utilisateurs, et aux personnes à qui la permission a été donnée (chapitre 11).</p>
+  <p>Le menu <strong>Statistiques</strong> montre combien de personnes visitent le site. Il n'apparaît qu'aux super-utilisateurs, et aux personnes à qui la permission a été donnée (chapitre 12).</p>
   <ul>
     <li>Choisissez la période en haut : <strong>7 jours</strong>, <strong>30 jours</strong>, <strong>3 mois</strong> ou <strong>12 mois</strong> (graphique par mois).</li>
     <li>Les quatre chiffres clés : <strong>visiteurs</strong>, <strong>pages vues</strong> (avec l'évolution par rapport à la période précédente de même durée), pages vues par visiteur, et part des pages vues sur téléphone ou tablette.</li>
@@ -675,8 +779,8 @@
 </section>
 
 <!-- ============================ 11. UTILISATEURS ============================ -->
-<section class="chapitre" id="ch11">
-  <div class="bandeau"><div class="num">Chapitre 11</div><h1>Gestion des utilisateurs et des droits</h1>
+<section class="chapitre" id="ch12">
+  <div class="bandeau"><div class="num">Chapitre 12</div><h1>Gestion des utilisateurs et des droits</h1>
     <p>Réservé aux responsables : se fait dans l'administration Django (<span class="url">/django-admin/</span>).</p></div>
 
   <figure><img src="img/django_admin.jpg"><figcaption>L'administration Django : utilisateurs et groupes, calendrier et réservations, théâtre, images…</figcaption></figure>
@@ -697,6 +801,7 @@
     <tr><td>Un <strong>administrateur du calendrier</strong> dont les actualités passent par la validation</td><td>Cochez <strong>Statut équipe</strong>, sans le groupe Moderators. Il gère tout le calendrier (demandes de location, contrats, activités) et peut modifier toutes les actualités depuis le site, mais ses actualités et ses modifications attendent l'approbation d'un modérateur. Pour l'accès à Wagtail, ajoutez-le au groupe <strong>Editors</strong> (facultatif).</td></tr>
     <tr><td>Un <strong>modérateur</strong> des actualités</td><td>Groupe <strong>Moderators</strong> : il reçoit un e-mail à chaque actualité proposée et peut l'approuver.</td></tr>
     <tr><td>L'<strong>accès au Théâtre</strong></td><td>Section « Permissions de l'utilisateur » : ajoutez <em>Gestion du Théâtre | acces application | Peut accéder à l'application Théâtre</em>.</td></tr>
+    <tr><td>Un <strong>responsable du planning</strong> sans « Statut équipe »</td><td>Section « Permissions de l'utilisateur » : ajoutez <em>Planning des membres | Événement du planning | Peut gérer le planning (responsable)</em>. Il voit tous les événements et tous les créneaux, gère ceux des autres et crée les canaux de discussion. Les comptes « Statut équipe » sont responsables d'office.</td></tr>
     <tr><td>La consultation des <strong>statistiques</strong> de fréquentation</td><td>Les super-utilisateurs les voient d'office. Pour un autre administrateur : section « Permissions de l'utilisateur », ajoutez <em>Statistiques de fréquentation | Journée | Peut consulter les statistiques de fréquentation</em>. Il doit aussi avoir accès à Wagtail (groupe Editors ou Moderators). La même permission se coche aussi pour un groupe, dans Wagtail (Paramètres → Groupes).</td></tr>
     <tr><td>Un <strong>super-utilisateur</strong></td><td>« Statut super-utilisateur » : tous les droits. À limiter à une ou deux personnes de confiance.</td></tr>
   </table>
@@ -708,13 +813,15 @@
 </section>
 
 <!-- ============================ 12. FAQ ============================ -->
-<section class="chapitre" id="ch12">
-  <div class="bandeau"><div class="num">Chapitre 12</div><h1>Bonnes pratiques et questions fréquentes</h1>
+<section class="chapitre" id="ch13">
+  <div class="bandeau"><div class="num">Chapitre 13</div><h1>Bonnes pratiques et questions fréquentes</h1>
     <p>Les réflexes qui évitent les mauvaises surprises.</p></div>
 
   <h2>Questions fréquentes</h2>
+  <h3>« Je ne vois pas le Planning. »</h3>
+  <p>Le planning est réservé aux membres connectés : connectez-vous, puis ouvrez le menu <strong>Réservations → Planning</strong>. Un événement « réservé aux invités » n'apparaît que si vous y êtes invité.</p>
   <h3>« Je ne vois pas le menu Théâtre. »</h3>
-  <p>Vérifiez que vous êtes connecté. Si c'est le cas, votre compte n'a pas la permission Théâtre : demandez-la à un responsable (chapitre 11).</p>
+  <p>Vérifiez que vous êtes connecté. Si c'est le cas, votre compte n'a pas la permission Théâtre : demandez-la à un responsable (chapitre 12).</p>
   <h3>« Le bouton Valider ne fonctionne pas pour une demande de location. »</h3>
   <p>Un message rouge indique que la salle est déjà occupée à ces dates (activité ou autre location). Libérez d'abord la date (déplacer l'activité, annuler l'autre location) ou contactez le demandeur pour une autre date.</p>
   <h3>« Mon actualité n'apparaît pas sur le site. »</h3>
@@ -755,6 +862,8 @@
     <tr><td><span class="url">/calendrier/reservation/demander/</span></td><td>Formulaire public de demande de location</td></tr>
     <tr><td><span class="url">/calendrier/reservations/</span></td><td>Gérer les demandes de location (administrateurs)</td></tr>
     <tr><td><span class="url">/calendrier/reservation/paiements/</span></td><td>Suivi des paiements et des cautions</td></tr>
+    <tr><td><span class="url">/planning/</span></td><td>Planning des membres (agenda privé)</td></tr>
+    <tr><td><span class="url">/planning/a-combler/</span></td><td>Planning : créneaux à combler</td></tr>
     <tr><td><span class="url">/calendrier/contrat-type/</span></td><td>Contrat-type : articles, annexes, mise en page</td></tr>
     <tr><td><span class="url">/ajouter-actualite/</span></td><td>Proposer une actualité</td></tr>
     <tr><td><span class="url">/theatre/</span></td><td>Application Théâtre : représentations</td></tr>

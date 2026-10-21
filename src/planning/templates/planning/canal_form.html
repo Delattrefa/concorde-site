@@ -1,0 +1,14 @@
+{% extends "planning/base.html" %}
+{% block title %}Nouveau canal — Discussions{% endblock %}
+
+{% block planning %}
+<p class="breadcrumb"><a href="{% url 'planning:canaux' %}">← Discussions</a></p>
+<h2>Nouveau canal de discussion</h2>
+<p class="pl-muet">Un canal général est ouvert à tous les membres (ex. « Général », « Bénévoles du bar »). Chaque événement a déjà son propre fil.</p>
+<form method="post" class="calendrier-form" style="margin:0; padding-left:0" novalidate>
+    {% csrf_token %}
+    {% include "planning/_champ.html" with champ=form.nom %}
+    {% include "planning/_champ.html" with champ=form.description %}
+    <button type="submit" class="btn btn--primary">Créer le canal</button>
+</form>
+{% endblock %}

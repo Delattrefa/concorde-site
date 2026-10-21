@@ -179,6 +179,99 @@ Jour.objects.bulk_create(jours)
 PageJour.objects.bulk_create(pages_jour)
 ProvenanceJour.objects.bulk_create(provenances_jour)
 
+# --- Planning des membres : événements, créneaux, sondage, discussions -------
+from planning import services as planning_services  # noqa: E402
+from planning.models import (  # noqa: E402
+    Canal as PlCanal, Creneau as PlCreneau, Disponibilite as PlDispo, Evenement as PlEvenement,
+    Inscription as PlInscription, Invitation as PlInvitation, Message as PlMessage,
+    Notification as PlNotification, Sondage as PlSondage, Vote as PlVote,
+)
+
+def _membre(identifiant, prenom, nom):
+    return User.objects.filter(username=identifiant).first() or User.objects.create_user(
+        identifiant, f"{identifiant}@exemple.be", MOT_DE_PASSE, first_name=prenom, last_name=nom)
+
+benevoles = [_membre("sophie", "Sophie", "Leroy"), _membre("marc", "Marc", "Petit"),
+             _membre("julie", "Julie", "Hennaut"), _membre("luc", "Luc", "Duvivier")]
+sophie, marc, julie, luc = benevoles
+# Les vrais comptes de la base copiée n'apparaissent pas dans les listes de
+# membres des captures (copie de travail uniquement)
+User.objects.exclude(pk__in=[admin.pk, membre.pk] + [b.pk for b in benevoles]).update(is_active=False)
+
+def _a(jour, heure, minute=0):
+    return timezone.make_aware(dt.datetime.combine(jour, dt.time(heure, minute)))
+
+for modele in (PlNotification, PlVote, PlSondage, PlMessage, PlEvenement):
+    modele.objects.all().delete()
+PlDispo.objects.all().delete()
+
+ducasse = PlEvenement.objects.create(
+    type="activite", titre="Ducasse d'hiver — souper raclette", lieu="Salle La Concorde", createur=admin,
+    description="Montage l'après-midi, service du souper le soir, rangement en fin de soirée.",
+    debut=_a(dt.date(2026, 11, 14), 14), fin=_a(dt.date(2026, 11, 14), 23))
+for heure, fin, poste, besoin, inscrits in [
+    (14, 17, "Montage de la salle", 4, [marc, luc, membre]), (18, 20, "Bar", 2, [sophie, julie]),
+    (20, 22, "Bar", 2, [sophie]), (18, 21, "Service à table", 3, []), (21, 23, "Vaisselle et rangement", 3, [luc]),
+]:
+    creneau = PlCreneau.objects.create(evenement=ducasse, libelle=poste, besoin=besoin,
+                                       debut=_a(dt.date(2026, 11, 14), heure), fin=_a(dt.date(2026, 11, 14), fin))
+    for m in inscrits:
+        PlInscription.objects.create(creneau=creneau, membre=m)
+
+comite = PlEvenement.objects.create(
+    type="reunion", titre="Réunion du comité", lieu="Petite salle", createur=admin, reserve_aux_invites=False,
+    description="Ordre du jour : bilan de la ducasse, préparation du marché de Noël.",
+    debut=_a(dt.date(2026, 11, 4), 20), fin=_a(dt.date(2026, 11, 4), 22))
+for occurrence in [comite] + planning_services.repeter(comite, "mois", dt.date(2027, 3, 31)):
+    for m, statut in [(membre, "accepte"), (sophie, "accepte"), (marc, "refuse"), (julie, "attente")]:
+        PlInvitation.objects.create(evenement=occurrence, membre=m, statut=statut)
+
+menage = PlEvenement.objects.create(type="tache", titre="Ménage de la salle", createur=admin,
+                                    debut=_a(dt.date(2026, 10, 26), 9), fin=_a(dt.date(2026, 10, 26), 11))
+planning_services.decouper(menage, 120, 2)
+for occurrence in planning_services.repeter(menage, "hebdo", dt.date(2026, 12, 21)):
+    planning_services.copier_creneaux(menage, [occurrence])
+PlInscription.objects.create(creneau=menage.creneaux.first(), membre=julie)
+
+marche = PlEvenement.objects.create(
+    type="activite", titre="Marché de Noël — stands et accueil", lieu="Salle et parking", createur=admin,
+    debut=_a(dt.date(2026, 12, 5), 16), fin=_a(dt.date(2026, 12, 5), 22))
+planning_services.decouper(marche, 120, 3, "Accueil des visiteurs")
+planning_services.decouper(marche, 180, 2, "Bar à vin chaud")
+
+PlDispo.objects.bulk_create([
+    PlDispo(membre=julie, date=dt.date(2026, 11, 14), heure_debut=dt.time(17)),
+    PlDispo(membre=marc, date=dt.date(2026, 11, 14), note="Après le montage"),
+    PlDispo(membre=membre, date=dt.date(2026, 12, 5)),
+])
+
+sondage_bilan = PlSondage.objects.create(type="date", titre="Réunion bilan de la ducasse", createur=admin,
+                                         description="Une heure pour faire le point à chaud.")
+options = [sondage_bilan.options.create(debut=_a(j, 20), fin=_a(j, 21), ordre=i)
+           for i, j in enumerate([dt.date(2026, 11, 17), dt.date(2026, 11, 18), dt.date(2026, 11, 19)])]
+for m, reponses in [(sophie, ["oui", "si_besoin", "non"]), (marc, ["oui", "oui", "non"]),
+                    (julie, ["non", "oui", "oui"]), (luc, ["oui", "non", "si_besoin"])]:
+    for option, reponse in zip(options, reponses):
+        PlVote.objects.create(option=option, membre=m, reponse=reponse)
+sondage_tshirts = PlSondage.objects.create(type="decision", titre="Couleur des t-shirts des bénévoles", createur=admin)
+for libelle, votants in [("Bordeaux", [sophie, marc, luc]), ("Noir", [julie]), ("Doré", [])]:
+    option = sondage_tshirts.options.create(libelle=libelle)
+    for m in votants:
+        PlVote.objects.create(option=option, membre=m)
+
+general = PlCanal.objects.get_or_create(nom="Général", evenement=None)[0]
+for auteur, texte in [
+    (sophie, "Bonjour à tous ! Qui a la clé du local de rangement cette semaine ?"),
+    (marc, "C'est moi, je la dépose au bar vendredi soir."),
+    (admin, "Merci Marc. N'oubliez pas de vous inscrire pour la ducasse : il manque encore du monde au service à table."),
+    (julie, "@membre tu pourrais faire le service avec moi samedi ?"),
+]:
+    planning_services.publier(general, auteur, texte)
+fil = planning_services.canal_de(ducasse)
+for auteur, texte in [(luc, "J'apporte les rallonges électriques pour les appareils à raclette."),
+                      (sophie, "Super ! Pour le bar, on prévoit combien de fûts ? @secretariat")]:
+    planning_services.publier(fil, auteur, texte)
+
 # --- Identifiants utiles aux captures (lus par captures.py) -----------------
 from pathlib import Path  # noqa: E402
 
@@ -208,6 +301,11 @@ ids = {
     "menu": MainMenu.objects.first().pk,
     "actualite_blocs": NewsPage.objects.get(title=TITRE_ACTU_BLOCS).pk,
     "actualite_blocs_url": NewsPage.objects.get(title=TITRE_ACTU_BLOCS).url,
+    "planning_ducasse": ducasse.pk,
+    "planning_comite": comite.pk,
+    "planning_sondage": sondage_bilan.pk,
+    "planning_sondage_decision": sondage_tshirts.pk,
+    "planning_canal": general.pk,
 }
 fichier = Path(connection.settings_dict["NAME"]).parent / "ids.json"
 fichier.write_text(json.dumps(ids, indent=2, ensure_ascii=False))

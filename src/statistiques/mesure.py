@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 PREFIXES_EXCLUS = (
     "/admin/", "/django-admin/", "/documents/", "/static/", "/media/", "/nl/", "/__debug__/",
+    "/planning/",  # espace privé des membres
 )
 _RE_ROBOT = re.compile(
     r"bot|crawl|spider|slurp|scrap|fetch|preview|monitor|uptime|headless|lighthouse|"

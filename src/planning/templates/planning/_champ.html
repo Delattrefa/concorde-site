@@ -1,0 +1,11 @@
+<div class="form-field{% if champ.errors %} form-field--error{% endif %}">
+    {% if cases %}
+        <span class="form-field__label">{{ champ.label }}</span><div class="pl-cases">{{ champ }}</div>
+    {% elif champ.field.widget.input_type == "checkbox" %}
+        <label>{{ champ }} {{ champ.label }}</label>
+    {% else %}
+        {{ champ.label_tag }}{{ champ }}
+    {% endif %}
+    {% if champ.help_text %}<p class="form-field__help">{{ champ.help_text }}</p>{% endif %}
+    {{ champ.errors }}
+</div>

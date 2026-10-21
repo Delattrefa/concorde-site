@@ -1,0 +1,11 @@
+{% autoescape off %}Bonjour {{ membre.first_name|default:membre.username }},
+
+{% if notifications|length == 1 %}Du nouveau dans le planning de La Concorde :{% else %}{{ notifications|length }} nouveautés dans le planning de La Concorde :{% endif %}
+{% for n in notifications %}
+- {{ n.texte }}
+  {{ base }}{{ n.lien }}
+{% endfor %}
+Pour choisir les e-mails que vous recevez : {{ base }}/planning/notifications/
+
+— La Concorde asbl
+{% endautoescape %}

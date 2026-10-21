@@ -1,0 +1,50 @@
+{% extends "planning/base.html" %}
+{% block title %}{% if evenement %}Modifier « {{ evenement.titre }} »{% else %}Nouvel événement{% endif %} — Planning{% endblock %}
+
+{% block planning %}
+<p class="breadcrumb"><a href="{% if evenement %}{{ evenement.get_absolute_url }}{% else %}{% url 'planning:accueil' %}{% endif %}">← Retour</a></p>
+<h2>{% if evenement %}Modifier l'événement{% else %}Nouvel événement{% endif %}</h2>
+{% if sondage %}<p class="message message--info">Date retenue par le sondage « {{ sondage.titre }} » ; ses participants sont déjà cochés pour l'invitation.</p>{% endif %}
+
+<form method="post" class="calendrier-form" style="margin:0; padding-left:0" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% include "planning/_champ.html" with champ=form.type %}
+    {% include "planning/_champ.html" with champ=form.titre %}
+    <div class="form-field-row">
+        {% include "planning/_champ.html" with champ=form.debut %}
+        {% include "planning/_champ.html" with champ=form.fin %}
+    </div>
+    {% include "planning/_champ.html" with champ=form.lieu %}
+    {% include "planning/_champ.html" with champ=form.description %}
+
+    {% if form.repetition %}
+        <fieldset class="pl-carte">
+            <legend><strong>Répétition</strong> (tâche régulière, réunion mensuelle…)</legend>
+            <div class="form-field-row">
+                {% include "planning/_champ.html" with champ=form.repetition %}
+                {% include "planning/_champ.html" with champ=form.repeter_jusquau %}
+            </div>
+        </fieldset>
+        <fieldset class="pl-carte">
+            <legend><strong>Créneaux</strong> (facultatif)</legend>
+            <div class="form-field-row">
+                {% include "planning/_champ.html" with champ=form.duree_creneaux %}
+                {% include "planning/_champ.html" with champ=form.besoin_creneaux %}
+            </div>
+        </fieldset>
+    {% endif %}
+
+    <fieldset class="pl-carte">
+        <legend><strong>Invitations</strong></legend>
+        {% include "planning/_champ.html" with champ=form.reserve_aux_invites %}
+        {% include "planning/_champ.html" with champ=form.inviter_groupes cases=True %}
+        {% include "planning/_champ.html" with champ=form.inviter_membres cases=True %}
+        <p class="form-field__help">Chaque invité reçoit une notification et peut répondre (accepter ou refuser).{% if evenement %} Les invitations déjà envoyées sont conservées.{% endif %}</p>
+    </fieldset>
+
+    {% if form.appliquer_serie %}{% include "planning/_champ.html" with champ=form.appliquer_serie %}{% endif %}
+
+    <button type="submit" class="btn btn--primary">{% if evenement %}Enregistrer{% else %}Ajouter au planning{% endif %}</button>
+</form>
+{% endblock %}

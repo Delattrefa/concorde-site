@@ -28,6 +28,8 @@ urlpatterns = [
 
     # Application 'calendrier' : activités + réservations de salle
     path("calendrier/", include("calendrier.urls", namespace="calendrier")),
+    # Application 'planning' : agenda interne des membres (connectés)
+    path("planning/", include("planning.urls")),
 
     # Application 'theatre' : gestion des places de théâtre (site secondaire,
     # intégrée telle quelle depuis son propre projet Django d'origine).

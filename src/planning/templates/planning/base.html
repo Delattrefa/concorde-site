@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static planning_tags %}
+
+{% block meta_description %}Planning interne des membres de La Concorde asbl.{% endblock %}
+
+{% block extra_css %}
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+<link rel="stylesheet" href="{% static 'planning/planning.css' %}">
+{% endblock %}
+
+{% block content %}
+{% onglet_actif as onglet %}
+<section class="planning wrap">
+    <div class="planning__entete">
+        <div>
+            <h1>Planning</h1>
+            <p>Agenda privé des membres de l'ASBL.</p>
+        </div>
+        <a class="btn btn--primary btn--small" href="{% url 'planning:evenement_ajouter' %}">+ Nouvel événement</a>
+    </div>
+
+    <nav class="pl-onglets" aria-label="Rubriques du planning">
+        <a href="{% url 'planning:accueil' %}"{% if onglet == "agenda" %} aria-current="page"{% endif %}>Agenda</a>
+        <a href="{% url 'planning:couverture' %}"{% if onglet == "couverture" %} aria-current="page"{% endif %}>À combler</a>
+        <a href="{% url 'planning:invitations' %}"{% if onglet == "invitations" %} aria-current="page"{% endif %}>Invitations</a>
+        <a href="{% url 'planning:sondages' %}"{% if onglet == "sondages" %} aria-current="page"{% endif %}>Sondages</a>
+        <a href="{% url 'planning:canaux' %}"{% if onglet == "discussions" %} aria-current="page"{% endif %}>Discussions</a>
+        <a href="{% url 'planning:disponibilites' %}"{% if onglet == "disponibilites" %} aria-current="page"{% endif %}>Mes disponibilités</a>
+        <a href="{% url 'planning:notifications' %}"{% if onglet == "notifications" %} aria-current="page"{% endif %}>Notifications
+            <span class="pl-compteur" data-compteur-notifications{% if not menu_reservations.non_lues %} hidden{% endif %}>{{ menu_reservations.non_lues }}</span></a>
+    </nav>
+    <div hidden data-planning-notifications="{% url 'planning:notifications_compte' %}"></div>
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="message message--{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% block planning %}{% endblock %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'planning/planning.js' %}" defer></script>
+{% endblock %}

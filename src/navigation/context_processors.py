@@ -1,3 +1,4 @@
+from planning.menu import menu_reservations
 from theatre.menu import menu_theatre
 
 from .models import FooterMenu, MainMenu
@@ -11,4 +12,6 @@ def menus(request):
         "footer_menu": FooterMenu.objects.prefetch_related("links").first(),
         # Sous-menu « Théâtre » : seulement pour les utilisateurs autorisés
         "menu_theatre": menu_theatre(request),
+        # Sous-menu « Réservations » (Calendrier, Planning) : membres connectés
+        "menu_reservations": menu_reservations(request),
     }

@@ -128,5 +128,7 @@ LOGGING = {
         "newsletter": {"handlers": ["fichier"], "level": "ERROR", "propagate": False},
         # Échecs de la recopie vers l'agenda Google
         "calendrier": {"handlers": ["fichier"], "level": "ERROR", "propagate": False},
+        # E-mails du planning non envoyés
+        "planning": {"handlers": ["fichier"], "level": "ERROR", "propagate": False},
     },
 }

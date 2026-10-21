@@ -23,6 +23,13 @@ contact), avec une page d'accueil en défilement continu et effets de fondu.
   membres connectés ; demande de réservation de salle par formulaire public
   (sans connexion) ; validation ou refus des demandes par un administrateur.
   Voir détails ci-dessous.
+- **Planning des membres** (`planning` app, menu Réservations › Planning,
+  réservé aux membres connectés) : réunions, tâches (répétées ou non) et
+  activités ; vues mois / semaine / jour / liste ; découpage en créneaux avec
+  inscription en un clic et tableau « À combler » ; disponibilités ;
+  invitations avec réponse ; sondages de date et de décision ; discussions
+  (canaux et fil par événement, mentions @) ; notifications dans le site et
+  par e-mail groupé (commande `planning_taches`, tâche cron).
 - **Page Médias** : albums photos avec galerie et lightbox. Les
   administrateurs (`is_staff`) peuvent ajouter plusieurs photos en une
   seule fois à un album (bouton "+ Ajouter des photos" sur la page de

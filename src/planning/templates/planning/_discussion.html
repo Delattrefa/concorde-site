@@ -1,0 +1,22 @@
+{# Fil de discussion d'un canal (page du canal ou d'un événement) #}
+<div class="pl-discussion{% if pleine_page %} pl-discussion--page{% endif %}" data-discussion
+     data-url="{% url 'planning:canal_messages' canal.pk %}" data-dernier="{{ dernier_id }}">
+    <div class="pl-discussion__messages" data-messages aria-live="polite">
+        {% if plus_anciens %}<p class="pl-muet" style="text-align:center"><a href="{% url 'planning:canal' canal.pk %}?avant={{ plus_anciens }}">Messages plus anciens</a></p>{% endif %}
+        {% for m in messages_canal %}
+            <div class="pl-message{% if m.moi %} pl-message--moi{% endif %}" data-id="{{ m.id }}">
+                <div class="pl-message__entete"><strong>{{ m.auteur }}</strong><span>{{ m.heure }}</span></div>
+                <div class="pl-message__texte">{{ m.html|safe }}</div>
+            </div>
+        {% empty %}
+            <p class="pl-muet" data-aucun-message>Pas encore de message. Écrivez le premier ! Tapez <strong>@</strong> pour mentionner un membre.</p>
+        {% endfor %}
+    </div>
+    <form method="post" action="{% url 'planning:canal_messages' canal.pk %}" class="pl-discussion__form">
+        {% csrf_token %}
+        <label class="visually-hidden" for="message-{{ canal.pk }}">Votre message</label>
+        <textarea id="message-{{ canal.pk }}" name="texte" rows="1" maxlength="4000" placeholder="Votre message… (@ pour mentionner quelqu'un)" required></textarea>
+        <button type="submit" class="btn btn--secondary btn--small">Envoyer</button>
+    </form>
+</div>
+{{ membres_mention|json_script:"membres-mention" }}

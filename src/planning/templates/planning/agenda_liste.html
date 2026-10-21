@@ -1,0 +1,31 @@
+{% extends "planning/base.html" %}
+{% block title %}Planning — {{ titre }}{% endblock %}
+
+{% block planning %}
+{% include "planning/_agenda_barre.html" %}
+<div class="pl-actions">
+    <a class="btn btn--small {% if mes_engagements %}btn--clair{% else %}btn--secondary{% endif %}" href="{% url 'planning:liste' %}{% if type_filtre %}?type={{ type_filtre }}{% endif %}">Tout le planning</a>
+    <a class="btn btn--small {% if mes_engagements %}btn--secondary{% else %}btn--clair{% endif %}" href="{% url 'planning:liste' %}?moi=1{% if type_filtre %}&type={{ type_filtre }}{% endif %}">Mes engagements</a>
+</div>
+
+{% for groupe in groupes %}
+    <h3 class="pl-groupe-date">{{ groupe.nom }} {{ groupe.date|date:"j F Y" }}</h3>
+    {% for e in groupe.evenements %}
+        <article class="pl-carte pl-carte--{{ e.type }}{% if e.annule %} pl-carte--annule{% endif %}">
+            <div class="pl-carte__meta">
+                <span class="pl-type pl-type--{{ e.type }}">{{ e.get_type_display }}</span>
+                <span><strong>{{ e.debut|date:"H:i" }}–{{ e.fin|date:"H:i" }}</strong>{% if e.debut|date:"Ymd" != e.fin|date:"Ymd" %} (jusqu'au {{ e.fin|date:"j F" }}){% endif %}</span>
+                {% if e.lieu %}<span>📍 {{ e.lieu }}</span>{% endif %}
+                {% if e.annule %}<span class="pl-etiquette pl-etiquette--annule">Annulé</span>
+                {% elif e.manque %}<span class="pl-etiquette pl-etiquette--manque">⚑ {{ e.manque }} place{{ e.manque|pluralize }} à combler</span>{% endif %}
+            </div>
+            <h3><a href="{{ e.get_absolute_url }}">{{ e.titre }}</a></h3>
+            {% if e.mes_creneaux %}
+                <p class="pl-muet">Vous êtes inscrit : {% for c in e.mes_creneaux %}{{ c.debut|date:"H:i" }}–{{ c.fin|date:"H:i" }}{% if c.libelle %} ({{ c.libelle }}){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+            {% endif %}
+        </article>
+    {% endfor %}
+{% empty %}
+    <p class="pl-vide-message">{% if mes_engagements %}Aucun engagement dans les 3 prochains mois.{% else %}Rien au planning pour les 3 prochains mois.{% endif %}</p>
+{% endfor %}
+{% endblock %}

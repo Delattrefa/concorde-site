@@ -27,7 +27,21 @@ Comportement piloté par static/js/scroll-effects.js.
                 <li class="main-nav__item"><a href="{{ item.url }}">{{ item.link_title }}</a></li>
             {% endif %}
         {% endfor %}
-        <li class="main-nav__item"><a href="{% url 'calendrier:mois_courant' %}">Réservations</a></li>
+        {% if menu_reservations %}
+            <li class="main-nav__item main-nav__item--parent{% if menu_reservations.actif %} is-actif{% endif %}">
+                <div class="main-nav__parent">
+                    <a href="{{ menu_reservations.url }}">Réservations{% if menu_reservations.non_lues %} <span class="main-nav__badge" data-planning-badge title="Notifications non lues du planning">{{ menu_reservations.non_lues }}</span>{% endif %}</a>
+                    <button type="button" class="main-nav__deplier" aria-expanded="false" aria-controls="sous-menu-reservations" aria-label="Afficher le sous-menu Réservations"></button>
+                </div>
+                <ul class="main-nav__sous-menu" id="sous-menu-reservations">
+                    {% for lien in menu_reservations.liens %}
+                        <li><a href="{{ lien.url }}"{% if lien.actif %} aria-current="page"{% endif %}>{{ lien.titre }}{% if lien.titre == "Planning" and menu_reservations.non_lues %} <span class="main-nav__badge">{{ menu_reservations.non_lues }}</span>{% endif %}</a></li>
+                    {% endfor %}
+                </ul>
+            </li>
+        {% else %}
+            <li class="main-nav__item"><a href="{% url 'calendrier:mois_courant' %}">Réservations</a></li>
+        {% endif %}
         {% if menu_theatre %}
             <li class="main-nav__item main-nav__item--parent{% if menu_theatre.actif %} is-actif{% endif %}">
                 <div class="main-nav__parent">

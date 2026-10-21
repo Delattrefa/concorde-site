@@ -1,0 +1,25 @@
+{% extends "planning/base.html" %}
+{% block title %}Planning — {{ titre }}{% endblock %}
+
+{% block planning %}
+{% include "planning/_agenda_barre.html" %}
+<table class="pl-mois">
+    <thead><tr>{% for nom in jours_semaine %}<th scope="col">{{ nom }}</th>{% endfor %}</tr></thead>
+    <tbody>
+        {% for semaine in semaines %}
+            <tr>
+                {% for j in semaine %}
+                    <td class="{% if not j.dans_le_mois %}hors-mois{% endif %}{% if j.date == aujourdhui %} aujourdhui{% endif %}{% if not j.entrees %} sans-entree{% endif %}">
+                        <div class="pl-jour__tete">
+                            <a class="pl-jour__numero" href="{% url 'planning:jour' j.date.year j.date.month j.date.day %}">{{ j.date.day }}</a>
+                            <span class="pl-jour__nom">{{ j.date|date:"l j F" }}</span>
+                            <a class="pl-jour__ajouter" href="{% url 'planning:evenement_ajouter' %}?date={{ j.date|date:'Y-m-d' }}" aria-label="Ajouter un événement le {{ j.date|date:'j F' }}">+</a>
+                        </div>
+                        {% for e in j.entrees %}{% include "planning/_entree.html" %}{% endfor %}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

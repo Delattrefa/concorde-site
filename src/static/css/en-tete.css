@@ -297,3 +297,19 @@
     .main-nav .main-nav__sous-menu li + li { border-top: 0; }
     .main-nav .main-nav__sous-menu a { padding: 10px 12px; font-size: 1rem; }
 }
+
+/* Pastille du nombre de notifications non lues du planning */
+.main-nav__badge {
+    display: inline-block;
+    min-width: 1.35em;
+    padding: 0 .4em;
+    margin-left: 4px;
+    border-radius: 999px;
+    background: var(--color-accent);
+    color: var(--color-dark);
+    font-size: .72rem;
+    font-weight: 700;
+    line-height: 1.5;
+    text-align: center;
+    vertical-align: 2px;
+}

@@ -1,0 +1,20 @@
+{% extends "planning/base.html" %}
+{% block title %}Découper en créneaux — {{ evenement.titre }}{% endblock %}
+
+{% block planning %}
+<p class="breadcrumb"><a href="{{ evenement.get_absolute_url }}#creneaux">← {{ evenement.titre }}</a></p>
+<h2>Découper en créneaux</h2>
+<p>La plage <strong>{{ evenement.debut|date:"l j F, H:i" }} – {{ evenement.fin|date:"H:i" }}</strong> est découpée en créneaux successifs
+   de la durée choisie ; le dernier peut être plus court. Les membres s'y inscrivent ensuite en un clic.</p>
+<form method="post" class="calendrier-form" style="margin:0; padding-left:0" novalidate>
+    {% csrf_token %}
+    <div class="form-field-row">
+        {% include "planning/_champ.html" with champ=form.duree %}
+        {% include "planning/_champ.html" with champ=form.besoin %}
+    </div>
+    {% include "planning/_champ.html" with champ=form.libelle %}
+    {% include "planning/_champ.html" with champ=form.remplacer %}
+    {% if evenement.serie %}{% include "planning/_champ.html" with champ=form.appliquer_serie %}{% endif %}
+    <button type="submit" class="btn btn--primary">Créer les créneaux</button>
+</form>
+{% endblock %}

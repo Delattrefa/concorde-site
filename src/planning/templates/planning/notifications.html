@@ -1,0 +1,38 @@
+{% extends "planning/base.html" %}
+{% block title %}Notifications — Planning{% endblock %}
+
+{% block planning %}
+<div class="pl-detail">
+    <div>
+        <div class="pl-barre">
+            <h2>Notifications</h2>
+            <form method="post" action="{% url 'planning:notifications_tout_lu' %}">{% csrf_token %}
+                <button type="submit" class="btn btn--clair btn--small">Tout marquer comme lu</button></form>
+        </div>
+        <ul class="pl-notifs">
+            {% for n in notifications %}
+                <li class="{% if not n.lue %}non-lue{% endif %}">
+                    <a href="{% url 'planning:notification_ouvrir' n.pk %}"><span>{{ n.texte }}</span>
+                        <time datetime="{{ n.cree_le|date:'c' }}">{{ n.cree_le|date:"j/m H:i" }}</time></a>
+                </li>
+            {% empty %}
+                <li class="pl-vide-message">Aucune notification.</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <aside>
+        <h2>Recevoir par e-mail</h2>
+        {% if sans_email %}<p class="message message--warning">Votre compte n'a pas d'adresse e-mail : demandez à un responsable de l'ajouter pour recevoir ces e-mails.</p>{% endif %}
+        <p class="pl-muet">Les notifications s'affichent toujours ici. Par e-mail, elles arrivent regroupées (au plus un e-mail toutes les 5 minutes).</p>
+        <form method="post" class="calendrier-form pl-carte" style="margin:0" novalidate>
+            {% csrf_token %}
+            {% include "planning/_champ.html" with champ=form.email_invitations %}
+            {% include "planning/_champ.html" with champ=form.email_sondages %}
+            {% include "planning/_champ.html" with champ=form.email_urgences %}
+            {% include "planning/_champ.html" with champ=form.email_evenements %}
+            <div class="form-field"><span class="form-field__label">{{ form.email_messages.label }}</span>{{ form.email_messages }}</div>
+            <button type="submit" class="btn btn--primary btn--small">Enregistrer</button>
+        </form>
+    </aside>
+</div>
+{% endblock %}

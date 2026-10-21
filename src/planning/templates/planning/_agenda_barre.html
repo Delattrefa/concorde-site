@@ -1,0 +1,36 @@
+{# Barre commune aux vues de l'agenda : vue, navigation, filtre par type #}
+<div class="pl-barre">
+    <nav class="pl-vues" aria-label="Vue de l'agenda">
+        <a href="{% url 'planning:mois' jour.year jour.month %}{{ suffixe }}"{% if vue == "mois" %} aria-current="page"{% endif %}>Mois</a>
+        <a href="{% url 'planning:semaine' jour.year jour.month jour.day %}{{ suffixe }}"{% if vue == "semaine" %} aria-current="page"{% endif %}>Semaine</a>
+        <a href="{% url 'planning:jour' jour.year jour.month jour.day %}{{ suffixe }}"{% if vue == "jour" %} aria-current="page"{% endif %}>Jour</a>
+        <a href="{% url 'planning:liste' %}{{ suffixe }}"{% if vue == "liste" %} aria-current="page"{% endif %}>Liste</a>
+    </nav>
+    {% if url_precedent %}
+        <div class="pl-nav">
+            <a class="pl-nav__fleche" href="{{ url_precedent }}{{ suffixe }}" aria-label="Période précédente">&larr;</a>
+            <h2>{{ titre }}</h2>
+            <a class="pl-nav__fleche" href="{{ url_suivant }}{{ suffixe }}" aria-label="Période suivante">&rarr;</a>
+            {% if vue == "mois" %}
+                <a class="btn btn--clair btn--small" href="{% url 'planning:accueil' %}{{ suffixe }}">Aujourd'hui</a>
+            {% else %}
+                <a class="btn btn--clair btn--small" href="{% if vue == 'semaine' %}{% url 'planning:semaine' aujourdhui.year aujourdhui.month aujourdhui.day %}{% else %}{% url 'planning:jour' aujourdhui.year aujourdhui.month aujourdhui.day %}{% endif %}{{ suffixe }}">Aujourd'hui</a>
+            {% endif %}
+        </div>
+    {% else %}
+        <h2>{{ titre }}</h2>
+    {% endif %}
+    <nav class="pl-filtres" aria-label="Type d'événement">
+        <a href="?{% if mes_engagements %}moi=1{% endif %}"{% if not type_filtre %} aria-current="page"{% endif %}>Tout</a>
+        {% for valeur, libelle in types %}
+            <a href="?type={{ valeur }}{% if mes_engagements %}&moi=1{% endif %}"{% if type_filtre == valeur %} aria-current="page"{% endif %}>{{ libelle }}</a>
+        {% endfor %}
+    </nav>
+</div>
+<div class="pl-legende">
+    <span><i style="background: var(--pl-reunion)"></i>Réunion</span>
+    <span><i style="background: var(--pl-tache)"></i>Tâche de l'ASBL</span>
+    <span><i style="background: var(--pl-activite)"></i>Activité / événement spécial</span>
+    <span><i style="background: var(--pl-site)"></i>Calendrier du site</span>
+    <span><b style="color: var(--pl-vide)">⚑ 2</b> places à combler</span>
+</div>

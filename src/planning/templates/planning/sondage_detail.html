@@ -1,0 +1,101 @@
+{% extends "planning/base.html" %}
+{% load planning_tags %}
+{% block title %}{{ sondage.titre }} — Sondage{% endblock %}
+
+{% block planning %}
+<p class="breadcrumb"><a href="{% url 'planning:sondages' %}">← Sondages</a>{% if sondage.evenement %} · <a href="{{ sondage.evenement.get_absolute_url }}">{{ sondage.evenement.titre }}</a>{% endif %}</p>
+<div class="pl-carte__meta">
+    <span class="pl-type {% if sondage.type == 'date' %}pl-type--reunion{% else %}pl-type--activite{% endif %}">{{ sondage.get_type_display }}</span>
+    <span>par {{ sondage.createur|nom_membre }}, le {{ sondage.cree_le|date:"j F Y" }}</span>
+    {% if sondage.date_limite %}<span>Répondre avant le {{ sondage.date_limite|date:"j F" }}</span>{% endif %}
+    {% if not sondage.ouvert %}<span class="pl-etiquette pl-etiquette--annule">Clôturé</span>{% endif %}
+</div>
+<h2 style="font-size:1.6rem; margin:.3em 0">{{ sondage.titre }}</h2>
+{% if sondage.description %}<p class="pl-description">{{ sondage.description|urlize }}</p>{% endif %}
+<p class="pl-muet">{{ nb_votants }} réponse{{ nb_votants|pluralize }}{% if destinataires %} · consultés : {% for m in destinataires %}{{ m|nom_membre }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %} · tous les membres sont consultés{% endif %}</p>
+
+{% if sondage.type == "date" %}
+    <form method="post" action="{% url 'planning:sondage_voter' sondage.pk %}">
+        {% csrf_token %}
+        <div class="pl-sondage">
+            <table>
+                <thead>
+                    <tr><th>Participant</th>{% for o in options %}<th class="{% if o.meilleur %}meilleur{% endif %}">{{ o.debut|date:"D j M" }}<br>
+                        {% if o.debut|date:"Hi" != "0000" or o.fin %}{{ o.debut|date:"H:i" }}{% if o.fin %}–{{ o.fin|date:"H:i" }}{% endif %}{% endif %}</th>{% endfor %}</tr>
+                </thead>
+                <tbody>
+                    {% for ligne in lignes %}
+                        <tr><td>{{ ligne.nom }}</td>{% for r in ligne.reponses %}<td>{% if r %}<span class="pl-case pl-case--{{ r }}" title="{% if r == 'oui' %}Oui{% elif r == 'si_besoin' %}Si nécessaire{% else %}Non{% endif %}">{% if r == "oui" %}✓{% elif r == "si_besoin" %}~{% else %}✗{% endif %}</span>{% endif %}</td>{% endfor %}</tr>
+                    {% endfor %}
+                    <tr class="ma-ligne">
+                        <td><strong>Vous</strong></td>
+                        {% for o, r in ma_ligne %}
+                            <td>{% if sondage.ouvert %}
+                                <div class="pl-choix-date">
+                                    {% for valeur, libelle in reponses %}
+                                        <label><input type="radio" name="option_{{ o.pk }}" value="{{ valeur }}"{% if r == valeur or not r and valeur == "non" %} checked{% endif %}> {{ libelle }}</label>
+                                    {% endfor %}
+                                </div>
+                            {% elif r %}<span class="pl-case pl-case--{{ r }}">{% if r == "oui" %}✓{% elif r == "si_besoin" %}~{% else %}✗{% endif %}</span>{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr><th>Total</th>{% for o in options %}<th class="{% if o.meilleur %}meilleur{% endif %}">{{ o.nb_oui }} ✓{% if o.nb_si_besoin %}<br><small>+ {{ o.nb_si_besoin }} ~</small>{% endif %}</th>{% endfor %}</tr>
+                </tfoot>
+            </table>
+        </div>
+        {% if sondage.ouvert %}<div class="pl-actions"><button type="submit" class="btn btn--primary">{% if a_vote %}Modifier ma réponse{% else %}Envoyer ma réponse{% endif %}</button></div>{% endif %}
+    </form>
+    {% if peut_modifier %}
+        <h3>Planifier la réunion</h3>
+        <p class="pl-muet">Choisissez la date retenue : l'événement est prérempli et les participants au sondage sont invités.</p>
+        <div class="pl-actions">
+            {% for o in options %}{% if o.meilleur %}
+                <a class="btn btn--secondary btn--small" href="{% url 'planning:evenement_ajouter' %}?sondage={{ sondage.pk }}&option={{ o.pk }}">Planifier le {{ o }}</a>
+            {% endif %}{% endfor %}
+            <details class="pl-plier"><summary>Une autre date</summary>
+                {% for o in options %}{% if not o.meilleur %}<a href="{% url 'planning:evenement_ajouter' %}?sondage={{ sondage.pk }}&option={{ o.pk }}">{{ o }}</a><br>{% endif %}{% endfor %}
+            </details>
+        </div>
+    {% endif %}
+{% else %}
+    <div class="pl-detail">
+        <div>
+            {% if sondage.ouvert %}
+                <form method="post" action="{% url 'planning:sondage_voter' sondage.pk %}" class="pl-carte">
+                    {% csrf_token %}
+                    <h3>{% if a_vote %}Votre vote (modifiable){% else %}Votre vote{% endif %}</h3>
+                    <p class="pl-muet">{% if sondage.choix_multiples %}Plusieurs réponses possibles.{% else %}Une seule réponse.{% endif %}</p>
+                    {% for o, r in ma_ligne %}
+                        <label style="display:block; margin:6px 0"><input type="{% if sondage.choix_multiples %}checkbox{% else %}radio{% endif %}" name="choix" value="{{ o.pk }}"{% if r == "oui" %} checked{% endif %}> {{ o.libelle }}</label>
+                    {% endfor %}
+                    <button type="submit" class="btn btn--primary btn--small">Voter</button>
+                </form>
+            {% endif %}
+            <h3>Résultats</h3>
+            {% for o in options %}
+                <div class="pl-resultat">
+                    <span class="pl-resultat__libelle">{% if o.meilleur %}<strong>{{ o.libelle }}</strong> 🏆{% else %}{{ o.libelle }}{% endif %}</span>
+                    <div class="pl-jauge__barre"><span style="width: {% widthratio o.nb_oui nb_votants|default:1 100 %}%"></span></div>
+                    <span class="pl-jauge__texte">{{ o.nb_oui }} voix</span>
+                </div>
+            {% endfor %}
+        </div>
+        <aside>
+            <h3>Qui a voté quoi</h3>
+            {% for ligne in lignes %}<p><strong>{{ ligne.nom }}</strong> : {{ ligne.choix|join:", " }}</p>
+            {% empty %}<p class="pl-muet">Personne d'autre n'a encore voté.</p>{% endfor %}
+        </aside>
+    </div>
+{% endif %}
+
+{% if peut_modifier %}
+    <div class="pl-actions" style="margin-top:30px">
+        <form method="post" action="{% url 'planning:sondage_clore' sondage.pk %}">{% csrf_token %}
+            <button type="submit" class="btn btn--clair btn--small">{% if sondage.clos %}Rouvrir le sondage{% else %}Clôturer le sondage{% endif %}</button></form>
+        <form method="post" action="{% url 'planning:sondage_supprimer' sondage.pk %}" onsubmit="return confirm('Supprimer ce sondage et toutes les réponses ?');">{% csrf_token %}
+            <button type="submit" class="btn btn--danger btn--small">Supprimer</button></form>
+    </div>
+{% endif %}
+{% endblock %}

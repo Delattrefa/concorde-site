@@ -665,6 +665,42 @@ redémarrez. Les événements déjà créés restent dans l'agenda.
 
 ---
 
+## Planning des membres (octobre 2026)
+
+Agenda privé des membres (application `planning`, menu **Réservations →
+Planning**, adresse `/planning/`) :
+- réunions, tâches et activités, avec créneaux de bénévoles ;
+- invitations, sondages ;
+- discussions ;
+- notifications dans le site et par e-mail.
+
+Mise en service : `bash ~/concorde/deploy.sh`. Il crée les tables et le
+canal de discussion « Général ».
+
+**Tâche cron à ajouter** (cPanel → *Tâches Cron*, toutes les 5 minutes),
+comme pour la newsletter. Elle signale les créneaux urgents et envoie les
+e-mails de notification, groupés (un e-mail par membre et par passage) :
+
+```
+cd ~/concorde/src && DJANGO_SETTINGS_MODULE=concorde_site.settings.production ~/virtualenv/concorde/src/3.11/bin/python manage.py planning_taches >> ~/concorde/src/planning-cron.log 2>&1
+```
+
+Sans cette tâche, le planning fonctionne, mais aucun e-mail ne part et les
+créneaux urgents ne sont pas signalés. Les e-mails sont envoyés à l'adresse
+de chaque compte : vérifiez que les membres en ont une.
+
+**« Temps réel ».** o2switch n'accepte pas les connexions permanentes
+(WebSocket). Une discussion ouverte interroge donc le serveur toutes les
+5 secondes, et la pastille des notifications chaque minute. C'est sans
+souci pour quelques dizaines de membres.
+
+**Responsables.** Sont responsables les comptes « Statut équipe », ou ceux
+qui ont la permission « Planning des membres | Événement du planning |
+Peut gérer le planning (responsable) ». Délai d'alerte des créneaux
+urgents : `PLANNING_URGENCE_HEURES` (72 h) dans `settings/base.py`.
+
+---
+
 ## Statistiques de fréquentation (octobre 2026)
 
 Le site compte lui-même ses visites (application `statistiques`) : sans

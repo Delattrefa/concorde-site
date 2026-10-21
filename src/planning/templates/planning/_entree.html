@@ -1,0 +1,4 @@
+<a class="pl-entree pl-entree--{{ e.type }}{% if e.annule %} pl-entree--annule{% endif %}" href="{{ e.url }}"
+   title="{{ e.titre }}{% if e.annule %} (annulé){% endif %}{% if e.manque %} — {{ e.manque }} place{{ e.manque|pluralize }} à combler{% endif %}">
+    {% if e.heure %}<span class="pl-entree__heure">{{ e.heure }}</span>{% endif %}{{ e.titre }}{% if e.manque and not e.annule %}<span class="pl-entree__manque">⚑&nbsp;{{ e.manque }}</span>{% endif %}
+</a>

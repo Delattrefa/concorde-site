@@ -1,0 +1,33 @@
+{% extends "planning/base.html" %}
+{% block title %}Mes invitations — Planning{% endblock %}
+
+{% block planning %}
+<h2>Invitations en attente de réponse</h2>
+{% for i in en_attente %}
+    <article class="pl-carte pl-carte--{{ i.evenement.type }}">
+        <div class="pl-carte__meta"><span class="pl-type pl-type--{{ i.evenement.type }}">{{ i.evenement.get_type_display }}</span>
+            <strong>{{ i.evenement.debut|date:"l j F Y, H:i" }}</strong>{% if i.evenement.lieu %}<span>📍 {{ i.evenement.lieu }}</span>{% endif %}
+            {% if i.evenement.annule %}<span class="pl-etiquette pl-etiquette--annule">Annulé</span>{% endif %}</div>
+        <h3><a href="{{ i.evenement.get_absolute_url }}">{{ i.evenement.titre }}</a></h3>
+        {% if not i.evenement.annule %}
+            <form method="post" action="{% url 'planning:evenement_repondre' i.evenement.pk %}" class="pl-actions">
+                {% csrf_token %}
+                <input type="hidden" name="retour" value="{% url 'planning:invitations' %}">
+                <button type="submit" name="statut" value="accepte" class="btn btn--ok btn--small">J'accepte</button>
+                <button type="submit" name="statut" value="refuse" class="btn btn--clair btn--small">Je ne peux pas</button>
+            </form>
+        {% endif %}
+    </article>
+{% empty %}
+    <p class="pl-vide-message">Aucune invitation en attente.</p>
+{% endfor %}
+
+{% if repondues %}
+    <h2 style="margin-top:30px">Mes réponses</h2>
+    {% for i in repondues %}
+        <p><a href="{{ i.evenement.get_absolute_url }}">{{ i.evenement.titre }}</a> — {{ i.evenement.debut|date:"j F, H:i" }} :
+            <span class="pl-statut pl-statut--{{ i.statut }}">{{ i.get_statut_display }}</span>
+            {% if i.commentaire %}<span class="pl-muet">« {{ i.commentaire }} »</span>{% endif %}</p>
+    {% endfor %}
+{% endif %}
+{% endblock %}

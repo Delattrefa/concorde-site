@@ -1,0 +1,46 @@
+{% extends "planning/base.html" %}
+{% block title %}Nouveau sondage — Planning{% endblock %}
+
+{% block planning %}
+<p class="breadcrumb"><a href="{% if evenement %}{{ evenement.get_absolute_url }}{% else %}{% url 'planning:sondages' %}{% endif %}">← Retour</a></p>
+<h2>Nouveau sondage{% if evenement %} pour « {{ evenement.titre }} »{% endif %}</h2>
+
+<form method="post" class="calendrier-form" style="margin:0; padding-left:0" data-sondage-form novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% include "planning/_champ.html" with champ=form.type %}
+    {% include "planning/_champ.html" with champ=form.titre %}
+    {% include "planning/_champ.html" with champ=form.description %}
+
+    <fieldset class="pl-carte">
+        <legend><strong data-pour-date>Dates proposées</strong><strong data-pour-decision hidden>Réponses proposées</strong></legend>
+        <p class="form-field__help" data-pour-date>Chacun répondra « oui », « si nécessaire » ou « non » pour chaque date. Laissez les heures vides pour proposer une journée.</p>
+        <p class="form-field__help" data-pour-decision hidden>Une réponse par ligne. La réponse qui recueille le plus de voix l'emporte.</p>
+        {% if erreur_options %}<p class="message message--error">{{ erreur_options }}</p>{% endif %}
+        {{ formset.management_form }}
+        <div data-options>
+            {% for f in formset %}
+                <div class="pl-options-ligne pl-options-ligne--date">
+                    <div data-pour-decision hidden>{{ f.libelle.label_tag }}{{ f.libelle }}</div>
+                    <div data-pour-date>{{ f.date.label_tag }}{{ f.date }}</div>
+                    <div data-pour-date>{{ f.heure_debut.label_tag }}{{ f.heure_debut }}</div>
+                    <div data-pour-date>{{ f.heure_fin.label_tag }}{{ f.heure_fin }}</div>
+                </div>
+            {% endfor %}
+        </div>
+        <button type="button" class="btn btn--clair btn--small" data-ajouter-option style="margin-top:10px">+ Ajouter une ligne</button>
+    </fieldset>
+
+    <div data-pour-decision hidden>{% include "planning/_champ.html" with champ=form.choix_multiples %}</div>
+    {% include "planning/_champ.html" with champ=form.date_limite %}
+
+    <fieldset class="pl-carte">
+        <legend><strong>Qui est consulté ?</strong></legend>
+        <p class="form-field__help">Ne cochez rien pour consulter tous les membres. Sinon, seuls les membres choisis (et les membres des groupes choisis) voient le sondage.</p>
+        {% include "planning/_champ.html" with champ=form.destinataires_groupes cases=True %}
+        {% include "planning/_champ.html" with champ=form.destinataires_membres cases=True %}
+    </fieldset>
+
+    <button type="submit" class="btn btn--primary">Créer le sondage</button>
+</form>
+{% endblock %}

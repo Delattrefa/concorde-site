@@ -188,7 +188,25 @@ with sync_playwright() as p:
         shot(page, "membre_activite_detail", f"/calendrier/activite/{IDS['activite_privee']}/", hauteur=900)
     shot(page, "membre_ajout_actualite", "/ajouter-actualite/", hauteur=1600)
     shot(page, "membre_actualites", "/news/", hauteur=900)
+
+    # Planning des membres
+    shot(page, "planning_menu", "/", avant=survol("text=Réservations"))
+    shot(page, "planning_mois", "/planning/mois/2026/11/", hauteur=1250)
+    shot(page, "planning_evenement", f"/planning/evenement/{IDS['planning_ducasse']}/", hauteur=1450)
+    shot(page, "planning_couverture", "/planning/a-combler/", hauteur=1150)
+    shot(page, "planning_formulaire", "/planning/evenement/ajouter/?date=2026-11-20", hauteur=1750)
+    shot(page, "planning_sondage", f"/planning/sondages/{IDS['planning_sondage']}/", hauteur=950)
+    shot(page, "planning_discussion", f"/planning/discussions/{IDS['planning_canal']}/", hauteur=850)
+    shot(page, "planning_notifications", "/planning/notifications/", hauteur=900)
     ctx.close()
+
+    # Planning sur téléphone (membre connecté)
+    mobile = nav.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2,
+                             locale="fr-BE", is_mobile=True, has_touch=True)
+    page = connecter(mobile, "membre")
+    accepter_cookies(page)
+    shot(page, "planning_mobile", f"/planning/evenement/{IDS['planning_ducasse']}/", hauteur=1500)
+    mobile.close()
 
     # ---------------- Administrateur ----------------
     ctx = nav.new_context(**options, accept_downloads=True)

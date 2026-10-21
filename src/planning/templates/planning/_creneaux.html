@@ -1,0 +1,50 @@
+{% load planning_tags %}
+{# Créneaux d'un événement : effectif, inscrits, inscription en un clic #}
+<table class="pl-creneaux">
+    <thead><tr><th>Horaire</th><th>Poste</th><th>Effectif</th><th>Inscrits</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody>
+    {% for c in creneaux %}
+        <tr>
+            <td><strong>{{ c.debut|date:"H:i" }}–{{ c.fin|date:"H:i" }}</strong>{% if c.debut|date:"Ymd" != evenement.debut|date:"Ymd" %} <span class="pl-muet">{{ c.debut|date:"D j/m" }}</span>{% endif %}</td>
+            <td>{{ c.libelle|default:"—" }}</td>
+            <td>{% jauge c.nb_inscrits c.besoin %}</td>
+            <td class="pl-inscrits">
+                {% for m in c.inscrits %}
+                    <span>{{ m|nom_membre }}{% if peut_modifier and m != user %}
+                        <form method="post" action="{% url 'planning:creneau_desinscrire' c.pk %}">{% csrf_token %}
+                            <input type="hidden" name="membre" value="{{ m.pk }}"><input type="hidden" name="retour" value="{{ request.get_full_path }}">
+                            <button type="submit" class="btn--lien" title="Retirer {{ m|nom_membre }}" aria-label="Retirer {{ m|nom_membre }}">×</button></form>{% endif %}</span>{% if not forloop.last %}, {% endif %}
+                {% empty %}<span class="pl-muet">Personne</span>
+                {% endfor %}
+                {% if peut_modifier and c.manque and membres %}
+                    <form method="post" action="{% url 'planning:creneau_inscrire' c.pk %}" class="pl-affecter">{% csrf_token %}
+                        <input type="hidden" name="retour" value="{{ request.get_full_path }}">
+                        <select name="membre" aria-label="Inscrire un membre"><option value="">Inscrire…</option>
+                            {% for m in membres %}{% if m not in c.inscrits %}<option value="{{ m.pk }}">{{ m|nom_membre }}</option>{% endif %}{% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn--clair btn--small">OK</button>
+                    </form>
+                {% endif %}
+            </td>
+            <td><div class="pl-creneaux__actions">
+                {% if c.je_suis_inscrit %}
+                    <form method="post" action="{% url 'planning:creneau_desinscrire' c.pk %}">{% csrf_token %}
+                        <input type="hidden" name="retour" value="{{ request.get_full_path }}">
+                        <button type="submit" class="btn btn--clair btn--small">Me désinscrire</button></form>
+                {% elif c.manque and not evenement.annule and not passe %}
+                    <form method="post" action="{% url 'planning:creneau_inscrire' c.pk %}">{% csrf_token %}
+                        <input type="hidden" name="retour" value="{{ request.get_full_path }}">
+                        <button type="submit" class="btn btn--ok btn--small">Je m'inscris</button></form>
+                {% elif not c.manque %}
+                    <span class="pl-etiquette pl-etiquette--ok">Complet</span>
+                {% endif %}
+                {% if peut_modifier %}
+                    <a class="btn--lien" href="{% url 'planning:creneau_modifier' c.pk %}">Modifier</a>
+                    <form method="post" action="{% url 'planning:creneau_supprimer' c.pk %}" onsubmit="return confirm('Supprimer ce créneau{% if c.inscrits %} et ses inscriptions{% endif %} ?');">{% csrf_token %}
+                        <button type="submit" class="btn--lien">Supprimer</button></form>
+                {% endif %}
+            </div></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

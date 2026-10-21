@@ -1,0 +1,28 @@
+{% extends "planning/base.html" %}
+{% load planning_tags %}
+{% block title %}Sondages — Planning{% endblock %}
+
+{% block planning %}
+<div class="pl-barre">
+    <h2>Sondages en cours</h2>
+    <a class="btn btn--secondary btn--small" href="{% url 'planning:sondage_nouveau' %}">+ Nouveau sondage</a>
+</div>
+{% for s in ouverts %}
+    <article class="pl-carte">
+        <div class="pl-carte__meta">
+            <span class="pl-type {% if s.type == 'date' %}pl-type--reunion{% else %}pl-type--activite{% endif %}">{{ s.get_type_display }}</span>
+            <span>par {{ s.createur|nom_membre }}, le {{ s.cree_le|date:"j F" }}</span>
+            {% if s.date_limite %}<span>Répondre avant le {{ s.date_limite|date:"j F" }}</span>{% endif %}
+            {% if s.a_vote %}<span class="pl-etiquette pl-etiquette--ok">Vous avez répondu</span>{% else %}<span class="pl-etiquette pl-etiquette--manque">À répondre</span>{% endif %}
+        </div>
+        <h3><a href="{{ s.get_absolute_url }}">{{ s.titre }}</a></h3>
+    </article>
+{% empty %}
+    <p class="pl-vide-message">Aucun sondage en cours.</p>
+{% endfor %}
+
+{% if termines %}
+    <h2 style="margin-top:30px">Sondages terminés</h2>
+    <ul>{% for s in termines %}<li><a href="{{ s.get_absolute_url }}">{{ s.titre }}</a> <span class="pl-muet">({{ s.get_type_display|lower }}, {{ s.cree_le|date:"j F Y" }})</span></li>{% endfor %}</ul>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "planning/base.html" %}
+{% load planning_tags %}
+{% block title %}{{ evenement.titre }} — Planning{% endblock %}
+
+{% block planning %}
+<p class="breadcrumb"><a href="{% url 'planning:jour' evenement.debut|date:'Y' evenement.debut|date:'n' evenement.debut|date:'j' %}">← {{ evenement.debut|date:"l j F Y" }}</a></p>
+
+{% if evenement.annule %}<p class="pl-bandeau-annule">Cet événement est annulé.</p>{% endif %}
+
+<div class="pl-carte__meta">
+    <span class="pl-type pl-type--{{ evenement.type }}">{{ evenement.get_type_display }}</span>
+    {% if evenement.reserve_aux_invites %}<span class="pl-etiquette pl-etiquette--manque">Réservé aux invités</span>{% endif %}
+    {% if evenement.serie %}<span>Répété ({{ nb_occurrences_suivantes }} date{{ nb_occurrences_suivantes|pluralize }} suivante{{ nb_occurrences_suivantes|pluralize }})</span>{% endif %}
+</div>
+<h2 style="font-size:1.7rem; margin:.3em 0">{{ evenement.titre }}</h2>
+<p><strong>{{ evenement.debut|date:"l j F Y, H:i" }}</strong> –
+    {% if evenement.debut|date:"Ymd" == evenement.fin|date:"Ymd" %}{{ evenement.fin|date:"H:i" }}{% else %}{{ evenement.fin|date:"l j F Y, H:i" }}{% endif %}
+    {% if evenement.lieu %}<br>📍 {{ evenement.lieu }}{% endif %}
+    <br><span class="pl-muet">Créé par {{ evenement.createur|nom_membre }}</span></p>
+
+{% if peut_modifier %}
+    <div class="pl-actions">
+        <a class="btn btn--secondary btn--small" href="{% url 'planning:evenement_modifier' evenement.pk %}">Modifier</a>
+        <a class="btn btn--clair btn--small" href="{% url 'planning:evenement_annuler' evenement.pk %}">{% if evenement.annule %}Rétablir{% else %}Annuler l'événement{% endif %}</a>
+        <a class="btn btn--clair btn--small" href="{% url 'planning:sondage_nouveau' %}?evenement={{ evenement.pk }}">Sondage pour cet événement</a>
+        <a class="btn btn--danger btn--small" href="{% url 'planning:evenement_supprimer' evenement.pk %}">Supprimer</a>
+    </div>
+{% endif %}
+
+<div class="pl-detail">
+    <div>
+        <section>
+            <h2>Description</h2>
+            {% if evenement.description %}<p class="pl-description">{{ evenement.description|urlize }}</p>{% else %}<p class="pl-muet">Pas de description.</p>{% endif %}
+        </section>
+        {% if sondages %}
+            <section>
+                <h2>Sondages</h2>
+                <ul>{% for s in sondages %}<li><a href="{{ s.get_absolute_url }}">{{ s.titre }}</a>{% if not s.ouvert %} <span class="pl-muet">(clos)</span>{% endif %}</li>{% endfor %}</ul>
+            </section>
+        {% endif %}
+    </div>
+
+    <aside>
+        <section id="invitations">
+            <h2>Invitations</h2>
+            {% if mon_invitation and not passe and not evenement.annule %}
+                <form method="post" action="{% url 'planning:evenement_repondre' evenement.pk %}" class="pl-reponse">
+                    {% csrf_token %}
+                    <strong>{% if mon_invitation.statut == "attente" %}Vous êtes invité : serez-vous là ?{% else %}Votre réponse : {{ mon_invitation.get_statut_display|lower }}{% endif %}</strong>
+                    <input type="text" name="commentaire" value="{{ mon_invitation.commentaire }}" placeholder="Commentaire (facultatif)" maxlength="200" aria-label="Commentaire">
+                    <button type="submit" name="statut" value="accepte" class="btn btn--ok btn--small">J'accepte</button>
+                    <button type="submit" name="statut" value="refuse" class="btn btn--clair btn--small">Je ne peux pas</button>
+                </form>
+            {% endif %}
+            {% if invitations %}
+                <p class="pl-muet">{{ compteurs_invitations.accepte }} accepté{{ compteurs_invitations.accepte|pluralize }} · {{ compteurs_invitations.refuse }} refusé{{ compteurs_invitations.refuse|pluralize }} · {{ compteurs_invitations.attente }} en attente</p>
+                <ul class="pl-invitations">
+                    {% for i in invitations %}
+                        <li><span>{{ i.membre|nom_membre }}{% if i.commentaire %}<br><small class="pl-muet">« {{ i.commentaire }} »</small>{% endif %}</span>
+                            <span class="pl-statut pl-statut--{{ i.statut }}">{{ i.get_statut_display }}</span></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="pl-muet">Personne n'est invité{% if not evenement.reserve_aux_invites %} : l'événement est visible par tous les membres{% endif %}.</p>
+            {% endif %}
+            {% if inviter_form %}
+                <details class="pl-plier">
+                    <summary>Inviter des membres</summary>
+                    <form method="post" action="{% url 'planning:evenement_inviter' evenement.pk %}" class="calendrier-form" style="padding:0">
+                        {% csrf_token %}
+                        <div class="form-field"><span class="form-field__label">Groupes</span><div class="pl-cases">{{ inviter_form.groupes }}</div></div>
+                        <div class="form-field"><span class="form-field__label">Membres</span><div class="pl-cases">{{ inviter_form.membres }}</div></div>
+                        <button type="submit" class="btn btn--secondary btn--small">Envoyer les invitations</button>
+                    </form>
+                </details>
+            {% endif %}
+        </section>
+    </aside>
+</div>
+
+<section id="creneaux" class="pl-section">
+    <h2>Créneaux {% if manque %}<span class="pl-etiquette pl-etiquette--manque">⚑ {{ manque }} place{{ manque|pluralize }} à combler</span>{% endif %}</h2>
+    {% if creneaux %}
+        {% include "planning/_creneaux.html" %}
+    {% else %}
+        <p class="pl-muet">Pas de créneau : l'événement n'a pas besoin d'inscriptions{% if peut_modifier %}, ou découpez-le en créneaux pour organiser l'aide (stand, ménage…){% endif %}.</p>
+    {% endif %}
+    {% if peut_modifier %}
+        <div class="pl-actions">
+            <a class="btn btn--clair btn--small" href="{% url 'planning:creneaux_decouper' evenement.pk %}">Découper en créneaux</a>
+            <a class="btn btn--clair btn--small" href="{% url 'planning:creneau_ajouter' evenement.pk %}">Ajouter un créneau</a>
+        </div>
+    {% endif %}
+</section>
+
+<section id="discussion" class="pl-section" style="max-width: 860px">
+    <h2>Discussion</h2>
+    {% include "planning/_discussion.html" %}
+</section>
+{% endblock %}

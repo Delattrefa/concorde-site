@@ -1,0 +1,34 @@
+{% extends "planning/base.html" %}
+{% load planning_tags %}
+{% block title %}Discussions — Planning{% endblock %}
+
+{% block planning %}
+<div class="pl-barre">
+    <h2>Canaux de l'ASBL</h2>
+    {% if est_responsable %}<a class="btn btn--secondary btn--small" href="{% url 'planning:canal_nouveau' %}">+ Nouveau canal</a>{% endif %}
+</div>
+<ul class="pl-canaux">
+    {% for c in generaux %}
+        <li>
+            <span><a href="{{ c.get_absolute_url }}"># {{ c.nom }}</a>{% if c.description %}<br><span class="pl-muet">{{ c.description }}</span>{% endif %}
+                {% if c.dernier_message %}<br><small class="pl-muet">{{ c.dernier_message.auteur|nom_membre }}, {{ c.dernier_message.cree_le|date:"j/m H:i" }} : {{ c.dernier_message.texte|truncatechars:70 }}</small>{% endif %}</span>
+            {% if c.non_lus %}<span class="pl-compteur" title="Messages non lus">{{ c.non_lus }}</span>{% endif %}
+        </li>
+    {% empty %}
+        <li class="pl-muet">Aucun canal général pour l'instant.{% if est_responsable %} Créez-en un (ex. « Général », « Bénévoles du bar »).{% endif %}</li>
+    {% endfor %}
+</ul>
+
+<h2>Discussions des événements</h2>
+<ul class="pl-canaux">
+    {% for c in evenements %}
+        <li>
+            <span><a href="{{ c.get_absolute_url }}">{{ c.evenement.titre }}</a> <span class="pl-muet">({{ c.evenement.debut|date:"j F Y" }})</span>
+                {% if c.dernier_message %}<br><small class="pl-muet">{{ c.dernier_message.auteur|nom_membre }}, {{ c.dernier_message.cree_le|date:"j/m H:i" }} : {{ c.dernier_message.texte|truncatechars:70 }}</small>{% endif %}</span>
+            {% if c.non_lus %}<span class="pl-compteur" title="Messages non lus">{{ c.non_lus }}</span>{% endif %}
+        </li>
+    {% empty %}
+        <li class="pl-muet">Aucune discussion d'événement. Chaque événement a son propre fil, en bas de sa page.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

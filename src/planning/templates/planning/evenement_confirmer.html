@@ -1,0 +1,34 @@
+{% extends "planning/base.html" %}
+{% block title %}{% if action == "supprimer" %}Supprimer{% else %}Annuler{% endif %} « {{ evenement.titre }} » — Planning{% endblock %}
+
+{% block planning %}
+<p class="breadcrumb"><a href="{{ evenement.get_absolute_url }}">← Retour à l'événement</a></p>
+<div class="pl-carte" style="max-width:640px">
+    {% if action == "supprimer" %}
+        <h2>Supprimer « {{ evenement.titre }} » ?</h2>
+        <p>L'événement, ses créneaux, ses inscriptions, ses invitations et sa discussion seront effacés définitivement.
+           Pour garder une trace, préférez <a href="{% url 'planning:evenement_annuler' evenement.pk %}">l'annuler</a>.</p>
+    {% elif evenement.annule %}
+        <h2>Rétablir « {{ evenement.titre }} » ?</h2>
+        <p>Les membres seront prévenus que l'événement a lieu.</p>
+    {% else %}
+        <h2>Annuler « {{ evenement.titre }} » ?</h2>
+        <p>L'événement reste visible, barré, et les membres sont prévenus. Il pourra être rétabli.</p>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        {% if action == "annuler" and evenement.annule %}<input type="hidden" name="retablir" value="1">{% endif %}
+        {% if nb_occurrences_suivantes %}
+            <div class="form-field">
+                <label><input type="radio" name="portee" value="une" checked> Seulement le {{ evenement.debut|date:"j F Y" }}</label>
+                <label><input type="radio" name="portee" value="suivantes"> Cette date et les {{ nb_occurrences_suivantes }} suivante{{ nb_occurrences_suivantes|pluralize }} de la série</label>
+            </div>
+        {% endif %}
+        <div class="pl-actions">
+            <button type="submit" class="btn {% if action == 'supprimer' %}btn--danger{% else %}btn--secondary{% endif %}">
+                {% if action == "supprimer" %}Supprimer{% elif evenement.annule %}Rétablir{% else %}Annuler l'événement{% endif %}</button>
+            <a href="{{ evenement.get_absolute_url }}">Retour</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

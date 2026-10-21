@@ -1,0 +1,17 @@
+{% extends "planning/base.html" %}
+{% block title %}{% if creneau %}Modifier le créneau{% else %}Ajouter un créneau{% endif %} — {{ evenement.titre }}{% endblock %}
+
+{% block planning %}
+<p class="breadcrumb"><a href="{{ evenement.get_absolute_url }}#creneaux">← {{ evenement.titre }}</a></p>
+<h2>{% if creneau %}Modifier le créneau{% else %}Ajouter un créneau{% endif %}</h2>
+<form method="post" class="calendrier-form" style="margin:0; padding-left:0" novalidate>
+    {% csrf_token %}
+    {% include "planning/_champ.html" with champ=form.libelle %}
+    <div class="form-field-row">
+        {% include "planning/_champ.html" with champ=form.debut %}
+        {% include "planning/_champ.html" with champ=form.fin %}
+    </div>
+    {% include "planning/_champ.html" with champ=form.besoin %}
+    <button type="submit" class="btn btn--primary">Enregistrer</button>
+</form>
+{% endblock %}
