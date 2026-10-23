@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "newsletter",
     "statistiques",
     "planning",
+    "comptes",
 
     # Wagtail
     "wagtail.contrib.forms",
@@ -230,7 +231,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # Débloquer plus tôt : python manage.py axes_reset_ip <adresse IP>
 AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",
-    "django.contrib.auth.backends.ModelBackend",
+    # Connexion avec l'identifiant ou l'adresse e-mail (application 'comptes')
+    "comptes.backends.IdentifiantOuEmailBackend",
 ]
 AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = timedelta(minutes=15)
@@ -284,6 +286,12 @@ NEWSLETTER_LOT_TAILLE = int(os.environ.get("NEWSLETTER_LOT_TAILLE", "20"))
 NEWSLETTER_PAUSE_SECONDES = float(os.environ.get("NEWSLETTER_PAUSE_SECONDES", "2"))
 NEWSLETTER_MAX_PAR_HEURE = int(os.environ.get("NEWSLETTER_MAX_PAR_HEURE", "150"))
 NEWSLETTER_TENTATIVES_MAX = 3
+
+# -----------------------------------------------------------------------
+# Invitations des nouveaux membres (application 'comptes')
+# -----------------------------------------------------------------------
+# Durée de validité du lien envoyé par e-mail
+COMPTES_INVITATION_JOURS = 14
 
 # -----------------------------------------------------------------------
 # Planning des membres (application 'planning')

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Créer mon compte{% endblock %}
+
+{% block extra_css %}
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <h1>Bienvenue à La Concorde</h1>
+        <p class="page-header__intro">{{ inviteur }} vous invite à rejoindre l'espace des membres de l'ASBL :
+            calendrier des activités, planning des bénévoles, sondages et discussions. Il ne reste qu'à créer votre compte.</p>
+    </div>
+</section>
+
+<section class="calendrier-form wrap" style="max-width: 560px;">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="form-field-row">
+            <div class="form-field">{{ form.prenom.label_tag }}{{ form.prenom }}{{ form.prenom.errors }}</div>
+            <div class="form-field">{{ form.nom.label_tag }}{{ form.nom }}{{ form.nom.errors }}</div>
+        </div>
+        <div class="form-field">
+            {{ form.email.label_tag }}{{ form.email }}
+            <p class="form-field__help">Elle vous servira à vous connecter et à recevoir les nouvelles du planning.</p>
+            {{ form.email.errors }}
+        </div>
+        <div class="form-field">
+            {{ form.mot_de_passe.label_tag }}{{ form.mot_de_passe }}
+            <div class="form-field__help">{{ form.mot_de_passe.help_text|safe }}</div>
+            {{ form.mot_de_passe.errors }}
+        </div>
+        <div class="form-field">{{ form.confirmation.label_tag }}{{ form.confirmation }}{{ form.confirmation.errors }}</div>
+        <button type="submit" class="btn btn--primary">Créer mon compte</button>
+        <p class="form-field__help" style="margin-top:14px">Cette invitation est personnelle et ne peut servir qu'une fois.
+            Elle est valable jusqu'au {{ invitation.expire_le|date:"j F Y à H:i" }}.</p>
+    </form>
+</section>
+{% endblock %}

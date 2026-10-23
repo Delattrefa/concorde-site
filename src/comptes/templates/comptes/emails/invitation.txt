@@ -1,0 +1,15 @@
+{% autoescape off %}Bonjour{% if invitation.prenom %} {{ invitation.prenom }}{% endif %},
+
+{{ inviteur }} vous invite à rejoindre l'espace des membres de La Concorde asbl : calendrier des activités, planning des bénévoles, sondages et discussions.
+{% if invitation.message %}
+Son message :
+{{ invitation.message }}
+{% endif %}
+Pour créer votre compte (nom, prénom, adresse e-mail et mot de passe), ouvrez ce lien :
+{{ lien }}
+
+Ce lien est personnel et ne sert qu'une fois. Il est valable jusqu'au {{ expire_le|date:"j F Y à H:i" }}.
+Si vous ne vous attendiez pas à cette invitation, ignorez simplement cet e-mail.
+
+— La Concorde asbl
+{% endautoescape %}

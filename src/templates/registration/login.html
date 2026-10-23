@@ -11,7 +11,7 @@
 <section class="page-header fade-target">
     <div class="wrap">
         <h1>Connexion</h1>
-        <p class="page-header__intro">Connectez-vous pour ajouter une activité au calendrier.</p>
+        <p class="page-header__intro">Espace des membres de l'ASBL : calendrier, planning, actualités. Les comptes sont créés sur invitation : demandez-la à un responsable.</p>
     </div>
 </section>
 
@@ -23,7 +23,7 @@
     <form method="post">
         {% csrf_token %}
         <div class="form-field">
-            {{ form.username.label_tag }}
+            <label for="{{ form.username.id_for_label }}">Adresse e-mail ou identifiant :</label>
             {{ form.username }}
         </div>
         <div class="form-field">

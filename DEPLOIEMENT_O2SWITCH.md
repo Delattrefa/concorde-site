@@ -665,6 +665,25 @@ redémarrez. Les événements déjà créés restent dans l'agenda.
 
 ---
 
+## Comptes sur invitation (octobre 2026)
+
+Les nouveaux membres ne créent leur compte que sur invitation d'un
+super-utilisateur : `/django-admin/` → *Comptes des membres → Invitations
+de membres → Ajouter*. L'e-mail part aussitôt avec un lien personnel
+(usage unique, valable 14 jours : `COMPTES_INVITATION_JOURS`).
+
+Mise en service : `bash ~/concorde/deploy.sh`, qui crée la table. Deux
+conditions :
+- l'envoi d'e-mails doit fonctionner (réglages `EMAIL_*` du `.env`) ; en
+  cas d'échec, l'administration affiche le lien à transmettre soi-même ;
+- `BASE_URL` (dans `.env`, par défaut `https://www.la-concorde.be`) doit
+  être l'adresse publique du site : le lien de l'e-mail en dépend.
+
+Les membres peuvent désormais se connecter avec leur adresse e-mail ou leur
+identifiant.
+
+---
+
 ## Planning des membres (octobre 2026)
 
 Agenda privé des membres (application `planning`, menu **Réservations →

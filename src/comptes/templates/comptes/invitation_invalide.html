@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Invitation non valable{% endblock %}
+
+{% block extra_css %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        {% if deja_acceptee %}
+            <h1>Compte déjà créé</h1>
+            <p class="page-header__intro">Cette invitation a déjà servi à créer un compte. Connectez-vous avec votre adresse e-mail et votre mot de passe.</p>
+            <p><a class="btn btn--primary" href="{% url 'login' %}">Se connecter</a></p>
+        {% else %}
+            <h1>Invitation non valable</h1>
+            <p class="page-header__intro">Ce lien d'invitation a expiré ou a été annulé. Demandez à la personne qui vous a invité de vous envoyer une nouvelle invitation.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
