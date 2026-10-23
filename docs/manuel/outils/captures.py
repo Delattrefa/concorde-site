@@ -164,6 +164,7 @@ with sync_playwright() as p:
     shot(page, "newsletter_inscription", "/newsletter/", hauteur=1000)
     shot(page, "recherche", "/recherche/?query=Noël", hauteur=1100)
     shot(page, "connexion", "/connexion/")
+    shot(page, "inscription", "/inscription/invitation-demo-manuel/", hauteur=1200)
     shot(page, "page_libre", "/le-ble-qui-leve/", hauteur=1300)
     ctx.close()
 
@@ -194,6 +195,7 @@ with sync_playwright() as p:
     shot(page, "planning_mois", "/planning/mois/2026/11/", hauteur=1250)
     shot(page, "planning_evenement", f"/planning/evenement/{IDS['planning_ducasse']}/", hauteur=1450)
     shot(page, "planning_couverture", "/planning/a-combler/", hauteur=1150)
+    shot(page, "planning_tache", f"/planning/evenement/{IDS['planning_ducasse']}/taches/ajouter/", hauteur=1300)
     shot(page, "planning_formulaire", "/planning/evenement/ajouter/?date=2026-11-20", hauteur=1750)
     shot(page, "planning_sondage", f"/planning/sondages/{IDS['planning_sondage']}/", hauteur=950)
     shot(page, "planning_discussion", f"/planning/discussions/{IDS['planning_canal']}/", hauteur=850)
@@ -205,7 +207,9 @@ with sync_playwright() as p:
                              locale="fr-BE", is_mobile=True, has_touch=True)
     page = connecter(mobile, "membre")
     accepter_cookies(page)
-    shot(page, "planning_mobile", f"/planning/evenement/{IDS['planning_ducasse']}/", hauteur=1500)
+    shot(page, "planning_mobile", f"/planning/evenement/{IDS['planning_ducasse']}/",
+         avant=lambda pg: (pg.evaluate("window.scrollTo(0, document.getElementById('creneaux').offsetTop - 70)"),
+                           pg.wait_for_timeout(800)))
     mobile.close()
 
     # ---------------- Administrateur ----------------
@@ -268,6 +272,8 @@ with sync_playwright() as p:
     # Administration Django
     shot(page, "django_admin", "/django-admin/", hauteur=1200)
     shot(page, "django_user", f"/django-admin/auth/user/{IDS['membre']}/change/", hauteur=1900)
+    shot(page, "django_invitation", "/django-admin/comptes/invitationmembre/add/", hauteur=800)
+    shot(page, "django_invitations", "/django-admin/comptes/invitationmembre/", hauteur=600)
     ctx.close()
     nav.close()
 

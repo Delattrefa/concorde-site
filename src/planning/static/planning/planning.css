@@ -248,3 +248,35 @@ details.pl-plier > summary { cursor: pointer; font-weight: 600; color: var(--col
 }
 
 .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- Tableau des tâches (colonnes = tâches, lignes = horaires) ---------- */
+.pl-grille-defile { overflow-x: auto; border: 1px solid var(--pl-bord); border-radius: 6px; background: var(--pl-fond); }
+.pl-grille { border-collapse: collapse; width: 100%; min-width: max-content; font-size: .88rem; }
+.pl-grille th, .pl-grille td { border: 1px solid var(--pl-bord); padding: 6px 8px; vertical-align: top; }
+.pl-grille thead th { background: var(--color-primary); color: #fff; font-weight: 600; min-width: 150px; text-align: left; }
+.pl-grille thead th .pl-muet { color: #f1d9dc; }
+.pl-grille__outils { display: flex; gap: 10px; margin-top: 3px; font-weight: 400; font-size: .75rem; }
+.pl-grille__outils a, .pl-grille__outils .btn--lien { color: #f1d9dc; font-size: .75rem; }
+.pl-grille__outils form { display: inline; }
+th.pl-grille__horaire { width: 70px; min-width: 70px !important; background: var(--pl-doux); color: var(--color-primary-dark); font-weight: 700; white-space: nowrap; position: sticky; left: 0; z-index: 1; }
+.pl-grille thead th.pl-grille__horaire { background: var(--color-primary-dark); color: #fff; }
+.pl-grille__jour th { background: #efe5da; color: var(--color-primary-dark); text-align: left; text-transform: capitalize; }
+.pl-case-grille { min-width: 150px; }
+.pl-case-grille--complet { background: #e6f4ea; }
+.pl-case-grille--partiel { background: #fdf4e3; }
+.pl-case-grille--vide { background: #fbeaea; }
+.pl-case-grille--moi { box-shadow: inset 0 0 0 2px var(--color-accent); }
+.pl-case-grille--indispo, .pl-hachure {
+    background: repeating-linear-gradient(135deg, #ece7e2, #ece7e2 6px, #f6f2ee 6px, #f6f2ee 12px);
+}
+.pl-case-grille__heures { font-size: .75rem; margin-bottom: 2px; }
+.pl-case-grille__inscrits { list-style: none; margin: 0 0 4px; padding: 0; }
+.pl-case-grille__inscrits li { line-height: 1.4; }
+.pl-case-grille__inscrits form { display: inline; }
+.pl-case-grille__pied { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
+.pl-case-grille__pied form { display: inline; margin: 0; }
+.pl-case-grille__compte { font-weight: 700; font-size: .8rem; color: var(--pl-gris); }
+.pl-case-grille__gestion { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px; font-size: .78rem; }
+.pl-case-grille__gestion select { max-width: 130px; font-size: .78rem; padding: 1px 2px; }
+.pl-grille__glisser { display: none; font-size: .8rem; margin: 0 0 6px; }
+@media (max-width: 700px) { .pl-grille__glisser { display: block; } }

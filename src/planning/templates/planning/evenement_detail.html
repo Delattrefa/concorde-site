@@ -80,16 +80,25 @@
 </div>
 
 <section id="creneaux" class="pl-section">
-    <h2>Créneaux {% if manque %}<span class="pl-etiquette pl-etiquette--manque">⚑ {{ manque }} place{{ manque|pluralize }} à combler</span>{% endif %}</h2>
+    <div class="pl-barre" style="margin-bottom:8px">
+        <h2 style="margin:0">Tableau des tâches {% if manque %}<span class="pl-etiquette pl-etiquette--manque">⚑ {{ manque }} place{{ manque|pluralize }} à combler</span>{% endif %}</h2>
+        {% if creneaux %}
+            <nav class="pl-vues" aria-label="Présentation">
+                <a href="?#creneaux"{% if not vue_liste %} aria-current="page"{% endif %}>Tableau</a>
+                <a href="?vue=liste#creneaux"{% if vue_liste %} aria-current="page"{% endif %}>Liste</a>
+            </nav>
+        {% endif %}
+    </div>
     {% if creneaux %}
-        {% include "planning/_creneaux.html" %}
+        {% if vue_liste %}{% include "planning/_creneaux.html" %}{% else %}{% include "planning/_grille.html" %}{% endif %}
     {% else %}
-        <p class="pl-muet">Pas de créneau : l'événement n'a pas besoin d'inscriptions{% if peut_modifier %}, ou découpez-le en créneaux pour organiser l'aide (stand, ménage…){% endif %}.</p>
+        <p class="pl-muet">Pas encore de tâche : l'événement n'a pas besoin d'inscriptions{% if peut_modifier %}, ou ajoutez des tâches (bar, caisse, montage…) avec leurs horaires pour que les membres s'y inscrivent{% endif %}.</p>
     {% endif %}
     {% if peut_modifier %}
         <div class="pl-actions">
-            <a class="btn btn--clair btn--small" href="{% url 'planning:creneaux_decouper' evenement.pk %}">Découper en créneaux</a>
-            <a class="btn btn--clair btn--small" href="{% url 'planning:creneau_ajouter' evenement.pk %}">Ajouter un créneau</a>
+            <a class="btn btn--secondary btn--small" href="{% url 'planning:tache_ajouter' evenement.pk %}">+ Ajouter une tâche</a>
+            <a class="btn btn--clair btn--small" href="{% url 'planning:creneau_ajouter' evenement.pk %}">Ajouter une case isolée</a>
+            <a class="btn btn--clair btn--small" href="{% url 'planning:creneaux_decouper' evenement.pk %}">Découper toute la durée</a>
         </div>
     {% endif %}
 </section>

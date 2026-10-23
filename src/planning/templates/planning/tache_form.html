@@ -1,0 +1,49 @@
+{% extends "planning/base.html" %}
+{% block title %}{% if libelle is not None %}Modifier la tâche{% else %}Ajouter une tâche{% endif %} — {{ evenement.titre }}{% endblock %}
+
+{% block planning %}
+<p class="breadcrumb"><a href="{{ evenement.get_absolute_url }}#creneaux">← {{ evenement.titre }}</a></p>
+<h2>{% if libelle is not None %}Modifier la tâche « {{ libelle|default:"Bénévoles" }} »{% else %}Ajouter une tâche{% endif %}</h2>
+<p class="pl-muet">Chaque tâche devient une colonne du tableau, et chaque plage horaire une case où les membres s'inscrivent.
+    Les cases des heures où la tâche n'a pas lieu sont grisées.
+    Événement : {{ evenement.debut|date:"l j F, H:i" }} – {% if evenement.debut|date:"Ymd" == evenement.fin|date:"Ymd" %}{{ evenement.fin|date:"H:i" }}{% else %}{{ evenement.fin|date:"l j F, H:i" }}{% endif %}.</p>
+
+<form method="post" class="calendrier-form" style="margin:0; padding-left:0" novalidate>
+    {% csrf_token %}
+    {% if libelle is not None %}<input type="hidden" name="tache_initiale" value="{{ libelle }}">{% endif %}
+    {% if erreur %}<p class="message message--error">{{ erreur }}</p>{% endif %}
+    <div class="form-field-row">
+        {% include "planning/_champ.html" with champ=form.libelle %}
+        {% include "planning/_champ.html" with champ=form.besoin %}
+    </div>
+    {% if libelle is not None %}<p class="form-field__help" style="margin-top:-10px">Le nombre de bénévoles s'applique aux {{ nb_cases }} case{{ nb_cases|pluralize }} existante{{ nb_cases|pluralize }} de la tâche.</p>{% endif %}
+
+    <fieldset class="pl-carte">
+        <legend><strong>{% if libelle is not None %}Ajouter des plages horaires{% else %}Plages horaires{% endif %}</strong></legend>
+        <p class="form-field__help">Une ligne par plage (ex. bar de 18 h à 22 h, puis de 23 h à 1 h). Une heure de fin plus petite que l'heure de début passe minuit.
+            {% if libelle is not None %}Pour changer une plage existante, utilisez « Modifier » dans sa case.{% endif %}</p>
+        {{ plages_form.management_form }}
+        {{ plages_form.non_form_errors }}
+        <div data-options>
+            {% for f in plages_form %}
+                <div class="pl-options-ligne pl-options-ligne--date">
+                    <div>{{ f.date.label_tag }}{{ f.date }}</div>
+                    <div>{{ f.heure_debut.label_tag }}{{ f.heure_debut }}</div>
+                    <div>{{ f.heure_fin.label_tag }}{{ f.heure_fin }}</div>
+                    {% if f.non_field_errors %}<div style="grid-column: 1 / -1">{{ f.non_field_errors }}</div>{% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <button type="button" class="btn btn--clair btn--small" data-ajouter-plage style="margin-top:10px">+ Ajouter une ligne</button>
+    </fieldset>
+
+    {% include "planning/_champ.html" with champ=form.duree %}
+    {% if evenement.serie %}{% include "planning/_champ.html" with champ=form.appliquer_serie %}{% endif %}
+
+    <div class="pl-actions">
+        <button type="submit" class="btn btn--primary">Enregistrer</button>
+        {% if libelle is None %}<button type="submit" name="encore" value="1" class="btn btn--secondary">Enregistrer et ajouter une autre tâche</button>{% endif %}
+        <a href="{{ evenement.get_absolute_url }}#creneaux">Terminer</a>
+    </div>
+</form>
+{% endblock %}

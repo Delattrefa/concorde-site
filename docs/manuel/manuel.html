@@ -118,17 +118,17 @@
   <h1>Sommaire</h1>
   <ol>
     <li><a href="#ch1">Présentation générale du site</a><span class="desc">Les différents espaces, les profils d'utilisateurs et leurs droits, les adresses utiles</span></li>
-    <li><a href="#ch2">Premiers pas</a><span class="desc">Se connecter, naviguer dans le menu, le bandeau cookies, la version mobile</span></li>
+    <li><a href="#ch2">Premiers pas</a><span class="desc">Se connecter, créer son compte à partir d'une invitation, naviguer dans le menu, le bandeau cookies, la version mobile</span></li>
     <li><a href="#ch3">Le site public, page par page</a><span class="desc">Accueil, News, Médias, Info, Contact, Newsletter, recherche, pages libres</span></li>
     <li><a href="#ch4">Calendrier et activités</a><span class="desc">Consulter le calendrier, ajouter, modifier ou supprimer une activité</span></li>
-    <li><a href="#ch5">Le planning des membres</a><span class="desc">Agenda privé, créneaux de bénévoles, « À combler », invitations, sondages, discussions, notifications</span></li>
+    <li><a href="#ch5">Le planning des membres</a><span class="desc">Agenda privé, tableau des tâches et inscription des bénévoles, « À combler », invitations, sondages, discussions, notifications</span></li>
     <li><a href="#ch6">Location de la salle</a><span class="desc">Demandes, validation, contrat de location PDF, suivi des paiements, contrat-type</span></li>
     <li><a href="#ch7">Les actualités (News)</a><span class="desc">Rédiger avec l'éditeur par blocs, placer les images, mettre à la une, valider, modifier</span></li>
     <li><a href="#ch8">Médias : albums photos et vidéos</a><span class="desc">Créer un album, envoyer des photos par lots, ajouter une vidéo</span></li>
     <li><a href="#ch9">L'application Théâtre</a><span class="desc">Représentations, réservations, plan de salle, contrôle d'entrée, ventes flash, tickets</span></li>
     <li><a href="#ch10">La newsletter</a><span class="desc">Inscriptions, abonnés, rédaction, envoi de test et envoi aux abonnés</span></li>
     <li><a href="#ch11">L'administration Wagtail (contenu du site)</a><span class="desc">Pages, images, menus, pied de page, paramètres, référencement, statistiques de fréquentation</span></li>
-    <li><a href="#ch12">Gestion des utilisateurs et des droits</a><span class="desc">Créer un compte, donner les droits d'administration, d'accès au théâtre, de modération</span></li>
+    <li><a href="#ch12">Gestion des utilisateurs et des droits</a><span class="desc">Inviter un nouveau membre, créer un compte, donner les droits d'administration, d'accès au théâtre, de modération</span></li>
     <li><a href="#ch13">Bonnes pratiques et questions fréquentes</a><span class="desc">Dépannage, réflexes à adopter, aide-mémoire des adresses</span></li>
   </ol>
 </section>
@@ -184,12 +184,23 @@
   <h2>Se connecter</h2>
   <ol class="etapes">
     <li>Cliquez sur le bouton <span class="btn" style="background:#fff;border:1px solid #999">Connexion</span> en haut à droite de n'importe quelle page (ou allez sur <span class="url">/connexion/</span>).</li>
-    <li>Saisissez votre <strong>nom d'utilisateur</strong> et votre <strong>mot de passe</strong>, puis cliquez sur <span class="btn">Se connecter</span>.</li>
+    <li>Saisissez votre <strong>adresse e-mail</strong> (ou votre identifiant) et votre <strong>mot de passe</strong>, puis cliquez sur <span class="btn">Se connecter</span>.</li>
     <li>Le bouton devient <strong>Déconnexion</strong> : pensez à l'utiliser sur un ordinateur partagé.</li>
   </ol>
   <figure class="basse"><img src="img/connexion.jpg"><figcaption>La page de connexion, commune au site, au calendrier et à l'application Théâtre.</figcaption></figure>
   <div class="encart astuce"><span class="t">Un seul compte pour tout</span>
     <p>Le même identifiant sert pour le site, l'application Théâtre et l'administration Wagtail (<span class="url">/admin/</span>), à condition d'avoir les droits correspondants.</p></div>
+
+  <h2>Votre premier accès : l'invitation</h2>
+  <p>On ne crée pas soi-même un compte sur le site : un responsable vous envoie une <strong>invitation par e-mail</strong> (« Invitation : rejoignez l'espace des membres de La Concorde »).</p>
+  <ol class="etapes">
+    <li>Cliquez sur <strong>Créer mon compte</strong> dans l'e-mail.</li>
+    <li>Vérifiez votre prénom, votre nom et votre adresse e-mail, puis choisissez un mot de passe (10 caractères au moins, pas trop simple) et confirmez-le.</li>
+    <li>Cliquez sur <span class="btn">Créer mon compte</span> : vous êtes connecté et arrivez sur le planning. Par la suite, connectez-vous avec votre adresse e-mail et ce mot de passe.</li>
+  </ol>
+  <figure class="basse"><img src="img/inscription.jpg"><figcaption>L'écran ouvert par le lien d'invitation.</figcaption></figure>
+  <div class="encart attention"><span class="t">Un lien personnel, valable 14 jours</span>
+    <p>Le lien ne sert qu'une fois. S'il a expiré (« Invitation non valable »), demandez à la personne qui vous a invité de vous la renvoyer. Le compte créé a les droits d'un membre ; un responsable peut ensuite vous en donner davantage.</p></div>
 
   <h2>Le menu principal</h2>
   <p>Le menu en haut de page contient les pages du site (Accueil, News, Médias, Contact, Info…), le lien <strong>Réservations</strong> vers le calendrier (ajouté automatiquement), une zone de <strong>recherche</strong> et le bouton de connexion. Une petite flèche ⌄ signale un <strong>sous-menu déroulant</strong> : il s'ouvre au survol de la souris (ou d'un toucher sur smartphone).</p>
@@ -335,7 +346,7 @@
   <ol class="etapes">
     <li><strong>+ Nouvel événement</strong> (ou le + d'un jour). Choisissez le type, le titre, le début et la fin, le lieu et une description.</li>
     <li><strong>Répétition</strong> (facultatif) : chaque semaine, toutes les deux semaines ou chaque mois, jusqu'à une date. Chaque date devient un événement à part, avec ses propres inscriptions.</li>
-    <li><strong>Créneaux</strong> (facultatif) : indiquez une durée, par exemple 120 minutes, et le nombre de bénévoles par créneau. La plage est découpée automatiquement.</li>
+    <li><strong>Créneaux</strong> (facultatif) : indiquez une durée, par exemple 120 minutes, et le nombre de bénévoles par créneau. La plage est découpée automatiquement. Pour une activité avec plusieurs tâches (bar, caisse…), laissez vide : le tableau des tâches se remplit juste après.</li>
     <li><strong>Invitations</strong> : cochez des groupes ou des membres. Cochez « Réservé aux invités » pour qu'un événement (réunion du CA…) ne soit vu que par les invités, son auteur et les responsables.</li>
   </ol>
   <figure class="haute"><img src="img/planning_formulaire.jpg"><figcaption>Le formulaire d'un événement : répétition, créneaux et invitations.</figcaption></figure>
@@ -343,13 +354,29 @@
     <ol><li>Type « Tâche de l'ASBL », titre « Ménage de la salle », lundi 9 h – 11 h.</li><li>Répétition : chaque semaine, jusqu'au 21 décembre.</li><li>Créneaux de 120 minutes, 2 bénévoles. Chaque lundi apparaît dans l'agenda, avec 2 places à prendre.</li></ol></div>
   <p>Seuls l'auteur d'un événement et les responsables peuvent le modifier, l'annuler ou le supprimer. Pour une série, le site demande si le changement vaut pour cette date seulement ou aussi pour les suivantes. Un événement <strong>annulé</strong> reste visible, barré, et peut être rétabli ; un événement <strong>supprimé</strong> disparaît avec ses inscriptions et sa discussion.</p>
 
-  <h2>Les créneaux et l'inscription en un clic</h2>
-  <p>La page d'un événement présente ses créneaux : horaire, poste, jauge de remplissage (vert : complet, orange : partiel, rouge : vide) et inscrits. Un clic sur <strong>Je m'inscris</strong> suffit ; <strong>Me désinscrire</strong> libère la place, et l'auteur de l'événement est prévenu.</p>
-  <figure class="haute"><img src="img/planning_evenement.jpg"><figcaption>Un événement découpé en créneaux, avec sa discussion.</figcaption></figure>
+  <h2>Le tableau des tâches d'une activité</h2>
+  <p>Pour organiser les bénévoles d'une activité (souper, marché, ducasse…), la page de l'événement présente un <strong>tableau</strong> :</p>
   <ul>
-    <li><strong>Découper en créneaux</strong> : plusieurs découpages peuvent coexister, un par poste (ex. « Bar » toutes les 2 h et « Caisse » toutes les 3 h).</li>
-    <li><strong>Ajouter un créneau</strong> : pour un horaire particulier (montage, rangement).</li>
-    <li>L'auteur et les responsables peuvent <strong>inscrire un membre</strong> (liste « Inscrire… ») ou retirer un inscrit (×) ; la personne est prévenue.</li>
+    <li><strong>une colonne par tâche</strong> (montage, bar, service, vaisselle…) ;</li>
+    <li><strong>une ligne par horaire</strong>, calculée d'après les plages de toutes les tâches ; une plage plus longue s'étend sur plusieurs lignes ;</li>
+    <li><strong>une case</strong> par tâche et par plage, avec les inscrits et le nombre de places (ex. 1/2) ; les cases des heures où la tâche n'a pas lieu sont <strong>grisées</strong>.</li>
+  </ul>
+  <figure class="haute"><img src="img/planning_evenement.jpg"><figcaption>Le tableau des tâches de la ducasse : vert = complet, orange = il manque du monde, rouge = personne, hachuré = pas de besoin à cette heure.</figcaption></figure>
+  <p>Pour s'inscrire, un clic sur <strong>+ Moi</strong> dans la case choisie ; <strong>Me retirer</strong> libère la place, et l'auteur de l'événement est prévenu. Les cases où vous êtes inscrit sont encadrées en doré. Le bouton <strong>Liste</strong>, au-dessus du tableau, présente les mêmes cases sous forme de liste.</p>
+
+  <h3>Créer les tâches</h3>
+  <p>Après la création d'une <strong>activité</strong>, le site propose directement d'ajouter ses tâches ; ensuite, bouton <strong>+ Ajouter une tâche</strong> sous le tableau.</p>
+  <ol class="etapes">
+    <li>Nom de la tâche (ex. « Bar ») et nombre de <strong>bénévoles par case</strong>.</li>
+    <li>Une ou plusieurs <strong>plages horaires</strong> : le jour est pré-rempli, indiquez les heures (ex. 18:00–20:00 puis 20:00–22:00). Une heure de fin plus petite que l'heure de début passe minuit (22:00–02:00).</li>
+    <li>Facultatif : découper chaque plage en tours de N minutes (ex. 120 pour des tours de 2 heures).</li>
+    <li><strong>Enregistrer et ajouter une autre tâche</strong> pour enchaîner, ou <strong>Enregistrer</strong>.</li>
+  </ol>
+  <figure class="basse"><img src="img/planning_tache.jpg"><figcaption>Une tâche et ses plages horaires.</figcaption></figure>
+  <ul>
+    <li>Sous le nom de chaque colonne : <strong>Modifier</strong> (renommer la tâche, changer le nombre de bénévoles de toutes ses cases, ajouter des plages) et <strong>Supprimer</strong> (la tâche, ses cases et leurs inscriptions ; les inscrits sont prévenus).</li>
+    <li>Dans une case : <strong>Modifier</strong> change ses horaires ou son nombre de places ; la liste <strong>Inscrire…</strong> y ajoute un membre, le × en retire un (la personne est prévenue).</li>
+    <li>Pour une réunion ou une tâche simple, <strong>Découper toute la durée</strong> crée des tours réguliers sur toute la durée de l'événement.</li>
   </ul>
 
   <h2>« À combler » : les trous du planning</h2>
@@ -401,8 +428,8 @@
 
   <h2>Sur téléphone</h2>
   <div class="duo">
-    <figure class="mobile"><img src="img/planning_mobile.jpg"><figcaption>Sur smartphone, les créneaux s'empilent et l'inscription reste à un clic.</figcaption></figure>
-    <div><p>Le planning s'utilise aussi bien sur téléphone : la vue mensuelle devient une liste des jours occupés, et chaque page s'adapte à la largeur de l'écran.</p></div>
+    <figure class="mobile"><img src="img/planning_mobile.jpg"><figcaption>Sur smartphone, le tableau des tâches défile de côté ; la colonne des horaires reste visible.</figcaption></figure>
+    <div><p>Le planning s'utilise aussi bien sur téléphone : la vue mensuelle devient une liste des jours occupés, et chaque page s'adapte à la largeur de l'écran. Le tableau des tâches se fait glisser du doigt vers la gauche pour voir toutes les colonnes ; le bouton <strong>Liste</strong> le présente aussi en liste, plus confortable sur un petit écran.</p></div>
   </div>
 </section>
 
@@ -785,7 +812,25 @@
 
   <figure><img src="img/django_admin.jpg"><figcaption>L'administration Django : utilisateurs et groupes, calendrier et réservations, théâtre, images…</figcaption></figure>
 
-  <h2>Créer un compte</h2>
+  <h2>Inviter un nouveau membre</h2>
+  <p>C'est la manière normale d'ouvrir un compte : la personne choisit elle-même son mot de passe, que personne d'autre ne connaît. Réservé aux <strong>super-utilisateurs</strong>.</p>
+  <ol class="etapes">
+    <li><em>Comptes des membres → Invitations de membres → Ajouter</em>.</li>
+    <li>Indiquez son <strong>adresse e-mail</strong>, et si vous le souhaitez son prénom, son nom (pré-remplis pour elle) et un <strong>message personnel</strong>.</li>
+    <li>Cliquez sur <strong>Enregistrer</strong> : l'e-mail d'invitation part aussitôt. Le lien est personnel, à usage unique, valable 14 jours.</li>
+  </ol>
+  <figure class="basse"><img src="img/django_invitation.jpg"><figcaption>Une nouvelle invitation.</figcaption></figure>
+  <p>La liste des invitations montre leur <strong>statut</strong> : en attente, acceptée (avec le compte créé), expirée ou annulée. Vous êtes prévenu par e-mail quand l'invité a créé son compte.</p>
+  <figure class="basse"><img src="img/django_invitations.jpg"><figcaption>Le suivi des invitations.</figcaption></figure>
+  <ul>
+    <li><strong>Renvoyer l'invitation</strong> (cochez-la, puis menu « Action ») : envoie un nouveau lien, valable à nouveau 14 jours ; l'ancien ne fonctionne plus.</li>
+    <li><strong>Annuler l'invitation</strong> : le lien ne fonctionne plus.</li>
+    <li>Si l'e-mail n'a pas pu partir, le site affiche le lien : transmettez-le vous-même à la personne (à elle seule).</li>
+    <li>Le compte créé est un compte de <strong>simple membre</strong> : son identifiant est « prénom.nom » et il peut aussi se connecter avec son adresse e-mail. Pour lui donner plus de droits, voir « Attribuer les droits » ci-dessous.</li>
+  </ul>
+
+  <h2>Créer un compte à la main</h2>
+  <p>À réserver aux cas particuliers (personne sans adresse e-mail…) :</p>
   <ol class="etapes">
     <li><em>Authentification et autorisation → Utilisateurs → Ajouter</em>.</li>
     <li>Choisissez un <strong>nom d'utilisateur</strong> et un <strong>mot de passe</strong> provisoire, puis enregistrez.</li>
@@ -818,6 +863,8 @@
     <p>Les réflexes qui évitent les mauvaises surprises.</p></div>
 
   <h2>Questions fréquentes</h2>
+  <h3>« Le lien de mon invitation ne fonctionne plus. »</h3>
+  <p>Il a expiré (14 jours), a déjà servi à créer votre compte, ou a été remplacé par une invitation renvoyée (seul le dernier e-mail compte). Si votre compte existe, connectez-vous avec votre adresse e-mail ; sinon, demandez une nouvelle invitation à un responsable.</p>
   <h3>« Je ne vois pas le Planning. »</h3>
   <p>Le planning est réservé aux membres connectés : connectez-vous, puis ouvrez le menu <strong>Réservations → Planning</strong>. Un événement « réservé aux invités » n'apparaît que si vous y êtes invité.</p>
   <h3>« Je ne vois pas le menu Théâtre. »</h3>
@@ -858,6 +905,7 @@
   <table>
     <tr><th style="width:44%">Adresse</th><th>Page</th></tr>
     <tr><td><span class="url">/connexion/</span> · <span class="url">/deconnexion/</span></td><td>Se connecter / se déconnecter</td></tr>
+    <tr><td><span class="url">/django-admin/comptes/invitationmembre/</span></td><td>Inviter un nouveau membre (super-utilisateurs)</td></tr>
     <tr><td><span class="url">/calendrier/</span></td><td>Calendrier des activités et des réservations</td></tr>
     <tr><td><span class="url">/calendrier/reservation/demander/</span></td><td>Formulaire public de demande de location (aussi utilisable par un membre connecté)</td></tr>
     <tr><td><span class="url">/calendrier/reservations/</span></td><td>Gérer les demandes de location (administrateurs)</td></tr>

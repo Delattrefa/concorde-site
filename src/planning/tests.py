@@ -62,8 +62,9 @@ class AccesTests(Base):
             self.assertIn(reverse("login"), reponse["Location"])
 
     def test_vues_de_l_agenda(self):
-        e = self.evenement()
-        j = self.jour
+        # Aujourd'hui : visible aussi sur /planning/ (mois en cours), quel que soit le jour du mois
+        j = timezone.localdate()
+        e = self.evenement(debut=moment(j, 23), fin=moment(j, 23, 30))
         for url in (reverse("planning:accueil"), reverse("planning:mois", args=[j.year, j.month]),
                     reverse("planning:semaine", args=[j.year, j.month, j.day]),
                     reverse("planning:jour", args=[j.year, j.month, j.day]), reverse("planning:liste")):
@@ -357,3 +358,91 @@ class OrdreTests(Base):
             Creneau.objects.create(evenement=e, debut=e.debut, fin=e.fin, besoin=1)
         titres = [b["evenement"].titre for b in self.client.get(reverse("planning:couverture")).context["evenements"]]
         self.assertEqual(titres, ["Plus tôt", "Plus tard"])
+
+
+class TableauDesTachesTests(Base):
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(self.chef)
+        self.e = self.evenement(debut=moment(self.jour, 14), fin=moment(self.jour, 23))
+
+    def ajouter_tache(self, libelle, plages, besoin=2, **champs):
+        donnees = {"libelle": libelle, "besoin": besoin, "plages-TOTAL_FORMS": str(len(plages)),
+                   "plages-INITIAL_FORMS": "0", **champs}
+        for i, (de, a) in enumerate(plages):
+            donnees.update({f"plages-{i}-date": f"{self.jour:%Y-%m-%d}", f"plages-{i}-heure_debut": de,
+                            f"plages-{i}-heure_fin": a})
+        return self.client.post(reverse("planning:tache_ajouter", args=[self.e.pk]), donnees)
+
+    def grille(self):
+        return self.client.get(self.e.get_absolute_url()).context["grille"]
+
+    def test_colonnes_lignes_et_cases_grisees(self):
+        self.ajouter_tache("Montage", [("14:00", "17:00")])
+        self.ajouter_tache("Bar", [("18:00", "20:00"), ("20:00", "22:00")])
+        self.ajouter_tache("Vaisselle", [("21:00", "23:00")], besoin=3)
+        g = self.grille()
+        self.assertEqual([c["tache"] for c in g["colonnes"]], ["Montage", "Bar", "Vaisselle"])
+        horaires = [(timezone.localtime(l["debut"]).strftime("%H:%M"), timezone.localtime(l["fin"]).strftime("%H:%M"))
+                    for l in g["lignes"]]
+        # 17 h–18 h : personne n'est attendu, la ligne disparaît
+        self.assertEqual(horaires, [("14:00", "17:00"), ("18:00", "20:00"), ("20:00", "21:00"),
+                                    ("21:00", "22:00"), ("22:00", "23:00")])
+        lignes = [[("vide" if "vide" in case else f"{case['creneau'].libelle}×{case['hauteur']}") for case in l["cases"]]
+                  for l in g["lignes"]]
+        self.assertEqual(lignes, [
+            ["Montage×1", "vide", "vide"],
+            ["vide", "Bar×1", "vide"],
+            ["vide", "Bar×2", "vide"],   # le bar de 20 h à 22 h s'étend sur deux lignes
+            ["vide", "Vaisselle×2"],     # case du bar absente (rowspan)
+            ["vide", "vide"],            # 22 h–23 h : bar fini, vaisselle en cours (rowspan)
+        ])
+        self.assertContains(self.client.get(self.e.get_absolute_url()), "pl-case-grille--indispo")
+
+    def test_plage_passant_minuit_et_decoupage(self):
+        self.ajouter_tache("Bar", [("22:00", "02:00")], duree=120)
+        creneaux = list(self.e.creneaux.order_by("debut"))
+        self.assertEqual([(timezone.localtime(c.debut).hour, timezone.localtime(c.fin).hour) for c in creneaux],
+                         [(22, 0), (0, 2)])
+        self.assertEqual(timezone.localtime(creneaux[-1].fin).date(), self.jour + timedelta(days=1))
+
+    def test_inscription_dans_une_case(self):
+        self.ajouter_tache("Caisse", [("18:00", "20:00")], besoin=1)
+        case = self.e.creneaux.get()
+        self.client.force_login(self.alice)
+        self.client.post(reverse("planning:creneau_inscrire", args=[case.pk]))
+        g = self.grille()
+        self.assertEqual([m.username for m in g["lignes"][0]["cases"][0]["creneau"].inscrits], ["alice"])
+        self.assertContains(self.client.get(self.e.get_absolute_url()), "pl-case-grille--complet")
+
+    def test_modifier_et_supprimer_une_tache(self):
+        self.ajouter_tache("Bar", [("18:00", "20:00"), ("20:00", "22:00")])
+        Inscription.objects.create(creneau=self.e.creneaux.first(), membre=self.bob)
+        url = reverse("planning:tache_modifier", args=[self.e.pk]) + "?tache=Bar"
+        self.client.post(url, {"libelle": "Bar à bières", "besoin": 3, "tache_initiale": "Bar",
+                               "plages-TOTAL_FORMS": "1", "plages-INITIAL_FORMS": "0",
+                               "plages-0-date": f"{self.jour:%Y-%m-%d}", "plages-0-heure_debut": "22:00",
+                               "plages-0-heure_fin": "23:00"})
+        self.assertEqual(set(self.e.creneaux.values_list("libelle", "besoin")), {("Bar à bières", 3)})
+        self.assertEqual(self.e.creneaux.count(), 3)
+        self.client.post(reverse("planning:tache_supprimer", args=[self.e.pk]) + "?tache=Bar%20%C3%A0%20bi%C3%A8res")
+        self.assertFalse(self.e.creneaux.exists())
+        self.assertTrue(Notification.objects.filter(destinataire=self.bob, texte__contains="Tâche supprimée").exists())
+
+    def test_nom_de_tache_deja_pris_et_plage_obligatoire(self):
+        self.ajouter_tache("Bar", [("18:00", "20:00")])
+        self.assertContains(self.ajouter_tache("Bar", [("20:00", "22:00")]), "existe déjà")
+        self.assertContains(self.ajouter_tache("Caisse", []), "au moins une plage")
+
+    def test_reserve_a_l_auteur_et_aux_responsables(self):
+        self.client.force_login(self.alice)
+        self.assertEqual(self.ajouter_tache("Bar", [("18:00", "20:00")]).status_code, 403)
+
+    def test_une_activite_creee_enchaine_sur_les_taches(self):
+        reponse = self.client.post(reverse("planning:evenement_ajouter"), {
+            "type": "activite", "titre": "Brocante", "debut": f"{self.jour:%Y-%m-%d}T08:00",
+            "fin": f"{self.jour:%Y-%m-%d}T18:00"})
+        nouvel = Evenement.objects.get(titre="Brocante")
+        self.assertRedirects(reponse, reverse("planning:tache_ajouter", args=[nouvel.pk]))
+        formulaire = self.client.get(reverse("planning:tache_ajouter", args=[nouvel.pk]))
+        self.assertContains(formulaire, 'value="08:00"')  # première plage = horaires de l'événement

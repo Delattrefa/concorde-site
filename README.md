@@ -25,11 +25,17 @@ contact), avec une page d'accueil en défilement continu et effets de fondu.
   Voir détails ci-dessous.
 - **Planning des membres** (`planning` app, menu Réservations › Planning,
   réservé aux membres connectés) : réunions, tâches (répétées ou non) et
-  activités ; vues mois / semaine / jour / liste ; découpage en créneaux avec
+  activités ; vues mois / semaine / jour / liste ; tableau des tâches d'une
+  activité (colonnes = tâches, lignes = horaires, cases grisées hors plages) avec
   inscription en un clic et tableau « À combler » ; disponibilités ;
   invitations avec réponse ; sondages de date et de décision ; discussions
   (canaux et fil par événement, mentions @) ; notifications dans le site et
   par e-mail groupé (commande `planning_taches`, tâche cron).
+- **Comptes sur invitation** (`comptes` app) : un super-utilisateur invite un
+  nouveau membre depuis l'administration Django ; l'e-mail contient un lien
+  personnel (usage unique, 14 jours) vers l'écran où il choisit nom, prénom,
+  adresse e-mail et mot de passe. Compte de simple membre ; connexion par
+  identifiant ou adresse e-mail.
 - **Page Médias** : albums photos avec galerie et lightbox. Les
   administrateurs (`is_staff`) peuvent ajouter plusieurs photos en une
   seule fois à un album (bouton "+ Ajouter des photos" sur la page de

@@ -172,3 +172,33 @@ class PreferencesForm(forms.ModelForm):
         model = Preferences
         fields = ["email_invitations", "email_sondages", "email_urgences", "email_evenements", "email_messages"]
         widgets = {"email_messages": forms.RadioSelect}
+
+
+class TacheForm(forms.Form):
+    """Une tâche (colonne du tableau) et ses plages horaires (voir PlagesFormSet)."""
+    libelle = forms.CharField(label="Tâche", max_length=100, help_text="Ex. : bar, caisse, montage, vaisselle.")
+    besoin = forms.IntegerField(label="Bénévoles par case", min_value=1, max_value=99, initial=2)
+    duree = forms.IntegerField(
+        label="Découper chaque plage en créneaux de (minutes)", required=False, min_value=15, max_value=24 * 60,
+        help_text="Facultatif : ex. 120 pour des tours de 2 heures. Vide : une case par plage.",
+    )
+    appliquer_serie = forms.BooleanField(label="Faire de même pour les occurrences suivantes de la série",
+                                         required=False)
+
+
+class PlageForm(forms.Form):
+    date = forms.DateField(label="Jour", required=False, widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"))
+    heure_debut = forms.TimeField(label="De", required=False, widget=forms.TimeInput(attrs={"type": "time"}, format="%H:%M"))
+    heure_fin = forms.TimeField(label="À", required=False, widget=forms.TimeInput(attrs={"type": "time"}, format="%H:%M"))
+
+    def clean(self):
+        # Une ligne sans heure est ignorée (le jour y est pré-rempli)
+        donnees = super().clean()
+        if donnees.get("heure_debut") or donnees.get("heure_fin"):
+            if not all(donnees.get(c) for c in ("date", "heure_debut", "heure_fin")):
+                raise forms.ValidationError("Indiquez le jour, l'heure de début et l'heure de fin.")
+        return donnees
+
+
+# Lignes fournies par la vue (initial) ; le bouton « + Ajouter une ligne » en ajoute
+PlagesFormSet = forms.formset_factory(PlageForm, extra=0, max_num=30)

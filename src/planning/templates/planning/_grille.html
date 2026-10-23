@@ -1,0 +1,85 @@
+{% load planning_tags %}
+{# Tableau des tâches : colonnes = tâches, lignes = horaires, cases grisées = pas de besoin à cette heure #}
+<p class="pl-grille__glisser pl-muet">Faites glisser le tableau vers la gauche pour voir toutes les tâches →</p>
+<div class="pl-grille-defile">
+<table class="pl-grille">
+    <thead>
+        <tr>
+            <th scope="col" class="pl-grille__horaire">Horaire</th>
+            {% for col in grille.colonnes %}
+                <th scope="col">
+                    {{ col.tache }}{% if col.suite %} <span class="pl-muet">(suite)</span>{% endif %}
+                    {% if peut_modifier and not col.suite %}
+                        <span class="pl-grille__outils">
+                            <a href="{% url 'planning:tache_modifier' evenement.pk %}?tache={{ col.libelle|urlencode }}" title="Modifier la tâche, ajouter des plages">Modifier</a>
+                            <form method="post" action="{% url 'planning:tache_supprimer' evenement.pk %}?tache={{ col.libelle|urlencode }}"
+                                  onsubmit="return confirm('Supprimer la tâche « {{ col.tache|escapejs }} », toutes ses cases et leurs inscriptions ?');">{% csrf_token %}
+                                <button type="submit" class="btn--lien">Supprimer</button></form>
+                        </span>
+                    {% endif %}
+                </th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for ligne in grille.lignes %}
+            {% if grille.plusieurs_jours and ligne.nouveau_jour %}
+                <tr class="pl-grille__jour"><th colspan="{{ grille.colonnes|length|add:1 }}">{{ ligne.debut|date:"l j F" }}</th></tr>
+            {% endif %}
+            <tr>
+                <th scope="row" class="pl-grille__horaire">{{ ligne.debut|date:"H:i" }}<br><span class="pl-muet">{{ ligne.fin|date:"H:i" }}</span></th>
+                {% for case in ligne.cases %}
+                    {% if case.vide %}
+                        <td class="pl-case-grille pl-case-grille--indispo" title="Pas de besoin pour cette tâche à cette heure"></td>
+                    {% else %}{% with c=case.creneau %}
+                        <td class="pl-case-grille {% if not c.manque %}pl-case-grille--complet{% elif c.nb_inscrits %}pl-case-grille--partiel{% else %}pl-case-grille--vide{% endif %}{% if c.je_suis_inscrit %} pl-case-grille--moi{% endif %}"
+                            rowspan="{{ case.hauteur }}">
+                            {% if case.hauteur > 1 %}<div class="pl-muet pl-case-grille__heures">{{ c.debut|date:"H:i" }}–{{ c.fin|date:"H:i" }}</div>{% endif %}
+                            <ul class="pl-case-grille__inscrits">
+                                {% for m in c.inscrits %}
+                                    <li>{{ m|nom_membre }}{% if peut_modifier and m != user %}
+                                        <form method="post" action="{% url 'planning:creneau_desinscrire' c.pk %}">{% csrf_token %}
+                                            <input type="hidden" name="membre" value="{{ m.pk }}"><input type="hidden" name="retour" value="{{ request.get_full_path }}#creneaux">
+                                            <button type="submit" class="btn--lien" aria-label="Retirer {{ m|nom_membre }}" title="Retirer">×</button></form>{% endif %}</li>
+                                {% endfor %}
+                            </ul>
+                            <div class="pl-case-grille__pied">
+                                <span class="pl-case-grille__compte">{{ c.nb_inscrits }}/{{ c.besoin }}</span>
+                                {% if c.je_suis_inscrit %}
+                                    <form method="post" action="{% url 'planning:creneau_desinscrire' c.pk %}">{% csrf_token %}
+                                        <input type="hidden" name="retour" value="{{ request.get_full_path }}#creneaux">
+                                        <button type="submit" class="btn btn--clair btn--small">Me retirer</button></form>
+                                {% elif c.manque and not evenement.annule and not passe %}
+                                    <form method="post" action="{% url 'planning:creneau_inscrire' c.pk %}">{% csrf_token %}
+                                        <input type="hidden" name="retour" value="{{ request.get_full_path }}#creneaux">
+                                        <button type="submit" class="btn btn--ok btn--small">+ Moi</button></form>
+                                {% endif %}
+                            </div>
+                            {% if peut_modifier %}
+                                <div class="pl-case-grille__gestion">
+                                    {% if c.manque and membres %}
+                                        <form method="post" action="{% url 'planning:creneau_inscrire' c.pk %}" class="pl-affecter">{% csrf_token %}
+                                            <input type="hidden" name="retour" value="{{ request.get_full_path }}#creneaux">
+                                            <select name="membre" aria-label="Inscrire un membre" onchange="this.form.submit()"><option value="">Inscrire…</option>
+                                                {% for m in membres %}{% if m not in c.inscrits %}<option value="{{ m.pk }}">{{ m|nom_membre }}</option>{% endif %}{% endfor %}
+                                            </select>
+                                        </form>
+                                    {% endif %}
+                                    <a class="btn--lien" href="{% url 'planning:creneau_modifier' c.pk %}">Modifier</a>
+                                </div>
+                            {% endif %}
+                        </td>
+                    {% endwith %}{% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<div class="pl-legende">
+    <span><i style="background:#e6f4ea"></i>Complet</span>
+    <span><i style="background:#fdf4e3"></i>Il manque du monde</span>
+    <span><i style="background:#fbeaea"></i>Personne</span>
+    <span><i class="pl-hachure"></i>Pas de besoin à cette heure</span>
+    <span><i style="background:#fff; box-shadow: inset 0 0 0 2px var(--color-accent)"></i>Vous y êtes</span>
+</div>

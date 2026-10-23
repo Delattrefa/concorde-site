@@ -235,7 +235,34 @@
         }
     }
 
+    // --- Plages horaires d'une tâche : lignes supplémentaires -------------------
+
+    function initPlages(bouton) {
+        var form = bouton.closest("form");
+        var conteneur = form.querySelector("[data-options]");
+        var total = form.querySelector("[name=plages-TOTAL_FORMS]");
+        bouton.addEventListener("click", function () {
+            var lignes = conteneur.querySelectorAll(".pl-options-ligne");
+            var modele = lignes[lignes.length - 1];
+            var n = parseInt(total.value, 10);
+            var copie = modele.cloneNode(true);
+            copie.querySelectorAll("input").forEach(function (input) {
+                input.name = input.name.replace(/plages-\d+-/, "plages-" + n + "-");
+                input.id = input.id.replace(/plages-\d+-/, "plages-" + n + "-");
+                // Le jour de la ligne précédente est repris : seules les heures changent
+                if (input.type !== "date") input.value = "";
+            });
+            copie.querySelectorAll("label").forEach(function (label) {
+                label.htmlFor = label.htmlFor.replace(/plages-\d+-/, "plages-" + n + "-");
+            });
+            copie.querySelectorAll(".errorlist").forEach(function (el) { el.remove(); });
+            conteneur.appendChild(copie);
+            total.value = n + 1;
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll("[data-ajouter-plage]").forEach(initPlages);
         document.querySelectorAll("[data-discussion]").forEach(initDiscussion);
         document.querySelectorAll("[data-sondage-form]").forEach(initSondage);
         initNotifications();

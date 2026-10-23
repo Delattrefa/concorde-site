@@ -272,6 +272,20 @@ for auteur, texte in [(luc, "J'apporte les rallonges électriques pour les appar
                       (sophie, "Super ! Pour le bar, on prévoit combien de fûts ? @secretariat")]:
     planning_services.publier(fil, auteur, texte)
 
+# --- Invitations de nouveaux membres -----------------------------------------
+from comptes.models import InvitationMembre, empreinte  # noqa: E402
+
+InvitationMembre.objects.all().delete()
+InvitationMembre.objects.create(
+    email="lea.vandenberg@exemple.be", prenom="Léa", nom="Van den Berg", invite_par=admin,
+    message="Bienvenue dans l'équipe ! Tu trouveras le planning du bar dans le menu Réservations.",
+    jeton_hache=empreinte("invitation-demo-manuel"), envoyee_le=timezone.now(),
+    expire_le=timezone.now() + dt.timedelta(days=14))
+InvitationMembre.objects.create(
+    email="luc@exemple.be", prenom="Luc", nom="Duvivier", invite_par=admin, membre=luc,
+    jeton_hache=empreinte("invitation-demo-acceptee"), envoyee_le=timezone.now() - dt.timedelta(days=9),
+    acceptee_le=timezone.now() - dt.timedelta(days=8), expire_le=timezone.now() + dt.timedelta(days=5))
+
 # --- Identifiants utiles aux captures (lus par captures.py) -----------------
 from pathlib import Path  # noqa: E402
 

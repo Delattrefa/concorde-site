@@ -21,13 +21,15 @@ from django.views.decorators.http import require_POST
 
 from calendrier.models import Activite
 
-from . import services
+from . import grille, services
 from .forms import (
     CreneauForm,
     DecouperForm,
     DisponibiliteForm,
     EvenementForm,
     InviterForm,
+    PlagesFormSet,
+    TacheForm,
 )
 from .views_discussion import contexte_discussion
 from .models import (
@@ -314,6 +316,10 @@ def evenement_ajouter(request):
         texte = f"« {evenement.titre} » ajouté au planning"
         if len(occurrences) > 1:
             texte += f", avec {len(occurrences) - 1} répétition{'s' if len(occurrences) > 2 else ''}"
+        if evenement.type == Evenement.TYPE_ACTIVITE and not evenement.creneaux.exists():
+            # Une activité s'organise par tâches : on enchaîne sur le tableau
+            messages.success(request, texte + ". Ajoutez maintenant les tâches et leurs horaires.")
+            return redirect("planning:tache_ajouter", pk=evenement.pk)
         messages.success(request, texte + ".")
         return redirect(evenement)
     return render(request, "planning/evenement_form.html", {"form": form, "sondage": sondage})
@@ -355,6 +361,8 @@ def evenement(request, pk):
         **contexte_discussion(services.canal_de(evenement), moi),
         "evenement": evenement,
         "creneaux": creneaux,
+        "grille": grille.construire(creneaux),
+        "vue_liste": request.GET.get("vue") == "liste",
         "manque": sum(c.manque for c in creneaux),
         "invitations": invitations,
         "mon_invitation": next((i for i in invitations if i.membre_id == moi.pk), None),
@@ -655,3 +663,108 @@ def disponibilite_supprimer(request, pk):
     get_object_or_404(Disponibilite, pk=pk, membre=request.user).delete()
     messages.success(request, "Disponibilité retirée.")
     return redirect("planning:disponibilites")
+
+
+# --- Tableau des tâches -----------------------------------------------------
+
+def _plages(formset):
+    """Plages (début, fin) saisies ; une fin avant le début passe minuit."""
+    plages = []
+    for form in formset:
+        d = form.cleaned_data
+        if d and d.get("heure_debut"):
+            debut = timezone.make_aware(datetime.combine(d["date"], d["heure_debut"]))
+            fin = timezone.make_aware(datetime.combine(d["date"], d["heure_fin"]))
+            if fin <= debut:
+                fin += timedelta(days=1)
+            plages.append((debut, fin))
+    return plages
+
+
+def _creer_creneaux(evenement, plages, libelle, besoin, duree=None, decalage=timedelta(0)):
+    nouveaux = []
+    for debut, fin in plages:
+        debut, fin = debut + decalage, fin + decalage
+        pas = timedelta(minutes=duree) if duree else fin - debut
+        while debut < fin:
+            suivant = min(debut + pas, fin)
+            nouveaux.append(Creneau(evenement=evenement, libelle=libelle, besoin=besoin, debut=debut, fin=suivant))
+            debut = suivant
+    return Creneau.objects.bulk_create(nouveaux)
+
+
+def _creneaux_de_la_tache(evenement, request):
+    libelle = request.GET.get("tache", request.POST.get("tache_initiale", ""))
+    creneaux = evenement.creneaux.filter(libelle=libelle)
+    if not creneaux.exists():
+        raise Http404
+    return libelle, creneaux
+
+
+def _formulaire_tache(request, evenement, libelle=None):
+    """Ajout (libelle None) ou modification d'une tâche et de ses plages."""
+    creneaux = evenement.creneaux.filter(libelle=libelle) if libelle is not None else Creneau.objects.none()
+    debut_local, fin_local = timezone.localtime(evenement.debut), timezone.localtime(evenement.fin)
+    initial = {"libelle": libelle, "besoin": creneaux.first().besoin} if libelle is not None else {}
+    # Lignes de plages : le jour de l'événement est pré-rempli, il reste les heures
+    lignes_vides = [{"date": debut_local.date()}] * 4
+    plage_initiale = lignes_vides if libelle is not None else [{
+        "date": debut_local.date(), "heure_debut": debut_local.time(), "heure_fin": fin_local.time(),
+    }] + lignes_vides
+    form = TacheForm(request.POST or None, initial=initial)
+    plages_form = PlagesFormSet(request.POST or None, prefix="plages", initial=plage_initiale)
+    erreur = ""
+    if request.method == "POST" and form.is_valid() and plages_form.is_valid():
+        d = form.cleaned_data
+        plages = _plages(plages_form)
+        nouveau_libelle = d["libelle"].strip()
+        if libelle is None and not plages:
+            erreur = "Indiquez au moins une plage horaire."
+        elif nouveau_libelle != (libelle or "") and evenement.creneaux.filter(libelle=nouveau_libelle).exists():
+            erreur = f"La tâche « {nouveau_libelle} » existe déjà : choisissez un autre nom."
+        else:
+            with transaction.atomic():
+                if libelle is not None:
+                    creneaux.update(libelle=nouveau_libelle, besoin=d["besoin"])
+                crees = _creer_creneaux(evenement, plages, nouveau_libelle, d["besoin"], d.get("duree"))
+                if d.get("appliquer_serie") and evenement.serie and plages:
+                    for occurrence in evenement.occurrences_suivantes().exclude(pk=evenement.pk):
+                        _creer_creneaux(occurrence, plages, nouveau_libelle, d["besoin"], d.get("duree"),
+                                        decalage=occurrence.debut - evenement.debut)
+            if libelle is None:
+                messages.success(request, f"Tâche « {nouveau_libelle} » ajoutée ({len(crees)} case{'s' if len(crees) > 1 else ''}).")
+            else:
+                messages.success(request, f"Tâche « {nouveau_libelle} » modifiée.")
+            if "encore" in request.POST:
+                return redirect("planning:tache_ajouter", pk=evenement.pk)
+            return redirect(reverse("planning:evenement", args=[evenement.pk]) + "#creneaux")
+    return render(request, "planning/tache_form.html", {
+        "form": form, "plages_form": plages_form, "erreur": erreur, "evenement": evenement,
+        "libelle": libelle, "nb_cases": creneaux.count(),
+    })
+
+
+@login_required
+def tache_ajouter(request, pk):
+    return _formulaire_tache(request, _evenement_modifiable(request, pk))
+
+
+@login_required
+def tache_modifier(request, pk):
+    evenement = _evenement_modifiable(request, pk)
+    libelle, _ = _creneaux_de_la_tache(evenement, request)
+    return _formulaire_tache(request, evenement, libelle)
+
+
+@login_required
+@require_POST
+def tache_supprimer(request, pk):
+    evenement = _evenement_modifiable(request, pk)
+    libelle, creneaux = _creneaux_de_la_tache(evenement, request)
+    inscrits = set(Inscription.objects.filter(creneau__in=creneaux).values_list("membre", flat=True))
+    creneaux.delete()
+    nom = libelle or "Bénévoles"
+    services.notifier(inscrits, Notification.EVENEMENT, f"Tâche supprimée : {nom}, {evenement.titre}",
+                      evenement.get_absolute_url(), exclure=request.user)
+    messages.success(request, f"Tâche « {nom} » supprimée.")
+    return redirect(reverse("planning:evenement", args=[evenement.pk]) + "#creneaux")
