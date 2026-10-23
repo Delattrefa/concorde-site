@@ -1,0 +1,91 @@
+/* Mise en page commune aux manuels (complet et membres) : A4, chapitres, figures, encarts. */
+@page { size: A4; margin: 18mm 17mm 20mm 17mm; }
+@page :first { margin: 0; }
+:root {
+  --bordeaux: #7a1f2b; --bordeaux-fonce: #5a1620; --or: #d1a62f; --creme: #f5eee7;
+  --encre: #2a2222; --gris: #6b6262; --bord: #e2d6cc; --vert: #2e7d32; --orange: #e67e22;
+}
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { font-family: "Helvetica Neue", Arial, "Liberation Sans", sans-serif; font-size: 10.3pt; line-height: 1.5; color: var(--encre); margin: 0; counter-reset: figure; }
+h1, h2, h3, .titre-serif { font-family: Georgia, "DejaVu Serif", "Liberation Serif", serif; color: var(--bordeaux); }
+h1 { font-size: 24pt; margin: 0 0 4mm; line-height: 1.15; }
+h2 { font-size: 15pt; margin: 9mm 0 3mm; padding-bottom: 1.5mm; border-bottom: 1.5px solid var(--bord); break-after: avoid; }
+h3 { font-size: 12pt; margin: 6mm 0 2mm; color: var(--bordeaux-fonce); break-after: avoid; }
+p { margin: 0 0 2.6mm; }
+ul, ol { margin: 0 0 3mm; padding-left: 6mm; }
+li { margin-bottom: 1mm; }
+a { color: var(--bordeaux); }
+code, .url { font-family: "DejaVu Sans Mono", Consolas, monospace; font-size: 8.8pt; background: var(--creme); padding: 0.2mm 1.2mm; border-radius: 1mm; color: var(--bordeaux-fonce); white-space: nowrap; }
+strong { color: #1d1717; }
+.btn { display: inline-block; font-size: 8.6pt; font-weight: 600; padding: 0.1mm 2mm; border-radius: 1mm; background: var(--or); color: #241c00; white-space: nowrap; }
+.btn.rouge { background: var(--bordeaux); color: #fff; }
+
+/* Couverture */
+.couverture { height: 297mm; width: 210mm; position: relative; overflow: hidden; break-after: page; background: var(--bordeaux-fonce); color: #fff; }
+.couverture img { position: absolute; inset: 0; width: 100%; height: 62%; object-fit: cover; opacity: .7; }
+.couverture .voile { position: absolute; inset: 0; height: 62%; background: linear-gradient(180deg, rgba(90,22,32,.1) 0%, rgba(90,22,32,1) 100%); }
+.couverture .texte { position: absolute; left: 20mm; right: 20mm; top: 120mm; }
+.couverture .sur { text-transform: uppercase; letter-spacing: 3px; color: var(--or); font-size: 10pt; font-weight: 700; }
+.couverture h1 { color: #fff; font-size: 38pt; margin: 4mm 0 5mm; }
+.couverture .sous { font-size: 14pt; color: #f1e3d6; max-width: 140mm; }
+.couverture .bas { position: absolute; left: 20mm; right: 20mm; bottom: 20mm; border-top: 1px solid rgba(255,255,255,.3); padding-top: 5mm; font-size: 9.5pt; color: #e9d7c8; display: flex; justify-content: space-between; }
+.couverture .logo { font-family: Georgia, serif; font-size: 20pt; color: #fff; }
+.couverture .logo span { color: var(--or); font-size: 12pt; }
+
+/* Chapitres */
+.chapitre { break-before: page; }
+.bandeau { background: var(--creme); border-left: 3mm solid var(--bordeaux); padding: 6mm 7mm 5mm; margin-bottom: 6mm; }
+.bandeau .num { font-size: 9pt; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gris); font-weight: 700; }
+.bandeau p { margin: 0; color: #4a3f3f; font-size: 10.5pt; }
+
+/* Figures */
+figure { margin: 4mm 0 5mm; break-inside: avoid; text-align: center; }
+figure img { max-width: 100%; max-height: 118mm; border: 1px solid var(--bord); border-radius: 1.5mm; box-shadow: 0 1mm 3mm rgba(60,30,30,.12); }
+figure.haute img { max-height: 150mm; }
+figure.basse img { max-height: 85mm; }
+figure.mobile img { max-height: 105mm; }
+figcaption { counter-increment: figure; font-size: 8.6pt; color: var(--gris); margin-top: 1.8mm; font-style: italic; }
+figcaption::before { content: "Figure " counter(figure) " — "; font-weight: 700; font-style: normal; color: var(--bordeaux); }
+.duo { display: flex; gap: 5mm; justify-content: center; align-items: flex-start; break-inside: avoid; }
+.duo figure { flex: 1; margin-top: 2mm; }
+
+/* Encadrés */
+.encart { border-radius: 2mm; padding: 3.5mm 4.5mm; margin: 4mm 0; break-inside: avoid; font-size: 9.8pt; }
+.encart p:last-child, .encart ul:last-child, .encart ol:last-child { margin-bottom: 0; }
+.encart .t { font-weight: 700; display: block; margin-bottom: 1mm; }
+.astuce { background: #eef6ee; border: 1px solid #c6e0c7; }
+.astuce .t { color: var(--vert); }
+.attention { background: #fdf3e3; border: 1px solid #f0d3a2; }
+.attention .t { color: #b5600b; }
+.exemple { background: #f6f1fa; border: 1px solid #ddd0ea; }
+.exemple .t { color: #5b3a87; }
+.exemple ol { margin-top: 1mm; }
+
+/* Tableaux */
+table { width: 100%; border-collapse: collapse; margin: 3mm 0 5mm; font-size: 9.2pt; break-inside: avoid; }
+th { background: var(--bordeaux); color: #fff; text-align: left; padding: 2mm 2.5mm; font-weight: 600; }
+td { border-bottom: 1px solid var(--bord); padding: 1.8mm 2.5mm; vertical-align: top; }
+tr:nth-child(even) td { background: #fbf8f5; }
+td.oui { color: var(--vert); font-weight: 700; text-align: center; }
+td.non { color: #b0a5a5; text-align: center; }
+
+/* Étapes */
+ol.etapes { list-style: none; counter-reset: etape; padding-left: 0; }
+ol.etapes > li { counter-increment: etape; position: relative; padding-left: 9mm; margin-bottom: 2.2mm; }
+ol.etapes > li::before { content: counter(etape); position: absolute; left: 0; top: 0.2mm; width: 6mm; height: 6mm; border-radius: 50%; background: var(--bordeaux); color: #fff; font-weight: 700; font-size: 8.5pt; text-align: center; line-height: 6mm; }
+
+/* Sommaire */
+.sommaire { break-after: page; }
+.sommaire ol { list-style: none; padding: 0; counter-reset: ch; }
+.sommaire > ol > li { counter-increment: ch; margin: 0 0 3.2mm; padding: 2.4mm 0 2.4mm 13mm; position: relative; border-bottom: 1px dotted var(--bord); }
+.sommaire > ol > li::before { content: counter(ch, decimal-leading-zero); position: absolute; left: 0; top: 1.6mm; font-family: Georgia, serif; font-size: 15pt; color: var(--or); font-weight: 700; }
+.sommaire a { text-decoration: none; color: var(--encre); font-weight: 700; font-size: 11.5pt; }
+.sommaire .desc { display: block; color: var(--gris); font-size: 9pt; font-weight: 400; }
+
+.profils { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4mm; margin: 4mm 0; }
+.profil { border: 1px solid var(--bord); border-top: 2mm solid var(--or); border-radius: 2mm; padding: 3mm 4mm; break-inside: avoid; font-size: 9.5pt; }
+.profil h4 { margin: 0 0 1.5mm; font-family: Georgia, serif; color: var(--bordeaux); font-size: 11pt; }
+.profil p { margin: 0; }
+.legende-couleurs span { display: inline-block; width: 3mm; height: 3mm; border-radius: 50%; margin: 0 1mm -0.3mm 3mm; }
+.petit { font-size: 8.8pt; color: var(--gris); }

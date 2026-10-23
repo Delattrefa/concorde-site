@@ -195,7 +195,7 @@ with sync_playwright() as p:
     shot(page, "planning_mois", "/planning/mois/2026/11/", hauteur=1250)
     shot(page, "planning_evenement", f"/planning/evenement/{IDS['planning_ducasse']}/", hauteur=1450)
     shot(page, "planning_couverture", "/planning/a-combler/", hauteur=1150)
-    shot(page, "planning_tache", f"/planning/evenement/{IDS['planning_ducasse']}/taches/ajouter/", hauteur=1300)
+    shot(page, "planning_tache", f"/planning/evenement/{IDS['planning_brocante']}/taches/ajouter/", hauteur=1300)
     shot(page, "planning_formulaire", "/planning/evenement/ajouter/?date=2026-11-20", hauteur=1750)
     shot(page, "planning_sondage", f"/planning/sondages/{IDS['planning_sondage']}/", hauteur=950)
     shot(page, "planning_discussion", f"/planning/discussions/{IDS['planning_canal']}/", hauteur=850)

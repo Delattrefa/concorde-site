@@ -233,6 +233,11 @@ for occurrence in planning_services.repeter(menage, "hebdo", dt.date(2026, 12, 2
     planning_services.copier_creneaux(menage, [occurrence])
 PlInscription.objects.create(creneau=menage.creneaux.first(), membre=julie)
 
+# Activité organisée par le membre de démonstration (il peut y ajouter des tâches)
+brocante = PlEvenement.objects.create(
+    type="activite", titre="Brocante du club de pétanque", lieu="Parking de la salle", createur=membre,
+    debut=_a(dt.date(2026, 11, 21), 7), fin=_a(dt.date(2026, 11, 21), 17))
+
 marche = PlEvenement.objects.create(
     type="activite", titre="Marché de Noël — stands et accueil", lieu="Salle et parking", createur=admin,
     debut=_a(dt.date(2026, 12, 5), 16), fin=_a(dt.date(2026, 12, 5), 22))
@@ -297,7 +302,11 @@ from news.models import NewsPage  # noqa: E402
 album_video = GalleryVideo.objects.order_by("page_id").values_list("page_id", flat=True).first()
 albums_photos = GalleryAlbum.objects.live().filter(gallery_images__isnull=False).distinct()
 album_photos = albums_photos.filter(videos__isnull=False).first() or albums_photos.first()
-activite_privee = Activite.objects.filter(visibilite=Activite.VISIBILITE_PRIVEE).first()
+# Activité privée fictive (et non une activité réelle de la base copiée)
+activite_privee, _ = Activite.objects.get_or_create(
+    nom="Répétition générale BQL", date_debut=dt.date(2026, 11, 19),
+    defaults={"date_fin": dt.date(2026, 11, 19), "visibilite": Activite.VISIBILITE_PRIVEE, "auteur": membre,
+              "description": "Filage complet en costumes, avant la première du 20 novembre."})
 ids = {
     "demande_validee": DemandeSalle.objects.get(nom="Vandenberghe").pk,
     "demande_attente": DemandeSalle.objects.get(nom="Ghislain").pk,
@@ -316,6 +325,7 @@ ids = {
     "actualite_blocs": NewsPage.objects.get(title=TITRE_ACTU_BLOCS).pk,
     "actualite_blocs_url": NewsPage.objects.get(title=TITRE_ACTU_BLOCS).url,
     "planning_ducasse": ducasse.pk,
+    "planning_brocante": brocante.pk,
     "planning_comite": comite.pk,
     "planning_sondage": sondage_bilan.pk,
     "planning_sondage_decision": sondage_tshirts.pk,

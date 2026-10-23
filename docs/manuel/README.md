@@ -1,11 +1,16 @@
 # Manuel d'utilisation — sources
 
-Sources du PDF `docs/Manuel d'utilisation - Site La Concorde.pdf`, destiné à
-l'équipe de l'ASBL.
+Sources des deux manuels PDF :
+- `docs/Manuel d'utilisation - Site La Concorde.pdf` : manuel complet, destiné
+  aux responsables de l'ASBL (`manuel.html`) ;
+- `docs/Manuel des membres - Site La Concorde.pdf` : manuel des simples
+  membres (`manuel-membres.html`) : compte, calendrier, planning, actualités.
 
 ```
 docs/manuel/
-├── manuel.html            # le texte du manuel (HTML + CSS d'impression A4)
+├── manuel.html            # le texte du manuel complet
+├── manuel-membres.html    # le texte du manuel des membres
+├── manuel.css             # mise en page A4 commune aux deux manuels
 ├── img/                   # captures d'écran en JPEG, référencées par manuel.html
 │   └── couverture.jpg     # photo de couverture (pas une capture : à garder)
 └── outils/
@@ -13,7 +18,7 @@ docs/manuel/
     ├── reglages_manuel.py # réglages Django de ce site de démonstration
     ├── donnees_demo.py    # comptes et données fictives des captures
     ├── captures.py        # captures d'écran (Playwright + Chrome)
-    └── rendu.py           # conversion manuel.html → PDF (Chrome)
+    └── rendu.py           # conversion HTML → PDF (Chrome)
 ```
 
 ## Modifier seulement le texte
@@ -24,8 +29,11 @@ docs/manuel/
    `<div class="duo">` pour deux images côte à côte).
 2. Régénérer le PDF (voir « Outils » ci-dessous) :
    ```bash
-   docs/manuel/.outils-venv/bin/python docs/manuel/outils/rendu.py
+   docs/manuel/.outils-venv/bin/python docs/manuel/outils/rendu.py           # manuel complet
+   docs/manuel/.outils-venv/bin/python docs/manuel/outils/rendu.py membres   # manuel des membres
    ```
+   Les deux manuels partagent les mêmes captures : après une évolution de
+   l'interface, régénérez les deux.
 
 ## Refaire les captures d'écran
 
