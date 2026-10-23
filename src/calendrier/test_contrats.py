@@ -280,8 +280,20 @@ class VuesContratTests(TestCase):
         donnees.update(champs)
         return self.client.post(self.url_rediger, donnees)
 
-    def test_contrat_refuse_pour_une_reservation_non_validee(self):
+    def test_contrat_redige_avant_validation(self):
+        """Le contrat se rédige dès la demande : c'est le paiement qui validera."""
         self.reservation.statut = Reservation.STATUT_ATTENTE
+        self.reservation.save()
+
+        reponse = self._rediger()
+
+        self.assertEqual(reponse["Content-Type"], "application/pdf")
+        self.assertTrue(ContratLocation.objects.filter(reservation=self.reservation).exists())
+        self.reservation.refresh_from_db()
+        self.assertEqual(self.reservation.statut, Reservation.STATUT_ATTENTE)
+
+    def test_contrat_refuse_pour_une_demande_refusee(self):
+        self.reservation.statut = Reservation.STATUT_REFUSEE
         self.reservation.save()
 
         reponse = self._rediger()
@@ -389,3 +401,78 @@ class AnnexeInvalideTests(TestCase):
         })
 
         self.assertContains(reponse, "aucune page")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  LE PAIEMENT VALIDE LA RÉSERVATION
+# ══════════════════════════════════════════════════════════════════════════════
+
+class PaiementValideReservationTests(TestCase):
+
+    def setUp(self):
+        self.admin = get_user_model().objects.create_user("admin", password="mdp", is_staff=True)
+        self.client.force_login(self.admin)
+        self.jour = date.today() + timedelta(days=30)
+        self.reservation = self._demande("Dupont")
+        self.contrat = ContratLocation.objects.create(
+            reservation=self.reservation, delegue_prenom="Jean", delegue_nom="Delcourt",
+            montant_location=350, montant_caution=150,
+        )
+        self.url = reverse("calendrier:suivi_paiements")
+
+    def _demande(self, nom, statut=Reservation.STATUT_ATTENTE):
+        return Reservation.objects.create(
+            nom=nom, prenom="Marie", adresse="Rue Haute 5, 7387 Honnelles", email="marie@exemple.be",
+            telephone="0470 12 34 56", date_debut=self.jour, date_fin=self.jour, statut=statut,
+        )
+
+    def _payer(self, **champs):
+        donnees = {"form-TOTAL_FORMS": "1", "form-INITIAL_FORMS": "1", "form-0-id": str(self.contrat.pk),
+                   "form-0-location_payee": "on"}
+        donnees.update(champs)
+        return self.client.post(self.url, donnees, follow=True)
+
+    def test_suivi_des_paiements_avant_validation(self):
+        reponse = self.client.get(self.url + "?filtre=non_validees")
+        self.assertContains(reponse, "Dupont")
+        self.assertContains(reponse, "Non validée")
+
+    def test_le_paiement_de_la_location_valide_la_reservation(self):
+        reponse = self._payer()
+
+        self.reservation.refresh_from_db()
+        self.contrat.refresh_from_db()
+        self.assertTrue(self.contrat.location_payee)
+        self.assertEqual(self.reservation.statut, Reservation.STATUT_VALIDEE)
+        self.assertEqual(self.reservation.traite_par, self.admin)
+        self.assertContains(reponse, "Paiement reçu : la réservation de Marie Dupont")
+
+    def test_paiement_refuse_si_la_salle_est_deja_prise(self):
+        self._demande("Martin", statut=Reservation.STATUT_VALIDEE)
+
+        reponse = self._payer()
+
+        self.assertContains(reponse, "la salle est déjà occupée")
+        self.reservation.refresh_from_db()
+        self.contrat.refresh_from_db()
+        self.assertFalse(self.contrat.location_payee)
+        self.assertEqual(self.reservation.statut, Reservation.STATUT_ATTENTE)
+
+    def test_la_caution_seule_ne_valide_pas(self):
+        self._payer(**{"form-0-location_payee": "", "form-0-caution_payee": "on"})
+        self.reservation.refresh_from_db()
+        self.assertEqual(self.reservation.statut, Reservation.STATUT_ATTENTE)
+
+    def test_refuser_une_demande_annule_son_contrat(self):
+        self.client.post(reverse("calendrier:reservation_traiter", args=[self.reservation.pk]), {"action": "refuser"})
+        self.contrat.refresh_from_db()
+        self.reservation.refresh_from_db()
+        self.assertTrue(self.contrat.annule)
+        self.assertEqual(self.reservation.statut, Reservation.STATUT_REFUSEE)
+
+    def test_retablir_une_annulation_non_payee_revient_en_attente(self):
+        self.client.post(reverse("calendrier:reservation_traiter", args=[self.reservation.pk]), {"action": "valider"})
+        self.client.post(reverse("calendrier:reservation_traiter", args=[self.reservation.pk]), {"action": "annuler"})
+        self.client.post(reverse("calendrier:reservation_traiter", args=[self.reservation.pk]), {"action": "retablir"})
+        self.reservation.refresh_from_db()
+        self.assertEqual(self.reservation.statut, Reservation.STATUT_ATTENTE)

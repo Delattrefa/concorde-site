@@ -54,8 +54,14 @@
         </p>
     {% endif %}
 
-    {% if reservation.statut == "validee" %}
+    {% if reservation.statut == "validee" or reservation.statut == "attente" %}
         <h2>Contrat de location</h2>
+        {% if reservation.statut == "attente" %}
+            <p class="calendrier__alerte" style="text-align:left">
+                {% if reservation.contrat %}En attente du paiement : la réservation sera <strong>validée automatiquement</strong> quand le paiement de la location sera coché dans le <a href="{% url 'calendrier:suivi_paiements' %}?filtre=non_validees">suivi des paiements</a>.
+                {% else %}Rédigez le contrat et envoyez-le au demandeur : c'est le <strong>paiement de la location</strong>, enregistré ensuite dans le suivi des paiements, qui validera la réservation.{% endif %}
+            </p>
+        {% endif %}
         {% if reservation.contrat %}
             <p>
                 Un contrat a été généré le {{ reservation.contrat.date_creation|date:"d/m/Y H:i" }}
@@ -79,7 +85,9 @@
         {% if reservation.statut == "attente" %}
             <form method="post" action="{% url 'calendrier:reservation_traiter' reservation.pk %}" class="calendrier-liste__form-action">
                 {% csrf_token %}
-                <button type="submit" name="action" value="valider" class="btn btn--primary">Valider la réservation</button>
+                <button type="submit" name="action" value="valider" class="btn {% if reservation.contrat %}btn--secondary{% else %}btn--primary{% endif %}"
+                        {% if reservation.contrat %}onclick="return confirm('Valider sans attendre le paiement de la location ?');"{% endif %}>
+                    {% if reservation.contrat %}Valider sans attendre le paiement{% else %}Valider la réservation{% endif %}</button>
                 <button type="submit" name="action" value="refuser" class="btn btn--danger">Refuser la réservation</button>
             </form>
         {% elif reservation.statut == "validee" %}

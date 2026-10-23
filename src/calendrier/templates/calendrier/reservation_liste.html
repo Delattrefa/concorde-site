@@ -61,15 +61,17 @@
                     </td>
                     <td>{{ reservation.email }}</td>
                     <td>{{ reservation.telephone }}</td>
-                    <td><span class="etiquette etiquette--{{ reservation.statut }}">{{ reservation.get_statut_display }}</span></td>
+                    <td><span class="etiquette etiquette--{{ reservation.statut }}">{{ reservation.get_statut_display }}</span>
+                        {% if reservation.statut == "attente" and reservation.contrat %}<br><small>Contrat rédigé — attente du paiement</small>{% endif %}</td>
                     <td>{{ reservation.date_demande|date:"d/m/Y H:i" }}</td>
                     <td class="calendrier-liste__actions">
                         {% if reservation.statut == "attente" %}
                             <form method="post" action="{% url 'calendrier:reservation_traiter' reservation.pk %}" class="calendrier-liste__form-action">
                                 {% csrf_token %}
-                                <button type="submit" name="action" value="valider" class="btn btn--primary btn--small">Valider</button>
+                                {% if not reservation.contrat %}<button type="submit" name="action" value="valider" class="btn btn--secondary btn--small">Valider</button>{% endif %}
                                 <button type="submit" name="action" value="refuser" class="btn btn--danger btn--small">Refuser</button>
                             </form>
+                            <a href="{% url 'calendrier:reservation_contrat' reservation.pk %}" class="btn btn--primary btn--small">{% if reservation.contrat %}Contrat{% else %}Rédiger le contrat{% endif %}</a>
                         {% else %}
                             <a href="{% url 'calendrier:reservation_detail' reservation.pk %}" class="btn btn--secondary btn--small">Détails</a>
                             {% if reservation.statut == "validee" or reservation.statut == "annulee" %}

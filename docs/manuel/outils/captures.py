@@ -118,6 +118,18 @@ def vers_photos(page):
     page.wait_for_timeout(1200)
 
 
+def contrat_en_attente(page):
+    """Contrat de la demande en attente : il attend le paiement, qui
+    validera la réservation (pas de capture du formulaire)."""
+    page.goto(f"{BASE}/calendrier/reservation/{IDS['demande_attente']}/contrat/", wait_until="networkidle")
+    page.fill("input[name=delegue_prenom]", "Marie")
+    page.fill("input[name=delegue_nom]", "Dupont")
+    page.fill("input[name=montant_location]", "450")
+    page.fill("input[name=montant_caution]", "250")
+    with page.expect_download(timeout=30000):
+        page.locator('form button[type=submit]').last.click()
+
+
 def rediger_contrat(page):
     """Remplit le contrat de la demande validée, capture le formulaire,
     puis l'enregistre (le PDF est généré et téléchargé)."""
@@ -221,11 +233,15 @@ with sync_playwright() as p:
     # Calendrier et location de salle
     shot(page, "admin_calendrier", "/calendrier/2026/11/", hauteur=1300)
     shot(page, "admin_jour_choix", "/calendrier/2026/11/15/", hauteur=900)
+    if voulu("admin_reservations") or voulu("admin_reservation_attente") or voulu("admin_paiements"):
+        contrat_en_attente(page)
     shot(page, "admin_reservations", "/calendrier/reservations/", hauteur=1400)
     shot(page, "admin_reservation_attente", f"/calendrier/reservation/{IDS['demande_attente']}/", hauteur=1300)
     if voulu("admin_contrat_form") or voulu("contrat_pdf"):
         rediger_contrat(page)
     shot(page, "admin_reservation_validee", f"/calendrier/reservation/{IDS['demande_validee']}/", hauteur=1400)
+    # Une page intermédiaire affiche (et efface) les messages de génération des contrats
+    page.goto(f"{BASE}/calendrier/reservations/", wait_until="networkidle")
     shot(page, "admin_paiements", "/calendrier/reservation/paiements/", hauteur=1100)
     shot(page, "admin_contrat_type", "/calendrier/contrat-type/", hauteur=1500)
     shot(page, "admin_mise_en_page", "/calendrier/contrat-type/mise-en-page/", hauteur=1300)

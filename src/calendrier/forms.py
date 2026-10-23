@@ -4,6 +4,7 @@ Formulaires de l'application 'calendrier'.
 import re
 
 from django import forms
+from django.utils import timezone
 
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
@@ -345,6 +346,18 @@ class SuiviPaiementForm(forms.ModelForm):
 
     CHAMPS_ANNULATION = ["date_annulation", "loyer_rembourse", "caution_rendue_annulation", "extrait_annulation"]
 
+    def __init__(self, *args, utilisateur=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.utilisateur = utilisateur
+        self.valide_par_paiement = False
+
+    def _validation_par_paiement(self, donnees):
+        """Le paiement de la location valide une demande encore en attente."""
+        return (
+            donnees.get("location_payee") and not donnees.get("annule")
+            and self.instance.reservation.statut == Reservation.STATUT_ATTENTE
+        )
+
     class Meta:
         model = ContratLocation
         fields = [
@@ -389,6 +402,18 @@ class SuiviPaiementForm(forms.ModelForm):
                 self.add_error(
                     "date_remboursement_caution",
                     "Une caution ne peut être remboursée que si elle a été payée.",
+                )
+
+        if self._validation_par_paiement(donnees):
+            reservation = contrat.reservation
+            occupations = occupations_sur(
+                reservation.date_debut, reservation.date_fin, exclure_reservation=reservation.pk
+            )
+            if occupations:
+                self.add_error(
+                    "location_payee",
+                    "Paiement non enregistré : il validerait la réservation, mais la salle est déjà occupée ("
+                    + " ; ".join(occupations) + ").",
                 )
 
         # --- Annulation -----------------------------------------------------
@@ -437,12 +462,20 @@ class SuiviPaiementForm(forms.ModelForm):
             # La réservation suit l'annulation : salle libérée dans le
             # calendrier, ou de nouveau réservée si l'annulation est retirée.
             reservation = contrat.reservation
-            if contrat.annule and reservation.statut != Reservation.STATUT_ANNULEE:
+            if contrat.annule and reservation.statut not in (Reservation.STATUT_ANNULEE, Reservation.STATUT_REFUSEE):
                 reservation.statut = Reservation.STATUT_ANNULEE
                 reservation.save(update_fields=["statut"])
             elif not contrat.annule and reservation.statut == Reservation.STATUT_ANNULEE:
-                reservation.statut = Reservation.STATUT_VALIDEE
+                # Annulation retirée : validée si la location est payée, sinon de nouveau en attente
+                reservation.statut = Reservation.STATUT_VALIDEE if contrat.location_payee else Reservation.STATUT_ATTENTE
                 reservation.save(update_fields=["statut"])
+            elif self._validation_par_paiement(self.cleaned_data):
+                reservation.statut = Reservation.STATUT_VALIDEE
+                reservation.traite_par = self.utilisateur
+                reservation.date_traitement = timezone.now()
+                # save() complet : déclenche aussi la recopie dans l'agenda Google
+                reservation.save()
+                self.valide_par_paiement = True
         return contrat
 
 

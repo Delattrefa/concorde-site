@@ -492,6 +492,12 @@ def reservation_traiter(request, pk):
         )
     elif action == "refuser":
         reservation.statut = Reservation.STATUT_REFUSEE
+        # Un contrat déjà rédigé sort des paiements attendus
+        contrat = getattr(reservation, "contrat", None)
+        if contrat is not None and not contrat.annule:
+            contrat.annule = True
+            contrat.date_annulation = contrat.date_annulation or timezone.localdate()
+            contrat.save(update_fields=["annule", "date_annulation"])
         messages.info(
             request,
             f"La réservation de {reservation.nom_court} a été refusée.",
@@ -534,7 +540,9 @@ def reservation_traiter(request, pk):
                 "dans le suivi des paiements.",
             )
             return redirect(_url_retour_reservation(request))
-        reservation.statut = Reservation.STATUT_VALIDEE
+        # Un contrat dont la location n'est pas encore payée attend toujours son paiement
+        payee = contrat is None or contrat.location_payee
+        reservation.statut = Reservation.STATUT_VALIDEE if payee else Reservation.STATUT_ATTENTE
         if contrat is not None and contrat.annule:
             contrat.annule = False
             contrat.date_annulation = None
@@ -589,7 +597,7 @@ class ReservationDeleteView(UserPassesTestMixin, DeleteView):
 @user_passes_test(_est_administrateur, login_url="login")
 def rediger_contrat(request, reservation_pk):
     """Affiche et traite le formulaire de rédaction du contrat de location
-    pour une réservation VALIDÉE, puis génère le PDF final (téléchargement
+    pour une demande EN ATTENTE ou une réservation VALIDÉE, puis génère le PDF final (téléchargement
     immédiat + copie conservée sur la fiche de la réservation).
 
     Réservé aux administrateurs, comme le reste de la gestion des
@@ -598,10 +606,12 @@ def rediger_contrat(request, reservation_pk):
 
     reservation = get_object_or_404(Reservation, pk=reservation_pk)
 
-    if reservation.statut != Reservation.STATUT_VALIDEE:
+    # Le contrat se rédige dès la demande : c'est le paiement de la location,
+    # enregistré dans le suivi des paiements, qui valide ensuite la réservation.
+    if reservation.statut not in (Reservation.STATUT_ATTENTE, Reservation.STATUT_VALIDEE):
         messages.error(
             request,
-            "Le contrat de location ne peut être rédigé que pour une réservation validée.",
+            "Le contrat ne peut être rédigé que pour une demande en attente ou une réservation validée.",
         )
         return redirect("calendrier:reservation_detail", pk=reservation.pk)
 
@@ -827,6 +837,7 @@ class AnnexeContratDeleteView(_ContratTypeMixin, DeleteView):
 FILTRES_PAIEMENTS = [
     ("", "Toutes les locations"),
     ("a_payer", "Paiement attendu"),
+    ("non_validees", "Non validées (attente du paiement)"),
     ("a_rembourser", "Caution à rembourser"),
     ("soldees", "Dossiers clôturés"),
     ("annulees", "Locations annulées"),
@@ -872,6 +883,8 @@ def _filtrer_statut(contrats, filtre):
         )
     elif filtre == "annulees":
         contrats = contrats.filter(annule=True)
+    elif filtre == "non_validees":
+        contrats = contrats.filter(annule=False, reservation__statut=Reservation.STATUT_ATTENTE)
     return contrats.order_by("-reservation__date_debut", "-pk")
 
 
@@ -907,13 +920,21 @@ def suivi_paiements(request):
     })
 
     if request.method == "POST":
-        formset = SuiviPaiementFormSet(request.POST, queryset=contrats)
+        formset = SuiviPaiementFormSet(request.POST, queryset=contrats, form_kwargs={"utilisateur": request.user})
         if formset.is_valid():
             nouvelles_annulations = [
                 f.instance for f in formset.forms
                 if f.has_changed() and "annule" in f.changed_data and f.cleaned_data.get("annule")
             ]
             modifies = formset.save()
+            for form in formset.forms:
+                if getattr(form, "valide_par_paiement", False):
+                    r = form.instance.reservation
+                    messages.success(
+                        request,
+                        f"Paiement reçu : la réservation de {r.nom_court} du {r.date_debut:%d/%m/%Y} est validée, "
+                        "la salle apparaît comme réservée dans le calendrier.",
+                    )
             for contrat in nouvelles_annulations:
                 r = contrat.reservation
                 _signaler_liste_attente(request, r.date_debut, r.date_fin, exclure=r.pk)
@@ -929,7 +950,7 @@ def suivi_paiements(request):
             return redirect(request.get_full_path())
         messages.error(request, "Certaines lignes contiennent des erreurs : rien n'a été enregistré.")
     else:
-        formset = SuiviPaiementFormSet(queryset=contrats)
+        formset = SuiviPaiementFormSet(queryset=contrats, form_kwargs={"utilisateur": request.user})
 
     # Totaux : sur la recherche en cours (nom / période), sinon sur tout.
     loyers_payes = selection.filter(location_payee=True).aggregate(t=Sum("montant_location"))["t"] or 0

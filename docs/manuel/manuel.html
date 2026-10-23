@@ -351,11 +351,13 @@
   <table>
     <tr><th style="width:5%">#</th><th style="width:27%">Étape</th><th style="width:20%">Qui</th><th>Où</th></tr>
     <tr><td>1</td><td>Demande de location</td><td>Le locataire (sans compte)</td><td>Calendrier → « + » sur un jour, ou bouton « Demander la réservation de la salle »</td></tr>
-    <tr><td>2</td><td>Validation ou refus</td><td>Administrateur</td><td>Calendrier → « Gérer les demandes de réservation »</td></tr>
-    <tr><td>3</td><td>Contrat de location (PDF)</td><td>Administrateur</td><td>Fiche de la réservation → « Rédiger le contrat de location »</td></tr>
-    <tr><td>4</td><td>Paiement du loyer et de la caution</td><td>Administrateur</td><td>« Suivi des paiements »</td></tr>
+    <tr><td>2</td><td>Contrat de location (PDF), envoyé au demandeur</td><td>Administrateur</td><td>Liste des demandes ou fiche → « Rédiger le contrat »</td></tr>
+    <tr><td>3</td><td>Paiement de la location : <strong>valide la réservation</strong></td><td>Administrateur</td><td>« Suivi des paiements » → cocher « Payée »</td></tr>
+    <tr><td>4</td><td>Paiement de la caution</td><td>Administrateur</td><td>« Suivi des paiements »</td></tr>
     <tr><td>5</td><td>Remboursement de la caution</td><td>Administrateur</td><td>« Suivi des paiements »</td></tr>
   </table>
+  <div class="encart astuce"><span class="t">C'est le paiement qui valide</span>
+    <p>Une demande reste « En attente » pendant que le contrat circule. Dès que le <strong>paiement de la location</strong> est coché dans le suivi des paiements, la réservation est <strong>validée automatiquement</strong> et la salle apparaît « réservée » dans le calendrier. Si la salle a été prise entre-temps par une autre location, le site refuse d'enregistrer ce paiement et l'indique.</p></div>
 
   <h2>1. La demande du locataire</h2>
   <p>Le visiteur clique sur le <strong>+</strong> d'un jour libre (ou sur le bouton sous le calendrier). Il indique s'il est un <strong>particulier</strong> ou une <strong>société</strong> (nom et n° de TVA), ses coordonnées, les dates souhaitées et des précisions (type d'événement, nombre de personnes…). Aucune inscription n'est nécessaire. Le formulaire est protégé contre les robots (champ piège et nombre d'envois limité).</p>
@@ -368,8 +370,9 @@
   <figure><img src="img/admin_reservation_attente.jpg"><figcaption>La fiche d'une demande en attente (ici une société) avec toutes les coordonnées.</figcaption></figure>
   <p>Depuis la fiche ou la liste :</p>
   <ul>
-    <li><span class="btn">Valider la réservation</span> : la salle apparaît « Salle réservée » dans le calendrier. La validation est <strong>refusée automatiquement</strong> si la salle est déjà occupée à ces dates.</li>
-    <li><span class="btn rouge">Refuser la réservation</span> : la demande est classée « Refusée ».</li>
+    <li><span class="btn">Rédiger le contrat</span> : la suite normale d'une demande acceptable (point 3 ci-dessous). La réservation sera validée par son paiement.</li>
+    <li><span class="btn">Valider la réservation</span> (ou, si un contrat existe, <strong>Valider sans attendre le paiement</strong>) : pour les cas particuliers, par exemple une mise à disposition gratuite. La validation est <strong>refusée automatiquement</strong> si la salle est déjà occupée à ces dates.</li>
+    <li><span class="btn rouge">Refuser la réservation</span> : la demande est classée « Refusée » ; un contrat déjà rédigé est marqué « annulé » dans le suivi des paiements.</li>
     <li><span class="btn rouge">Annuler la réservation</span> (réservation validée) : la salle redevient libre. S'il existe un contrat, il est marqué « annulé » dans le suivi des paiements, pour noter les remboursements. Le site signale alors les autres demandes en attente sur ces dates.</li>
     <li><strong>Rétablir la réservation</strong> : annule une annulation (si la salle est toujours libre).</li>
     <li><span class="btn rouge">Modifier cette réservation</span> / <span class="btn rouge">Supprimer cette demande</span> : corriger les dates ou coordonnées, ou effacer définitivement.</li>
@@ -379,7 +382,7 @@
   <p>Un administrateur peut aussi encoder directement une location reçue par téléphone : clic sur le + d'un jour → <strong>Une réservation de salle</strong>.</p>
 
   <h2>3. Rédiger le contrat de location</h2>
-  <p>Sur la fiche d'une réservation <strong>validée</strong>, cliquez sur <span class="btn">Rédiger le contrat de location</span>. Le locataire et les dates sont repris automatiquement ; il reste à compléter :</p>
+  <p>Dès la demande, sans attendre la validation : bouton <span class="btn">Rédiger le contrat</span> dans la liste des demandes, ou <span class="btn">Rédiger le contrat de location</span> sur la fiche. Le locataire et les dates sont repris automatiquement ; il reste à compléter :</p>
   <ul>
     <li>le <strong>prénom et le nom du délégué</strong> de l'ASBL qui gère cette location ;</li>
     <li>les <strong>locaux</strong> loués : salle des fêtes et scène, local café, cuisine équipée, sanitaires ;</li>
@@ -397,14 +400,14 @@
   <div class="encart exemple"><span class="t">Exemple complet : l'anniversaire de Sarah Vandenberghe</span>
     <ol>
       <li>Sarah demande la salle pour le samedi 7 novembre 2026 (« Anniversaire de 50 ans, environ 80 personnes »).</li>
-      <li>Marie, administratrice, ouvre <em>Gérer les demandes</em>, vérifie la date et clique sur <strong>Valider</strong>. Le 7 novembre affiche désormais « Salle réservée ».</li>
-      <li>Marie appelle Sarah pour confirmer, puis clique sur <strong>Rédiger le contrat de location</strong> : délégué « Marie Dupont », salle + café + cuisine + sanitaires, location 350 €, caution 250 €.</li>
-      <li>Le PDF de 10 pages se télécharge ; Marie l'imprime ou l'envoie à Sarah pour signature.</li>
-      <li>À la réception du virement, Marie coche « Payée » dans le <em>Suivi des paiements</em> et note la date et le n° d'extrait.</li>
+      <li>Marie, administratrice, ouvre <em>Gérer les demandes</em>, vérifie que la date est libre et clique sur <strong>Rédiger le contrat</strong> : délégué « Marie Dupont », salle + café + cuisine + sanitaires, location 350 €, caution 250 €.</li>
+      <li>Le PDF de 10 pages se télécharge ; Marie l'envoie à Sarah avec les coordonnées bancaires. La demande reste « En attente ».</li>
+      <li>À la réception du virement, Marie coche « Payée » (location) dans le <em>Suivi des paiements</em>, note la date et le n° d'extrait, et enregistre : la réservation est <strong>validée</strong>, le 7 novembre affiche « Salle réservée ».</li>
     </ol></div>
 
   <h2>4. Suivi des paiements</h2>
-  <p>Accessible depuis la liste des demandes (<span class="btn rouge">Suivi des paiements et des cautions</span>), cette page contient <strong>une ligne par contrat généré</strong>. Trois compteurs résument les locations encaissées, les locations à encaisser et les cautions à rembourser. Les onglets filtrent : paiement attendu, caution à rembourser, dossiers clôturés, locations annulées.</p>
+  <p>Accessible depuis la liste des demandes (<span class="btn rouge">Suivi des paiements et des cautions</span>), cette page contient <strong>une ligne par contrat rédigé</strong>, que la réservation soit déjà validée ou non. Trois compteurs résument les locations encaissées, les locations à encaisser et les cautions à rembourser. Les onglets filtrent : paiement attendu, <strong>non validées</strong> (contrats en attente du paiement, signalés « Non validée » sur leur ligne), caution à rembourser, dossiers clôturés, locations annulées.</p>
+  <p>Cocher <strong>« Payée » sous la location</strong> d'une ligne non validée, puis enregistrer, <strong>valide la réservation</strong> ; un message le confirme. Le paiement de la caution seul ne valide pas.</p>
   <figure><img src="img/admin_paiements.jpg"><figcaption>Le suivi des paiements : cochez « Payée » / « Remboursée », complétez dates et n° d'extrait, puis « Enregistrer les modifications ».</figcaption></figure>
 
   <h2>5. Le contrat-type (articles, annexes, mise en page)</h2>

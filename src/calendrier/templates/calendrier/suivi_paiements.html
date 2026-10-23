@@ -13,9 +13,9 @@
         <p class="breadcrumb"><a href="{% url 'calendrier:reservation_liste' %}">← Retour aux demandes de réservation</a></p>
         <h1>Suivi des paiements</h1>
         <p class="page-header__intro">
-            Une ligne par contrat de location généré. Les montants proviennent du
+            Une ligne par contrat de location rédigé, validé ou non. Les montants proviennent du
             contrat ; cochez les paiements et complétez les dates et numéros
-            d'extrait, puis enregistrez.
+            d'extrait, puis enregistrez. Le paiement de la location valide la réservation.
         </p>
     </div>
 </section>
@@ -109,6 +109,7 @@
                             {% else %}
                                 <a class="paiements__contrat paiements__contrat--absent" href="{% url 'calendrier:reservation_contrat' reservation.pk %}" title="Le fichier du contrat est introuvable : le régénérer">⚠ Contrat introuvable — régénérer</a>
                             {% endif %}
+                            {% if reservation.statut == "attente" and not contrat.annule %}<small class="paiements__attente">Non validée : cocher « Payée » (location) valide la réservation</small>{% endif %}
                             <label class="paiements__case paiements__case--annulation">{{ form.annule }} Annulée</label>
                             {% if form.annule.errors %}<div class="paiements__erreur">{{ form.annule.errors|join:" " }}</div>{% endif %}
                             {% if form.non_field_errors %}<div class="paiements__erreur">{{ form.non_field_errors|join:" " }}</div>{% endif %}
@@ -119,6 +120,7 @@
                         <td data-label="Location">
                             <span class="paiements__montant">{{ contrat.montant_location|floatformat:2 }} €</span>
                             <label class="paiements__case">{{ form.location_payee }} Payée</label>
+                            {% if form.location_payee.errors %}<div class="paiements__erreur">{{ form.location_payee.errors|join:" " }}</div>{% endif %}
                         </td>
                         <td data-label="Caution">
                             <span class="paiements__montant">{{ contrat.montant_caution|floatformat:2 }} €</span>
