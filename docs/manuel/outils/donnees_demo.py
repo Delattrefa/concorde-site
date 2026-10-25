@@ -87,6 +87,8 @@ if not Representation.objects.filter(nom="La Martingale").exists():
             Ticket.objects.get_or_create(place=place, defaults={"prix_unitaire": prix})
 
 # --- Location de salle : une demande validée, une en attente (société) ------
+# Seules les demandes fictives restent dans la copie de travail
+DemandeSalle.objects.exclude(nom__in=["Vandenberghe", "Ghislain"]).delete()
 if not DemandeSalle.objects.filter(nom="Vandenberghe").exists():
     DemandeSalle.objects.create(
         nom="Vandenberghe", prenom="Sarah", adresse="Rue de la Station 12, 7387 Honnelles",
@@ -103,6 +105,7 @@ if not DemandeSalle.objects.filter(nom="Vandenberghe").exists():
     )
 
 # --- Newsletter --------------------------------------------------------------
+Abonne.objects.exclude(email__endswith="@exemple.be").delete()
 for email, prenom, nom, statut, source in [
     ("anne.dubois@exemple.be", "Anne", "Dubois", "actif", "formulaire"),
     ("luc.martin@exemple.be", "Luc", "Martin", "actif", "formulaire"),
@@ -197,6 +200,10 @@ sophie, marc, julie, luc = benevoles
 # Les vrais comptes de la base copiée n'apparaissent pas dans les listes de
 # membres des captures (copie de travail uniquement)
 User.objects.exclude(pk__in=[admin.pk, membre.pk] + [b.pk for b in benevoles]).update(is_active=False)
+# … et leurs noms et adresses sont remplacés (listes d'utilisateurs de l'admin)
+for i, compte in enumerate(User.objects.filter(is_active=False).order_by("pk"), start=1):
+    User.objects.filter(pk=compte.pk).update(
+        username=f"ancien{i}", first_name="Ancien", last_name=f"compte {i}", email=f"ancien{i}@exemple.be")
 
 def _a(jour, heure, minute=0):
     return timezone.make_aware(dt.datetime.combine(jour, dt.time(heure, minute)))
@@ -301,6 +308,10 @@ from calendrier.models import Activite  # noqa: E402
 from media_gallery.models import GalleryAlbum, GalleryVideo  # noqa: E402
 from navigation.models import MainMenu  # noqa: E402
 from news.models import NewsPage  # noqa: E402
+
+# Locations de particuliers et activités privées réelles : hors des captures
+Activite.objects.filter(nom__istartswith="Location salle").delete()
+Activite.objects.filter(visibilite=Activite.VISIBILITE_PRIVEE).delete()
 
 album_video = GalleryVideo.objects.order_by("page_id").values_list("page_id", flat=True).first()
 albums_photos = GalleryAlbum.objects.live().filter(gallery_images__isnull=False).distinct()

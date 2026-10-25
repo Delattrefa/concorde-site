@@ -240,6 +240,7 @@ with sync_playwright() as p:
     shot(page, "admin_jour_choix", "/calendrier/2026/11/15/", hauteur=900)
     if voulu("admin_reservations") or voulu("admin_reservation_attente") or voulu("admin_paiements"):
         contrat_en_attente(page)
+        page.goto(BASE + "/calendrier/", wait_until="networkidle")  # vide le message « contrat généré »
     shot(page, "admin_reservations", "/calendrier/reservations/", hauteur=1400)
     shot(page, "admin_reservation_attente", f"/calendrier/reservation/{IDS['demande_attente']}/", hauteur=1300)
     if voulu("admin_contrat_form") or voulu("contrat_pdf"):
