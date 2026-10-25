@@ -217,6 +217,9 @@ for heure, fin, poste, besoin, inscrits in [
                                        debut=_a(dt.date(2026, 11, 14), heure), fin=_a(dt.date(2026, 11, 14), fin))
     for m in inscrits:
         PlInscription.objects.create(creneau=creneau, membre=m)
+    if poste == "Service à table":
+        # Bénévole sans compte, noté par l'organisateur
+        PlInscription.objects.create(creneau=creneau, nom="Michel (voisin)", ajoute_par=admin)
 
 comite = PlEvenement.objects.create(
     type="reunion", titre="Réunion du comité", lieu="Petite salle", createur=admin, reserve_aux_invites=False,

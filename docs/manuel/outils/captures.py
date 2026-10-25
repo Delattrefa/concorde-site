@@ -207,6 +207,7 @@ with sync_playwright() as p:
     shot(page, "planning_mois", "/planning/mois/2026/11/", hauteur=1250)
     shot(page, "planning_evenement", f"/planning/evenement/{IDS['planning_ducasse']}/", hauteur=1450)
     shot(page, "planning_couverture", "/planning/a-combler/", hauteur=1150)
+    shot(page, "planning_plannings", "/planning/plannings/", hauteur=1000)
     shot(page, "planning_tache", f"/planning/evenement/{IDS['planning_brocante']}/taches/ajouter/", hauteur=1300)
     shot(page, "planning_formulaire", "/planning/evenement/ajouter/?date=2026-11-20", hauteur=1750)
     shot(page, "planning_sondage", f"/planning/sondages/{IDS['planning_sondage']}/", hauteur=950)
@@ -229,6 +230,10 @@ with sync_playwright() as p:
     page = connecter(ctx, "secretariat")
     accepter_cookies(page)
     rep, rep2 = IDS["representation"], IDS["representation_2"]
+
+    # Planning vu par l'organisateur : listes « Inscrire… » et champ « Autre nom… »
+    shot_element(page, "planning_grille_organisateur", f"/planning/evenement/{IDS['planning_ducasse']}/",
+                 ".pl-grille-defile")
 
     # Calendrier et location de salle
     shot(page, "admin_calendrier", "/calendrier/2026/11/", hauteur=1300)

@@ -42,6 +42,12 @@
                                             <input type="hidden" name="membre" value="{{ m.pk }}"><input type="hidden" name="retour" value="{{ request.get_full_path }}#creneaux">
                                             <button type="submit" class="btn--lien" aria-label="Retirer {{ m|nom_membre }}" title="Retirer">×</button></form>{% endif %}</li>
                                 {% endfor %}
+                                {% for i in c.externes %}
+                                    <li class="pl-externe" title="Sans compte membre, ajouté par l'organisateur">{{ i.nom }}{% if peut_modifier %}
+                                        <form method="post" action="{% url 'planning:creneau_desinscrire' c.pk %}">{% csrf_token %}
+                                            <input type="hidden" name="inscription" value="{{ i.pk }}"><input type="hidden" name="retour" value="{{ request.get_full_path }}#creneaux">
+                                            <button type="submit" class="btn--lien" aria-label="Retirer {{ i.nom }}" title="Retirer">×</button></form>{% endif %}</li>
+                                {% endfor %}
                             </ul>
                             <div class="pl-case-grille__pied">
                                 <span class="pl-case-grille__compte">{{ c.nb_inscrits }}/{{ c.besoin }}</span>
@@ -63,6 +69,13 @@
                                             <select name="membre" aria-label="Inscrire un membre" onchange="this.form.submit()"><option value="">Inscrire…</option>
                                                 {% for m in membres %}{% if m not in c.inscrits %}<option value="{{ m.pk }}">{{ m|nom_membre }}</option>{% endif %}{% endfor %}
                                             </select>
+                                        </form>
+                                    {% endif %}
+                                    {% if c.manque %}
+                                        <form method="post" action="{% url 'planning:creneau_inscrire' c.pk %}" class="pl-affecter pl-ajout-nom">{% csrf_token %}
+                                            <input type="hidden" name="retour" value="{{ request.get_full_path }}#creneaux">
+                                            <input type="text" name="nom" maxlength="100" required placeholder="Autre nom…" aria-label="Ajouter un nom (personne sans compte)">
+                                            <button type="submit" class="btn btn--clair btn--small" title="Ajouter ce nom">+</button>
                                         </form>
                                     {% endif %}
                                     <a class="btn--lien" href="{% url 'planning:creneau_modifier' c.pk %}">Modifier</a>

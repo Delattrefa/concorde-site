@@ -1,0 +1,44 @@
+{% extends "planning/base.html" %}
+{% load planning_tags %}
+{% block title %}Planning — Plannings en cours{% endblock %}
+
+{% block planning %}
+<h2>Plannings en cours</h2>
+<p class="pl-muet">Toutes les activités et tâches à venir qui ont un tableau de bénévoles, pour y accéder directement sans passer par l'agenda.</p>
+<div class="pl-actions">
+    <a class="btn btn--small {% if mes_plannings %}btn--clair{% else %}btn--secondary{% endif %}" href="{% url 'planning:plannings' %}">Tous les plannings</a>
+    <a class="btn btn--small {% if mes_plannings %}btn--secondary{% else %}btn--clair{% endif %}" href="{% url 'planning:plannings' %}?moi=1">Mes plannings (créés par moi)</a>
+</div>
+
+{% for e in evenements %}
+    <article class="pl-carte pl-carte--{{ e.type }}{% if e.annule %} pl-carte--annule{% endif %}">
+        <div class="pl-carte__meta">
+            <span class="pl-type pl-type--{{ e.type }}">{{ e.get_type_display }}</span>
+            <span><strong>{{ e.debut|date:"l j F" }}</strong>, {{ e.debut|date:"H:i" }}–{% if e.debut|date:"Ymd" != e.fin|date:"Ymd" %}{{ e.fin|date:"j F H:i" }}{% else %}{{ e.fin|date:"H:i" }}{% endif %}</span>
+            {% if e.lieu %}<span>📍 {{ e.lieu }}</span>{% endif %}
+            {% if e.annule %}<span class="pl-etiquette pl-etiquette--annule">Annulé</span>
+            {% elif e.manque %}<span class="pl-etiquette pl-etiquette--manque">⚑ {{ e.manque }} place{{ e.manque|pluralize }} à combler</span>
+            {% else %}<span class="pl-etiquette pl-etiquette--ok">Complet</span>{% endif %}
+        </div>
+        <h3><a href="{{ e.get_absolute_url }}#creneaux">{{ e.titre }}</a></h3>
+        <div class="pl-carte__meta">
+            {% jauge e.pourvu e.besoin %}
+            <span class="pl-muet">{{ e.taches|length }} tâche{{ e.taches|length|pluralize }} : {{ e.taches|join:", " }}</span>
+            {% if e.createur %}<span class="pl-muet">Organisé par {{ e.createur|nom_membre }}</span>{% endif %}
+        </div>
+        {% if e.dates_suivantes %}
+            <p class="pl-muet">Se répète : encore {{ e.dates_suivantes|length }} date{{ e.dates_suivantes|length|pluralize }} —
+                {% for s in e.dates_suivantes|slice:":6" %}<a href="{{ s.get_absolute_url }}#creneaux">{{ s.debut|date:"j/m" }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}{% if e.dates_suivantes|length > 6 %}…{% endif %}</p>
+        {% endif %}
+        {% if e.mes_creneaux %}
+            <p class="pl-muet">Vous êtes inscrit : {% for c in e.mes_creneaux %}{{ c.debut|date:"H:i" }}–{{ c.fin|date:"H:i" }}{% if c.libelle %} ({{ c.libelle }}){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+        {% endif %}
+        <div class="pl-actions" style="margin:8px 0 0">
+            <a class="btn btn--primary btn--small" href="{{ e.get_absolute_url }}#creneaux">Ouvrir le planning</a>
+            {% if e.modifiable %}<a class="btn btn--clair btn--small" href="{% url 'planning:tache_ajouter' e.pk %}">+ Ajouter une tâche</a>{% endif %}
+        </div>
+    </article>
+{% empty %}
+    <p class="pl-vide-message">{% if mes_plannings %}Vous n'avez créé aucun planning en cours.{% else %}Aucun planning en cours. Créez une activité depuis « + Nouvel événement » puis ajoutez-y des tâches.{% endif %}</p>
+{% endfor %}
+{% endblock %}

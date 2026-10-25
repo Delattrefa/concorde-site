@@ -6,6 +6,7 @@ register = template.Library()
 
 # Onglet du planning correspondant à chaque page (nom d'URL)
 ONGLETS = {
+    "plannings": "plannings",
     "couverture": "couverture",
     "invitations": "invitations",
     "disponibilites": "disponibilites",

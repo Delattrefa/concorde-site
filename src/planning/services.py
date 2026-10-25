@@ -124,7 +124,7 @@ def notifier(destinataires, genre, texte, lien, exclure=None):
     """Crée une notification pour chaque destinataire (ids ou membres),
     sauf `exclure` (l'auteur de l'action). L'e-mail suit les préférences
     de chacun et part groupé avec la commande planning_taches."""
-    ids = {getattr(d, "pk", d) for d in destinataires}
+    ids = {getattr(d, "pk", d) for d in destinataires} - {None}
     if exclure is not None:
         ids.discard(exclure.pk)
     if not ids:

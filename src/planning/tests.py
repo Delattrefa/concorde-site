@@ -188,6 +188,62 @@ class CreneauxTests(Base):
         self.assertTrue(c.inscriptions.filter(membre=self.bob).exists())
         self.assertTrue(Notification.objects.filter(destinataire=self.bob, texte__contains="vous a inscrit").exists())
 
+    def test_nom_libre_ajoute_par_l_organisateur(self):
+        e = self.evenement(createur=self.alice)
+        c = Creneau.objects.create(evenement=e, debut=e.debut, fin=e.fin, besoin=2, libelle="Bar")
+        self.client.post(reverse("planning:creneau_inscrire", args=[c.pk]), {"nom": "  Jean   Voisin "})
+        externe = c.inscriptions.get()
+        self.assertIsNone(externe.membre)
+        self.assertEqual((externe.nom, externe.ajoute_par), ("Jean Voisin", self.alice))
+        self.assertEqual(Creneau.objects.avec_effectif().get(pk=c.pk).nb_inscrits, 1)
+        self.assertContains(self.client.get(e.get_absolute_url()), "Jean Voisin")
+        self.assertEqual(e.participants(), {self.alice.pk})
+        # Créneau complet : un second nom passe, un troisième est refusé
+        self.client.post(reverse("planning:creneau_inscrire", args=[c.pk]), {"nom": "Paul"})
+        self.client.post(reverse("planning:creneau_inscrire", args=[c.pk]), {"nom": "Trop"})
+        self.assertEqual(c.inscriptions.count(), 2)
+        self.client.post(reverse("planning:creneau_desinscrire", args=[c.pk]), {"inscription": externe.pk})
+        self.assertEqual(list(c.inscriptions.values_list("nom", flat=True)), ["Paul"])
+        # Supprimer le créneau ne plante pas sur les inscriptions sans membre
+        self.client.post(reverse("planning:creneau_supprimer", args=[c.pk]))
+        self.assertFalse(Creneau.objects.filter(pk=c.pk).exists())
+
+    def test_nom_libre_reserve_aux_organisateurs(self):
+        e = self.evenement()
+        c = Creneau.objects.create(evenement=e, debut=e.debut, fin=e.fin, besoin=2)
+        self.assertEqual(self.client.post(reverse("planning:creneau_inscrire", args=[c.pk]), {"nom": "X"}).status_code, 403)
+        externe = Inscription.objects.create(creneau=c, nom="Jean")
+        self.assertEqual(self.client.post(reverse("planning:creneau_desinscrire", args=[c.pk]),
+                                          {"inscription": externe.pk}).status_code, 403)
+        self.assertTrue(c.inscriptions.filter(pk=externe.pk).exists())
+
+    def test_onglet_plannings(self):
+        avec = self.evenement(titre="Brocante")
+        Creneau.objects.create(evenement=avec, debut=avec.debut, fin=avec.fin, besoin=3, libelle="Bar")
+        Creneau.objects.create(evenement=avec, debut=avec.debut, fin=avec.fin, besoin=1, libelle="Caisse")
+        self.evenement(titre="Sans tableau")
+        passe = self.evenement(titre="Fête passée", debut=moment(self.jour - timedelta(days=30), 10),
+                               fin=moment(self.jour - timedelta(days=30), 12))
+        Creneau.objects.create(evenement=passe, debut=passe.debut, fin=passe.fin)
+        reponse = self.client.get(reverse("planning:plannings"))
+        self.assertContains(reponse, "Brocante")
+        self.assertContains(reponse, "Bar, Caisse")
+        self.assertNotContains(reponse, "Sans tableau")
+        self.assertNotContains(reponse, "Fête passée")
+        self.assertEqual(reponse.context["evenements"][0].manque, 4)
+        self.assertNotContains(self.client.get(reverse("planning:plannings") + "?moi=1"), "Brocante")
+
+    def test_plannings_une_carte_par_serie(self):
+        import uuid
+        serie = uuid.uuid4()
+        for semaine in range(3):
+            e = self.evenement(titre="Ménage", serie=serie, debut=moment(self.jour + timedelta(weeks=semaine), 9),
+                               fin=moment(self.jour + timedelta(weeks=semaine), 11))
+            Creneau.objects.create(evenement=e, debut=e.debut, fin=e.fin)
+        evenements = self.client.get(reverse("planning:plannings")).context["evenements"]
+        self.assertEqual(len(evenements), 1)
+        self.assertEqual(len(evenements[0].dates_suivantes), 2)
+
     def test_couverture_et_bouche_trou(self):
         e = self.evenement()
         trou = Creneau.objects.create(evenement=e, debut=e.debut, fin=e.debut + timedelta(hours=2), besoin=2, libelle="Bar")

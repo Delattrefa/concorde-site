@@ -22,6 +22,7 @@
 
     <nav class="pl-onglets" aria-label="Rubriques du planning">
         <a href="{% url 'planning:accueil' %}"{% if onglet == "agenda" %} aria-current="page"{% endif %}>Agenda</a>
+        <a href="{% url 'planning:plannings' %}"{% if onglet == "plannings" %} aria-current="page"{% endif %}>Plannings</a>
         <a href="{% url 'planning:couverture' %}"{% if onglet == "couverture" %} aria-current="page"{% endif %}>À combler</a>
         <a href="{% url 'planning:invitations' %}"{% if onglet == "invitations" %} aria-current="page"{% endif %}>Invitations</a>
         <a href="{% url 'planning:sondages' %}"{% if onglet == "sondages" %} aria-current="page"{% endif %}>Sondages</a>

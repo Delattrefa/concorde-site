@@ -11,6 +11,7 @@ urlpatterns = [
     path("semaine/<int:annee>/<int:mois>/<int:jour>/", views.semaine, name="semaine"),
     path("jour/<int:annee>/<int:mois>/<int:jour>/", views.jour, name="jour"),
     path("liste/", views.liste, name="liste"),
+    path("plannings/", views.plannings, name="plannings"),
 
     # Événements, invitations, créneaux
     path("evenement/ajouter/", views.evenement_ajouter, name="evenement_ajouter"),

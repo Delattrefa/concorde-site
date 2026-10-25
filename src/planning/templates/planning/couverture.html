@@ -39,7 +39,7 @@
                     <td><strong>{{ c.debut|date:"H:i" }}–{{ c.fin|date:"H:i" }}</strong>{% if c.urgent %} <span class="pl-etiquette pl-etiquette--urgent">Urgent</span>{% endif %}</td>
                     <td>{{ c.libelle|default:"—" }}</td>
                     <td>{% jauge c.nb_inscrits c.besoin %}</td>
-                    <td class="pl-inscrits">{% for m in c.inscrits %}{{ m|nom_membre }}{% if not forloop.last %}, {% endif %}{% empty %}<span class="pl-muet">Personne</span>{% endfor %}
+                    <td class="pl-inscrits">{% for m in c.inscrits %}{{ m|nom_membre }}{% if not forloop.last or c.externes %}, {% endif %}{% endfor %}{% for i in c.externes %}<span class="pl-externe">{{ i.nom }}</span>{% if not forloop.last %}, {% endif %}{% endfor %}{% if not c.inscrits and not c.externes %}<span class="pl-muet">Personne</span>{% endif %}
                         {% if est_responsable and c.manque %}
                             <form method="post" action="{% url 'planning:creneau_inscrire' c.pk %}" class="pl-affecter">{% csrf_token %}
                                 <input type="hidden" name="retour" value="{{ request.get_full_path }}">

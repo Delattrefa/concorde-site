@@ -5,7 +5,8 @@ Strictement privé : toutes les pages exigent d'être connecté.
 - Evenement : réunion, tâche de l'ASBL ou activité. Une répétition crée
   une occurrence par date, reliées par le même identifiant de série.
 - Creneau / Inscription : découpage d'un événement en plages horaires,
-  chacune avec un besoin en bénévoles, et les membres inscrits.
+  chacune avec un besoin en bénévoles, et les membres inscrits (ou un
+  simple nom saisi par l'organisateur pour quelqu'un sans compte).
 - Disponibilite : jours où un membre peut aider.
 - Invitation : invitation nominative à un événement, avec réponse.
 - Sondage / OptionSondage / Vote : sondage de date (type Doodle) ou de
@@ -99,7 +100,8 @@ class Evenement(models.Model):
     def participants(self):
         """Membres concernés : auteur, invités (sauf refus) et inscrits."""
         ids = set(self.invitations.exclude(statut=Invitation.REFUSEE).values_list("membre", flat=True))
-        ids |= set(Inscription.objects.filter(creneau__evenement=self).values_list("membre", flat=True))
+        ids |= set(Inscription.objects.filter(creneau__evenement=self, membre__isnull=False)
+                   .values_list("membre", flat=True))
         if self.createur_id:
             ids.add(self.createur_id)
         return ids
@@ -139,12 +141,28 @@ class Creneau(models.Model):
 
 
 class Inscription(models.Model):
+    """Un membre inscrit, ou un nom libre (bénévole sans compte) ajouté par
+    un responsable ou l'auteur de l'événement."""
     creneau = models.ForeignKey(Creneau, on_delete=models.CASCADE, related_name="inscriptions")
-    membre = models.ForeignKey(MEMBRE, on_delete=models.CASCADE, related_name="inscriptions_planning")
+    membre = models.ForeignKey(MEMBRE, on_delete=models.CASCADE, null=True, blank=True,
+                               related_name="inscriptions_planning")
+    nom = models.CharField("Nom", max_length=100, blank=True)
+    ajoute_par = models.ForeignKey(MEMBRE, on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name="+", editable=False)
     cree_le = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["creneau", "membre"], name="planning_inscription_unique")]
+        ordering = ["cree_le", "pk"]
+        constraints = [
+            models.UniqueConstraint(fields=["creneau", "membre"], name="planning_inscription_unique"),
+            models.CheckConstraint(condition=Q(membre__isnull=False) | ~Q(nom=""), name="planning_inscription_qui"),
+        ]
+
+    def __str__(self):
+        return self.nom_affiche()
+
+    def nom_affiche(self):
+        return nom_membre(self.membre) if self.membre_id else self.nom
 
 
 class Disponibilite(models.Model):

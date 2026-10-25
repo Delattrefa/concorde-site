@@ -73,12 +73,19 @@ def _manque(evenement):
     return sum(max(0, c.besoin - c.nb_inscrits) for c in evenement.creneaux.all())
 
 
+def _repartir_inscrits(creneau, user):
+    """Membres inscrits d'un côté, noms libres (sans compte) de l'autre."""
+    inscriptions = list(creneau.inscriptions.all())
+    creneau.inscrits = [i.membre for i in inscriptions if i.membre_id]
+    creneau.externes = [i for i in inscriptions if not i.membre_id]
+    creneau.je_suis_inscrit = any(m.pk == user.pk for m in creneau.inscrits)
+
+
 def _preparer_creneaux(evenement, user):
     """Créneaux prêts à afficher : inscrits, place libre, inscription."""
     creneaux = list(evenement.creneaux.all())
     for c in creneaux:
-        c.inscrits = [i.membre for i in c.inscriptions.all()]
-        c.je_suis_inscrit = any(m.pk == user.pk for m in c.inscrits)
+        _repartir_inscrits(c, user)
         c.manque = max(0, c.besoin - c.nb_inscrits)
     return creneaux
 
@@ -232,6 +239,37 @@ def liste(request):
         ] if p),
     })
     return render(request, "planning/agenda_liste.html", contexte)
+
+
+@login_required
+def plannings(request):
+    """Tous les plannings en cours : événements à venir ou en cours qui
+    ont des tâches ou créneaux, pour y accéder sans passer par l'agenda."""
+    requete = (Evenement.objects.visibles_par(request.user)
+               .filter(fin__gt=timezone.now(), creneaux__isnull=False).distinct().order_by("debut"))
+    if request.GET.get("moi") == "1":
+        requete = requete.filter(createur=request.user)
+    # Une série (ménage chaque lundi…) n'apparaît qu'une fois : sa prochaine date
+    evenements, series = [], {}
+    for e in _avec_creneaux(requete.select_related("createur")):
+        if e.serie and e.serie in series:
+            series[e.serie].dates_suivantes.append(e)
+            continue
+        e.dates_suivantes = []
+        if e.serie:
+            series[e.serie] = e
+        evenements.append(e)
+    for e in evenements:
+        creneaux = e.creneaux.all()
+        e.besoin = sum(c.besoin for c in creneaux)
+        e.pourvu = sum(min(c.nb_inscrits, c.besoin) for c in creneaux)
+        e.manque = e.besoin - e.pourvu
+        e.taches = sorted({c.libelle or "Bénévoles" for c in creneaux})
+        e.mes_creneaux = [c for c in creneaux if any(i.membre_id == request.user.pk for i in c.inscriptions.all())]
+        e.modifiable = e.peut_modifier(request.user)
+    return render(request, "planning/plannings.html", {
+        "evenements": evenements, "mes_plannings": request.GET.get("moi") == "1",
+    })
 
 
 # --- Événements -------------------------------------------------------------
@@ -518,7 +556,7 @@ def creneau_modifier(request, pk):
 @require_POST
 def creneau_supprimer(request, pk):
     creneau = _creneau_modifiable(request, pk)
-    inscrits = list(creneau.inscriptions.values_list("membre", flat=True))
+    inscrits = list(creneau.inscriptions.filter(membre__isnull=False).values_list("membre", flat=True))
     evenement = creneau.evenement
     texte = f"Créneau supprimé : {evenement.titre}, {creneau}"
     creneau.delete()
@@ -538,7 +576,13 @@ def creneau_inscrire(request, pk):
     creneau = get_object_or_404(Creneau.objects.select_related("evenement"), pk=pk)
     evenement = _evenement_visible(request, creneau.evenement_id)
     membre = request.user
-    if request.POST.get("membre") and str(request.POST["membre"]) != str(request.user.pk):
+    nom = " ".join(request.POST.get("nom", "").split())[:100]
+    if nom:
+        # Un responsable (ou l'auteur de l'événement) note un bénévole sans compte
+        if not evenement.peut_modifier(request.user):
+            raise PermissionDenied
+        membre = None
+    elif request.POST.get("membre") and str(request.POST["membre"]) != str(request.user.pk):
         # Un responsable (ou l'auteur de l'événement) affecte quelqu'un
         if not evenement.peut_modifier(request.user):
             raise PermissionDenied
@@ -555,11 +599,14 @@ def creneau_inscrire(request, pk):
             return redirect(_retour(request, defaut))
         try:
             with transaction.atomic():
-                Inscription.objects.create(creneau=creneau, membre=membre)
+                Inscription.objects.create(creneau=creneau, membre=membre, nom="" if membre else nom,
+                                           ajoute_par=request.user)
         except IntegrityError:
             messages.info(request, "Déjà inscrit sur ce créneau.")
             return redirect(_retour(request, defaut))
-    if membre == request.user:
+    if membre is None:
+        messages.success(request, f"{nom} est inscrit : {creneau}.")
+    elif membre == request.user:
         messages.success(request, f"Merci ! Vous êtes inscrit : {evenement.titre}, {creneau}.")
     else:
         messages.success(request, f"{nom_membre(membre)} est inscrit : {creneau}.")
@@ -574,6 +621,14 @@ def creneau_inscrire(request, pk):
 def creneau_desinscrire(request, pk):
     creneau = get_object_or_404(Creneau.objects.select_related("evenement"), pk=pk)
     evenement = _evenement_visible(request, creneau.evenement_id)
+    defaut = reverse("planning:evenement", args=[evenement.pk]) + "#creneaux"
+    if request.POST.get("inscription"):
+        # Nom libre (bénévole sans compte) : réservé aux organisateurs
+        if not evenement.peut_modifier(request.user):
+            raise PermissionDenied
+        creneau.inscriptions.filter(pk=request.POST["inscription"], membre__isnull=True).delete()
+        messages.success(request, "Nom retiré du créneau.")
+        return redirect(_retour(request, defaut))
     membre_id = request.POST.get("membre") or request.user.pk
     if str(membre_id) != str(request.user.pk) and not evenement.peut_modifier(request.user):
         raise PermissionDenied
@@ -583,7 +638,7 @@ def creneau_desinscrire(request, pk):
                           f"{nom_membre(request.user)} s'est désinscrit : {evenement.titre}, {creneau}",
                           evenement.get_absolute_url(), exclure=request.user)
     messages.success(request, "Désinscription enregistrée.")
-    return redirect(_retour(request, reverse("planning:evenement", args=[evenement.pk]) + "#creneaux"))
+    return redirect(_retour(request, defaut))
 
 
 # --- Couverture des besoins (« bouche-trous ») ------------------------------
@@ -607,8 +662,7 @@ def couverture(request):
         creneaux = creneaux.filter(nb_inscrits__lt=F("besoin"))
     par_evenement, stats = {}, {"creneaux": 0, "places": 0, "manque": 0, "vides": 0, "urgents": 0}
     for c in creneaux:
-        c.inscrits = [i.membre for i in c.inscriptions.all()]
-        c.je_suis_inscrit = any(m.pk == request.user.pk for m in c.inscrits)
+        _repartir_inscrits(c, request.user)
         c.manque = max(0, c.besoin - c.nb_inscrits)
         c.taux = round(min(c.nb_inscrits, c.besoin) * 100 / c.besoin) if c.besoin else 100
         c.urgent = c.manque and c.est_urgent()
@@ -761,7 +815,8 @@ def tache_modifier(request, pk):
 def tache_supprimer(request, pk):
     evenement = _evenement_modifiable(request, pk)
     libelle, creneaux = _creneaux_de_la_tache(evenement, request)
-    inscrits = set(Inscription.objects.filter(creneau__in=creneaux).values_list("membre", flat=True))
+    inscrits = set(Inscription.objects.filter(creneau__in=creneaux, membre__isnull=False)
+                   .values_list("membre", flat=True))
     creneaux.delete()
     nom = libelle or "Bénévoles"
     services.notifier(inscrits, Notification.EVENEMENT, f"Tâche supprimée : {nom}, {evenement.titre}",
