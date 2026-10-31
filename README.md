@@ -115,7 +115,7 @@ concorde_site/
 ├── theatre/                  # gestion des places de théâtre (site secondaire, /theatre/)
 ├── page_libre/                # pages libres (logo/titres, sections, galerie miniatures)
 ├── media_gallery/         # page médias + albums photos
-├── info/                  # page infos pratiques (StreamField)
+├── info/                  # page infos pratiques (blocs et onglets)
 ├── contact/                # page contact (formulaire Wagtail)
 ├── search/                 # recherche interne
 ├── navigation/             # menu principal + pied de page
@@ -406,6 +406,19 @@ Chaque page libre propose, dans l'admin Wagtail :
    format dans une boîte de type lightbox (réutilise le même script que la
    galerie photos de l'app `media_gallery`). N'apparaît pas du tout si
    aucune miniature n'est ajoutée.
+
+## Page d'informations à onglets (app "info")
+
+Une **page d'informations** affiche une introduction (blocs), puis jusqu'à
+8 **onglets** (`InfoOnglet`, limite `MAX_ONGLETS`). Un onglet peut contenir les
+blocs de la page et ceux d'une page libre : logo et titres, sections image + texte
+ou en colonnes, galerie. Sans onglet, seule l'introduction s'affiche (ex. politique
+de confidentialité). Chaque onglet a son adresse (`/info/#onglet-historique`) ; sans
+JavaScript, tous les onglets restent lisibles les uns sous les autres.
+
+`manage.py convertir_info_en_onglets [--dry-run]`, lancée par `deploy.sh`, transforme
+une seule fois les liens de la page Info vers des pages libres en onglets. Les pages
+libres restent possibles et ne sont jamais supprimées par la commande.
 
 ## Liens vers une page du site (app "info")
 

@@ -5,9 +5,9 @@
 (function () {
     "use strict";
 
-    var gallery = document.getElementById("lightbox-gallery");
+    var galleries = document.querySelectorAll("#lightbox-gallery, [data-lightbox-galerie]");
     var lightbox = document.getElementById("lightbox");
-    if (!gallery || !lightbox) return;
+    if (!galleries.length || !lightbox) return;
 
     var img = lightbox.querySelector(".lightbox__image");
     var caption = lightbox.querySelector(".lightbox__caption");
@@ -34,10 +34,12 @@
         }, 400);
     }
 
-    gallery.addEventListener("click", function (event) {
-        var item = event.target.closest(".photo-gallery__item");
-        if (!item) return;
-        openLightbox(item.getAttribute("data-full"), item.getAttribute("data-caption"));
+    galleries.forEach(function (gallery) {
+        gallery.addEventListener("click", function (event) {
+            var item = event.target.closest(".photo-gallery__item");
+            if (!item) return;
+            openLightbox(item.getAttribute("data-full"), item.getAttribute("data-caption"));
+        });
     });
 
     closeBtn.addEventListener("click", closeLightbox);

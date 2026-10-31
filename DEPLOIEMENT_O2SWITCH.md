@@ -747,6 +747,37 @@ jamais une page existante : il faut donc mettre à jour la page en ligne
 
 ---
 
+## Page Info à onglets (octobre 2026)
+
+La page Info présente désormais ses informations dans 8 onglets au plus. Au
+déploiement, `deploy.sh` applique la migration puis lance
+`python manage.py convertir_info_en_onglets` :
+
+- chaque lien de la page Info vers une page libre devient un onglet qui reprend
+  le contenu de cette page (logo et titres, sections, galerie) ;
+- chaque titre suivi de contenu (ex. « Historique ») devient aussi un onglet ; un
+  titre seul reste en introduction et une ligne de séparation (`-----`) disparaît ;
+- la conversion n'a lieu qu'une fois : dès que la page a un onglet, la commande ne
+  fait plus rien, et un lien vers une page libre ajouté ensuite reste un lien.
+
+Pour voir le résultat à l'avance, sans rien modifier :
+`python manage.py convertir_info_en_onglets --dry-run`.
+
+La commande ne convertit pas et signale dans le journal du déploiement :
+
+- **un brouillon non publié sur la page Info** : rien n'est converti, pour ne pas
+  l'écraser. Publiez-le ou annulez-le, puis relancez la commande ;
+- **une page libre non publiée ou à accès restreint** : elle reste un lien, car
+  l'onglet rendrait son contenu public.
+
+**Après le déploiement** : vérifiez les onglets sur `/info/`, puis supprimez dans
+Wagtail les pages libres devenues inutiles (rien n'est supprimé automatiquement).
+Leur ancienne adresse redirige alors vers l'onglet. La commande indique si une
+page est encore citée ailleurs (menu, article…) : corrigez ces liens avant de la
+supprimer. L'ancien contenu de la page Info reste dans son historique de révisions.
+
+---
+
 ## Dépannage
 
 | Symptôme | Cause probable / solution |

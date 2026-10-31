@@ -1,0 +1,13 @@
+{% load wagtailcore_tags wagtailimages_tags %}
+{# Un bloc simple du corps de la page ou d'un onglet #}
+<div class="info-body__block fade-up">
+    {% if block.block_type == "heading" %}
+        <h2>{{ block.value }}</h2>
+    {% elif block.block_type == "paragraph" %}
+        {{ block.value|richtext }}
+    {% elif block.block_type == "image" %}
+        {% image block.value width-1000 %}
+    {% else %}
+        {% include_block block %}
+    {% endif %}
+</div>

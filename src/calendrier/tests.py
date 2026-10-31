@@ -89,7 +89,8 @@ class PermissionsTests(TestCase):
         cls.autre_membre = Utilisateur.objects.create_user("autre", password="mdp")
         cls.admin = Utilisateur.objects.create_user("admin", password="mdp", is_staff=True)
 
-        cls.jour = date.today() + timedelta(days=60)
+        # Le 10 du mois : la réservation (3 jours plus tard) reste dans le même mois
+        cls.jour = (date.today() + timedelta(days=60)).replace(day=10)
         cls.activite_publique = Activite.objects.create(
             nom="Atelier public", date_debut=cls.jour, date_fin=cls.jour,
             visibilite=Activite.VISIBILITE_PUBLIQUE, auteur=cls.auteur,

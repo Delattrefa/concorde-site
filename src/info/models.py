@@ -2,22 +2,33 @@ import html
 import re
 
 from django.core.exceptions import ValidationError
-from wagtail.admin.panels import FieldPanel
+from django.db import models
+from django.utils.text import slugify
+from modelcluster.fields import ParentalKey
+from wagtail.admin.panels import FieldPanel, InlinePanel
 from wagtail.blocks import (
     CharBlock,
+    ChoiceBlock,
     IntegerBlock,
+    ListBlock,
     PageChooserBlock,
     RichTextBlock,
+    StreamBlock,
     StructBlock,
     StructBlockValidationError,
+    StructValue,
     TextBlock,
     URLBlock,
 )
 from wagtail.fields import StreamField
 from wagtail.images.blocks import ImageChooserBlock
-from wagtail.models import Page
+from wagtail.models import Orderable, Page
 from wagtail.search import index
 from wagtailseo.models import SeoMixin
+
+from home.models import LienBlock, SectionDefilementAbstraite
+
+MAX_ONGLETS = 8
 
 
 class CalloutBlock(StructBlock):
@@ -124,31 +135,168 @@ class CarteBlock(StructBlock):
         template = "info/blocks/carte_block.html"
 
 
-class InfoPage(SeoMixin, Page):
-    """Page 'Infos pratiques' : contenu libre construit par blocs
-    (texte, images, encarts, liens utiles, FAQ…)."""
+class EnteteOngletBlock(StructBlock):
+    """Logo et titres en tête d'un onglet (comme l'en-tête d'une page libre)."""
 
-    body = StreamField(
-        [
-            ("heading", CharBlock(icon="title", form_classname="title")),
-            ("paragraph", RichTextBlock(icon="pilcrow")),
-            ("image", ImageChooserBlock(icon="image")),
-            ("callout", CalloutBlock()),
-            ("useful_link", LinkBlock()),
-            ("map", CarteBlock()),
-        ],
-        blank=True,
+    logo = ImageChooserBlock(required=False, label="Logo")
+    titre = CharBlock(required=False, label="Titre")
+    sous_titre = CharBlock(required=False, label="Sous-titre")
+
+    class Meta:
+        icon = "title"
+        label = "Logo et titres"
+
+
+class SectionNormaleValue(StructValue):
+    type_section = SectionDefilementAbstraite.TYPE_NORMAL
+
+
+class SectionNormaleBlock(StructBlock):
+    """Image + texte : même rendu qu'une section d'une page libre
+    (includes/section_defilement.html, d'où les mêmes noms de champs)."""
+
+    title = CharBlock(required=False, label="Titre")
+    text = RichTextBlock(required=False, label="Texte")
+    image = ImageChooserBlock(required=False, label="Image")
+    image_position = ChoiceBlock(
+        choices=SectionDefilementAbstraite.IMAGE_POSITION_CHOICES, default="left", label="Position de l'image",
     )
+    taille_image = ChoiceBlock(
+        choices=SectionDefilementAbstraite.TAILLE_IMAGE_CHOICES,
+        default=SectionDefilementAbstraite.TAILLE_MOYENNE, label="Taille de l'image",
+    )
+    liens = StreamBlock([("lien", LienBlock())], required=False, label="Liens")
+
+    class Meta:
+        icon = "image"
+        label = "Section image + texte"
+        value_class = SectionNormaleValue
+
+
+class SectionColonnesValue(StructValue):
+    type_section = SectionDefilementAbstraite.TYPE_COLONNES
+
+    @property
+    def nombre_colonnes(self):
+        return len(self["colonnes"])
+
+
+class SectionColonnesBlock(StructBlock):
+    """1 à 3 colonnes : même rendu qu'une section en colonnes d'une page libre."""
+
+    titre_colonnes = CharBlock(required=False, label="Titre de la section")
+    image_fond_colonnes = ImageChooserBlock(required=False, label="Image de fond (facultatif)")
+    taille_image = ChoiceBlock(
+        choices=SectionDefilementAbstraite.TAILLE_IMAGE_CHOICES,
+        default=SectionDefilementAbstraite.TAILLE_MOYENNE, label="Taille des images",
+    )
+    colonnes = ListBlock(
+        StructBlock([
+            ("titre", CharBlock(required=False, label="Titre")),
+            ("texte", RichTextBlock(required=False, label="Texte")),
+            ("image", ImageChooserBlock(required=False, label="Image")),
+        ], label="Colonne"),
+        min_num=1, max_num=3, label="Colonnes",
+    )
+    liens = StreamBlock([("lien", LienBlock())], required=False, label="Liens")
+
+    class Meta:
+        icon = "table"
+        label = "Section en colonnes"
+        value_class = SectionColonnesValue
+
+
+class GalerieBlock(StructBlock):
+    """Miniatures sur 4 colonnes, ouvertes en grand dans la visionneuse."""
+
+    titre = CharBlock(required=False, label="Titre de la galerie")
+    images = ListBlock(
+        StructBlock([
+            ("image", ImageChooserBlock(label="Image")),
+            ("legende", CharBlock(required=False, label="Légende (facultative)")),
+        ], label="Miniature"),
+        label="Miniatures",
+    )
+
+    class Meta:
+        icon = "image"
+        label = "Galerie de miniatures"
+
+
+BLOCS_INFO = [
+    ("heading", CharBlock(icon="title", form_classname="title", label="Titre")),
+    ("paragraph", RichTextBlock(icon="pilcrow", label="Texte")),
+    ("image", ImageChooserBlock(icon="image", label="Image")),
+    ("callout", CalloutBlock()),
+    ("useful_link", LinkBlock()),
+    ("map", CarteBlock()),
+]
+
+
+class InfoPage(SeoMixin, Page):
+    """Page 'Infos pratiques' : contenu libre construit par blocs (texte,
+    images, encarts, liens utiles, FAQ…), suivi de 8 onglets au plus."""
+
+    body = StreamField(BLOCS_INFO, blank=True, verbose_name="Introduction (au-dessus des onglets)")
 
     search_fields = Page.search_fields + [
         index.SearchField("body"),
+        index.RelatedFields("onglets", [index.SearchField("titre"), index.SearchField("contenu")]),
     ]
 
     content_panels = Page.content_panels + [
         FieldPanel("body"),
+        InlinePanel(
+            "onglets", label="Onglet", max_num=MAX_ONGLETS,
+            heading=f"Onglets ({MAX_ONGLETS} au maximum)",
+            help_text="Chaque onglet présente une information. Sans onglet, la page affiche seulement l'introduction.",
+        ),
     ]
 
     promote_panels = SeoMixin.seo_panels
 
     class Meta:
         verbose_name = "Page d'informations"
+
+    def get_context(self, request, *args, **kwargs):
+        context = super().get_context(request, *args, **kwargs)
+        onglets = list(self.onglets.all())
+        for onglet, ancre in zip(onglets, ancres_onglets(o.titre for o in onglets)):
+            onglet.ancre = ancre
+        context["onglets"] = onglets
+        context["a_galerie"] = any(b.block_type == "galerie" for o in onglets for b in o.contenu)
+        return context
+
+
+def ancres_onglets(titres):
+    """Ancres d'URL des onglets (/info/#onglet-historique), toutes distinctes."""
+    ancres = []
+    for titre in titres:
+        base = f"onglet-{slugify(titre) or len(ancres) + 1}"
+        ancre, suite = base, 2
+        while ancre in ancres:
+            ancre, suite = f"{base}-{suite}", suite + 1
+        ancres.append(ancre)
+    return ancres
+
+
+class InfoOnglet(Orderable):
+    """Un onglet de la page d'informations : une information, avec les
+    mêmes possibilités de contenu que la page et qu'une page libre."""
+
+    page = ParentalKey(InfoPage, on_delete=models.CASCADE, related_name="onglets")
+    titre = models.CharField("Titre de l'onglet", max_length=60)
+    contenu = StreamField(
+        BLOCS_INFO + [
+            ("entete", EnteteOngletBlock()),
+            ("section", SectionNormaleBlock()),
+            ("colonnes", SectionColonnesBlock()),
+            ("galerie", GalerieBlock()),
+        ],
+        blank=True, verbose_name="Contenu",
+    )
+
+    panels = [FieldPanel("titre"), FieldPanel("contenu")]
+
+    class Meta(Orderable.Meta):
+        verbose_name = "Onglet"

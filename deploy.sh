@@ -37,6 +37,9 @@ python manage.py collectstatic --noinput
 echo "→ Slugs des pages sans accents (URL accentuées non servies par o2switch)"
 python manage.py convertir_slugs_ascii
 
+echo "→ Page Info : liens vers les pages libres transformés en onglets (une seule fois)"
+python manage.py convertir_info_en_onglets
+
 echo "→ Index de la recherche du site"
 python manage.py update_index > /dev/null
 

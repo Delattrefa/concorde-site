@@ -164,12 +164,12 @@
   <figure class="basse"><img src="img/lightbox.jpg"><figcaption>La visionneuse : photo en grand format, navigation et miniatures.</figcaption></figure>
 
   <h2>Info, Contact et pages libres</h2>
-  <p><strong>Info</strong> présente l'ASBL (historique, informations pratiques) avec des blocs de texte, images, encarts et liens. <strong>Contact</strong> propose un formulaire (nom, e-mail, objet de la demande, message), les coordonnées et une carte. Les messages envoyés arrivent par e-mail et restent consultables dans Wagtail (<em>Formulaires</em>). Pour répondre, il suffit de cliquer sur « Répondre » dans l'e-mail reçu : la réponse part directement à l'adresse saisie par le visiteur.</p>
+  <p><strong>Info</strong> présente l'ASBL dans 8 onglets au plus (historique, troupe de théâtre, pétanque…) : un clic sur un onglet affiche son information. <strong>Contact</strong> propose un formulaire (nom, e-mail, objet de la demande, message), les coordonnées et une carte. Les messages envoyés arrivent par e-mail et restent consultables dans Wagtail (<em>Formulaires</em>). Pour répondre, il suffit de cliquer sur « Répondre » dans l'e-mail reçu : la réponse part directement à l'adresse saisie par le visiteur.</p>
   <div class="duo">
     <figure><img src="img/info.jpg"><figcaption>La page Info.</figcaption></figure>
     <figure><img src="img/contact.jpg"><figcaption>La page Contact et son formulaire.</figcaption></figure>
   </div>
-  <p>Les <strong>pages libres</strong> (par exemple « Le Blé qui Lève » ou « La pétanque ») sont des pages composées librement : logo, titre, sections en défilement et galerie de miniatures. Elles peuvent être placées n'importe où et ajoutées au menu si on le souhaite.</p>
+  <p>Les <strong>pages libres</strong> (par exemple « Le Blé qui Lève » ou « La pétanque ») sont des pages composées librement : logo, titre, sections en défilement et galerie de miniatures. Elles peuvent être placées n'importe où et ajoutées au menu si on le souhaite. Pour une information durable sur l'ASBL, préférez un onglet de la page Info ; la page libre convient à une page à part (campagne, affiche, QR code…).</p>
   <figure class="basse"><img src="img/page_libre.jpg"><figcaption>Une page libre : « L'histoire du BQL ».</figcaption></figure>
 
   <h2>Newsletter, recherche et pied de page</h2>
@@ -662,6 +662,17 @@
   <p>L'<strong>adresse</strong> de la page (le « slug », dans l'onglet <strong>Promotion</strong>) est créée automatiquement à partir du titre, <strong>sans accents</strong> : « Marché de Noël » donne <span class="url">marche-de-noel</span>. Les accents tapés à la main sont aussi retirés à l'enregistrement, car l'hébergeur du site ne sait pas afficher les adresses accentuées.</p>
   <div class="encart attention"><span class="t">Adresses réservées</span>
     <p>Ne créez pas de page dont l'adresse (slug) serait « theatre », « calendrier », « admin », « recherche » ou « connexion » au premier niveau : ces adresses sont déjà utilisées par les applications du site.</p></div>
+
+  <h3>Les onglets de la page Info</h3>
+  <ol class="etapes">
+    <li><em>Pages → Accueil → Info</em>, <strong>Modifier</strong>. Le champ <strong>Introduction</strong> s'affiche au-dessus des onglets.</li>
+    <li>Dans <strong>Onglets</strong>, cliquez sur <strong>Ajouter onglet</strong> (8 au maximum) et donnez-lui un titre court.</li>
+    <li>Composez son <strong>contenu</strong> avec des blocs : texte, image, encart, lien, carte, logo et titres, section image + texte, section en colonnes, galerie de miniatures.</li>
+    <li>Les flèches de chaque onglet changent leur ordre ; le premier s'affiche à l'ouverture de la page. <strong>Publiez</strong>.</li>
+  </ol>
+  <p>Chaque onglet a sa propre adresse, à copier depuis la barre du navigateur après un clic sur l'onglet (ex. <span class="url">/info/#onglet-historique</span>).</p>
+  <div class="encart astuce"><span class="t">Une ancienne page libre devenue onglet</span>
+    <p>Une fois l'onglet vérifié, la page libre peut être supprimée dans Wagtail : son ancienne adresse mène alors à l'onglet. Avant de confirmer, regardez si Wagtail signale qu'elle est encore utilisée ailleurs (menu, article…) et corrigez ces liens.</p></div>
 
   <h3>Les sections en défilement (accueil et pages libres)</h3>
   <p>Chaque section choisit son <strong>type de section</strong> ; seuls les champs de ce type sont utilisés :</p>

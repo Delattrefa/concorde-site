@@ -1,5 +1,14 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags wagtailimages_tags %}
+{% load static wagtailcore_tags wagtailimages_tags %}
+
+{% block extra_css %}
+{% if onglets %}
+<link rel="stylesheet" href="{% static 'page_libre/css/page_libre.css' %}">
+<link rel="stylesheet" href="{% static 'info/info.css' %}">
+{# Sans JavaScript, tous les onglets restent lisibles les uns sous les autres #}
+<noscript><style>.info-onglet[hidden] { display: block; }</style></noscript>
+{% endif %}
+{% endblock %}
 
 {% block content %}
 <section class="page-header fade-target">
@@ -8,19 +17,75 @@
     </div>
 </section>
 
-<section class="info-body wrap fade-target">
+{% if page.body %}
+<section class="info-body wrap fade-target{% if onglets %} info-body--intro{% endif %}">
     {% for block in page.body %}
-        <div class="info-body__block fade-up">
-            {% if block.block_type == "heading" %}
-                <h2>{{ block.value }}</h2>
-            {% elif block.block_type == "paragraph" %}
-                {{ block.value|richtext }}
-            {% elif block.block_type == "image" %}
-                {% image block.value width-1000 %}
-            {% else %}
-                {% include_block block %}
-            {% endif %}
-        </div>
+        {% include "info/_bloc.html" %}
     {% endfor %}
 </section>
+{% endif %}
+
+{% if onglets %}
+<div class="info-onglets" data-onglets>
+    <div class="wrap">
+        <div class="info-onglets__barre" role="tablist" aria-label="Informations">
+            {% for onglet in onglets %}
+                <a class="info-onglets__onglet" role="tab" id="{{ onglet.ancre }}-titre" href="#{{ onglet.ancre }}"
+                   aria-controls="{{ onglet.ancre }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                   {% if not forloop.first %}tabindex="-1"{% endif %}>{{ onglet.titre }}</a>
+            {% endfor %}
+        </div>
+    </div>
+    {% for onglet in onglets %}
+        <div class="info-onglet" role="tabpanel" id="{{ onglet.ancre }}" aria-labelledby="{{ onglet.ancre }}-titre"{% if not forloop.first %} hidden{% endif %}>
+            {% for block in onglet.contenu %}
+                {% if block.block_type == "section" or block.block_type == "colonnes" %}
+                    {% include "includes/section_defilement.html" with section=block.value %}
+                {% elif block.block_type == "entete" %}
+                    <div class="page-libre-entete">
+                        <div class="wrap">
+                            {% if block.value.logo %}
+                                {% image block.value.logo width-240 as logo_img %}
+                                <img class="page-libre-entete__logo" src="{{ logo_img.url }}" alt="">
+                            {% endif %}
+                            {% if block.value.titre %}<h2>{{ block.value.titre }}</h2>{% endif %}
+                            {% if block.value.sous_titre %}<p class="page-libre-entete__sous-titre">{{ block.value.sous_titre }}</p>{% endif %}
+                        </div>
+                    </div>
+                {% elif block.block_type == "galerie" %}
+                    <div class="page-libre-galerie">
+                        <div class="wrap">
+                            {% if block.value.titre %}<h2>{{ block.value.titre }}</h2>{% endif %}
+                            <div class="page-libre-galerie__grille" data-lightbox-galerie>
+                                {% for item in block.value.images %}
+                                    {% image item.image fill-400x400 as thumb %}
+                                    {% image item.image width-1600 as full %}
+                                    <button type="button" class="photo-gallery__item" data-full="{{ full.url }}" data-caption="{{ item.legende }}">
+                                        <img src="{{ thumb.url }}" alt="{{ item.legende|default:onglet.titre }}" loading="lazy">
+                                    </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="info-body wrap">{% include "info/_bloc.html" %}</div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endfor %}
+</div>
+
+{% if a_galerie %}
+<div class="lightbox" id="lightbox" aria-hidden="true">
+    <button class="lightbox__close" aria-label="Fermer">&times;</button>
+    <img class="lightbox__image" src="" alt="">
+    <p class="lightbox__caption"></p>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if onglets %}<script src="{% static 'info/onglets.js' %}" defer></script>{% endif %}
+{% if a_galerie %}<script src="{% static 'js/lightbox.js' %}" defer></script>{% endif %}
 {% endblock %}
