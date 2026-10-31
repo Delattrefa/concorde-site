@@ -760,8 +760,16 @@ déploiement, `deploy.sh` applique la migration puis lance
 - la conversion n'a lieu qu'une fois : dès que la page a un onglet, la commande ne
   fait plus rien, et un lien vers une page libre ajouté ensuite reste un lien.
 
-Pour voir le résultat à l'avance, sans rien modifier :
-`python manage.py convertir_info_en_onglets --dry-run`.
+Pour la lancer à la main (voir le résultat sans rien modifier avec `--dry-run`),
+indiquez les réglages de production, sinon Django cherche une base SQLite locale
+et s'arrête sur `no such table: info_infopage` :
+
+```bash
+cd ~/concorde/src
+export DJANGO_SETTINGS_MODULE=concorde_site.settings.production
+python manage.py convertir_info_en_onglets --dry-run
+python manage.py convertir_info_en_onglets
+```
 
 La commande ne convertit pas et signale dans le journal du déploiement :
 
