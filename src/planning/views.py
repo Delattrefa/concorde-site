@@ -7,6 +7,7 @@ import calendar
 from collections import defaultdict
 from datetime import date, datetime, time, timedelta
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -678,6 +679,7 @@ def couverture(request):
         for d in Disponibilite.objects.filter(date__in=jours_concernes).select_related("membre"):
             disponibles[d.date].append(d)
     return render(request, "planning/couverture.html", {
+        "urgence_jours": settings.PLANNING_URGENCE_HEURES // 24,
         "evenements": [{"evenement": e, "creneaux": liste_c, "jour": timezone.localtime(e.debut).date(),
                         "disponibles": disponibles.get(timezone.localtime(liste_c[0].debut).date(), [])}
                        for e, liste_c in par_evenement.items()],

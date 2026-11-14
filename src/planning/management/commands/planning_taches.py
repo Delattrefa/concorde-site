@@ -5,9 +5,9 @@ Tâches Cron), comme l'envoi des newsletters :
     */5 * * * * cd ~/concorde/src && DJANGO_SETTINGS_MODULE=concorde_site.settings.production \\
         ~/virtualenv/concorde/src/3.11/bin/python manage.py planning_taches >> ~/concorde/src/planning-cron.log 2>&1
 
-1. Alerte « créneau urgent » : un créneau qui commence dans moins de
-   PLANNING_URGENCE_HEURES et manque de bénévoles est signalé (une fois)
-   à tous les membres.
+1. Alerte « bénévoles manquants » : une seule fois par événement, quand
+   un de ses créneaux incomplets commence dans moins de
+   PLANNING_URGENCE_HEURES (2 jours) ; tous les membres sont prévenus.
 2. E-mails : les notifications en attente partent groupées, un seul
    e-mail par membre et par passage.
 """
@@ -28,27 +28,32 @@ logger = logging.getLogger("planning")
 
 
 def alerter_creneaux_urgents():
+    """Une seule alerte par événement, même s'il a plusieurs créneaux
+    incomplets : ses créneaux sont tous marqués « alerte envoyée »."""
     maintenant = timezone.now()
-    urgents = list(
+    urgents = (
         Creneau.objects.a_combler()
         .filter(alerte_envoyee=False, debut__gt=maintenant,
                 debut__lte=maintenant + timedelta(hours=settings.PLANNING_URGENCE_HEURES))
         .select_related("evenement")
     )
+    par_evenement = defaultdict(list)
     for creneau in urgents:
-        evenement = creneau.evenement
-        manque = creneau.besoin - creneau.nb_inscrits
+        par_evenement[creneau.evenement].append(creneau)
+    for evenement, creneaux in par_evenement.items():
+        manque = sum(c.besoin - c.nb_inscrits for c in creneaux)
         if evenement.reserve_aux_invites:
             destinataires = evenement.participants()
         else:
             destinataires = services.membres_actifs().values_list("pk", flat=True)
+        debut = timezone.localtime(min(c.debut for c in creneaux))
         services.notifier(
             destinataires, Notification.URGENCE,
-            f"Urgent : il manque {manque} bénévole{'s' if manque > 1 else ''} pour {evenement.titre}, {creneau}",
+            f"Il manque {manque} bénévole{'s' if manque > 1 else ''} pour {evenement.titre} ({debut:%d/%m à %H:%M})",
             evenement.get_absolute_url() + "#creneaux",
         )
-    Creneau.objects.filter(pk__in=[c.pk for c in urgents]).update(alerte_envoyee=True)
-    return len(urgents)
+    Creneau.objects.filter(evenement__in=list(par_evenement)).update(alerte_envoyee=True)
+    return len(par_evenement)
 
 
 def envoyer_emails():

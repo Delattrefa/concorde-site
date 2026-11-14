@@ -262,14 +262,26 @@ class CreneauxTests(Base):
         self.assertContains(reponse, "Caisse")
         self.assertContains(reponse, "Bob Dubois (toute la journée)")
 
-    def test_alerte_creneau_urgent_une_seule_fois(self):
-        demain = timezone.localdate() + timedelta(days=1)
-        e = self.evenement(debut=moment(demain, 10), fin=moment(demain, 12))
-        Creneau.objects.create(evenement=e, debut=e.debut, fin=e.fin, besoin=2)
+    def test_alerte_une_seule_fois_par_evenement_a_2_jours(self):
+        maintenant = timezone.now()
+        dans_3_jours = self.evenement(titre="Brocante", debut=maintenant + timedelta(days=3),
+                                      fin=maintenant + timedelta(days=3, hours=4))
+        Creneau.objects.create(evenement=dans_3_jours, debut=dans_3_jours.debut, fin=dans_3_jours.fin)
         call_command("planning_taches", stdout=StringIO())
-        self.assertEqual(Notification.objects.filter(genre=Notification.URGENCE).count(), 3)  # tous les membres
+        self.assertFalse(Notification.objects.filter(genre=Notification.URGENCE).exists())  # pas encore
+
+        e = self.evenement(debut=maintenant + timedelta(days=1), fin=maintenant + timedelta(days=4))
+        for heures, besoin in ((0, 2), (2, 1), (60, 3)):  # le 3e créneau tombe après les 2 jours
+            Creneau.objects.create(evenement=e, debut=e.debut + timedelta(hours=heures),
+                                   fin=e.debut + timedelta(hours=heures + 2), besoin=besoin)
         call_command("planning_taches", stdout=StringIO())
-        self.assertEqual(Notification.objects.filter(genre=Notification.URGENCE).count(), 3)
+        alertes = Notification.objects.filter(genre=Notification.URGENCE)
+        self.assertEqual(alertes.count(), 3)  # une par membre, pas une par créneau
+        self.assertIn("Il manque 3 bénévoles pour Marché de Noël", alertes.first().texte)
+        # Ni au passage suivant, ni quand ses autres créneaux entrent dans les 2 jours
+        Creneau.objects.filter(evenement=e).update(debut=maintenant + timedelta(hours=1))
+        call_command("planning_taches", stdout=StringIO())
+        self.assertEqual(alertes.count(), 3)
 
 
 class InvitationsTests(Base):

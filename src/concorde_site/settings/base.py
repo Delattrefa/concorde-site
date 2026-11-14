@@ -298,7 +298,7 @@ COMPTES_INVITATION_JOURS = 14
 # -----------------------------------------------------------------------
 # Un créneau qui manque de bénévoles et commence dans moins de ce délai est
 # signalé à tous les membres (commande planning_taches, toutes les 5 min)
-PLANNING_URGENCE_HEURES = 72
+PLANNING_URGENCE_HEURES = 48
 
 # -----------------------------------------------------------------------
 # Statistiques de fréquentation (application 'statistiques')

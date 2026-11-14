@@ -17,7 +17,7 @@
 
 <div class="pl-stats">
     <div class="pl-stat{% if stats.manque %} pl-stat--alerte{% endif %}"><strong>{{ stats.manque }}</strong><span>bénévole{{ stats.manque|pluralize }} manquant{{ stats.manque|pluralize }}</span></div>
-    <div class="pl-stat{% if stats.urgents %} pl-stat--alerte{% endif %}"><strong>{{ stats.urgents }}</strong><span>créneau{{ stats.urgents|pluralize:"x" }} urgent{{ stats.urgents|pluralize }} (moins de 3 jours)</span></div>
+    <div class="pl-stat{% if stats.urgents %} pl-stat--alerte{% endif %}"><strong>{{ stats.urgents }}</strong><span>créneau{{ stats.urgents|pluralize:"x" }} urgent{{ stats.urgents|pluralize }} (moins de {{ urgence_jours }} jour{{ urgence_jours|pluralize }})</span></div>
     <div class="pl-stat"><strong>{{ stats.vides }}</strong><span>créneau{{ stats.vides|pluralize:"x" }} sans personne</span></div>
     <div class="pl-stat"><strong>{{ stats.creneaux }}</strong><span>créneau{{ stats.creneaux|pluralize:"x" }} {% if tout_voir %}au total{% else %}incomplet{{ stats.creneaux|pluralize }}{% endif %}</span></div>
 </div>

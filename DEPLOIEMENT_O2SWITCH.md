@@ -715,8 +715,8 @@ souci pour quelques dizaines de membres.
 
 **Responsables.** Sont responsables les comptes « Statut équipe », ou ceux
 qui ont la permission « Planning des membres | Événement du planning |
-Peut gérer le planning (responsable) ». Délai d'alerte des créneaux
-urgents : `PLANNING_URGENCE_HEURES` (72 h) dans `settings/base.py`.
+Peut gérer le planning (responsable) ». Alerte « bénévoles manquants » : une
+seule par événement, `PLANNING_URGENCE_HEURES` (48 h) avant, dans `settings/base.py`.
 
 ---
 
