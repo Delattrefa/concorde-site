@@ -64,7 +64,8 @@ class NewsPageForm(forms.Form):
         required=False,
         help_text=(
             "Affiche cette actualité sur la page d'accueil à la place de la plus "
-            "récente, quelle que soit sa date."
+            "récente, quelle que soit sa date. Elle remplace l'actualité qui était "
+            "à la une."
         ),
     )
     image = ChampPhoto(

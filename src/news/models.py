@@ -120,8 +120,8 @@ class NewsPage(SeoMixin, Page):
         default=False,
         help_text=(
             "Affiche cette actualité sur la page d'accueil à la place de la plus "
-            "récente, quelle que soit sa date. Si plusieurs actualités sont à la "
-            "une, la plus récente l'emporte."
+            "récente, quelle que soit sa date. Une seule actualité est à la une : "
+            "à la publication, la case est retirée de la précédente."
         ),
     )
     featured_image = models.ForeignKey(

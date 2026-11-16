@@ -322,10 +322,48 @@ class ALaUneTests(TestCase):
         self.assertContains(reponse, "À la une")
 
     def test_plusieurs_a_la_une_la_plus_recente_l_emporte(self):
+        # Ancienne situation (avant la case exclusive) : la plus récente gagne
         self._actualite("Première", 20, a_la_une=True)
         self._actualite("Seconde", 5, a_la_une=True)
 
         self.assertEqual(self._accueil().context["derniere_actualite"].title, "Seconde")
+
+    def test_la_derniere_publiee_a_la_une_remplace_la_precedente(self):
+        recente = self._actualite("Récente", 2)
+        recente.a_la_une = True
+        recente.save_revision().publish()
+        ancienne = self._actualite("Ancienne", 30)
+        ancienne.a_la_une = True
+        ancienne.save_revision().publish()
+
+        self.assertEqual(self._accueil().context["derniere_actualite"].title, "Ancienne")
+        recente = NewsPage.objects.get(pk=recente.pk)
+        self.assertFalse(recente.a_la_une)
+        # Republier l'ancienne « à la une » ne la remet pas à la une
+        self.assertFalse(recente.get_latest_revision_as_object().a_la_une)
+        recente.save_revision().publish()
+        self.assertEqual(self._accueil().context["derniere_actualite"].title, "Ancienne")
+
+    def test_brouillon_a_la_une_ne_retire_rien(self):
+        en_ligne = self._actualite("En ligne", 10)
+        en_ligne.a_la_une = True
+        en_ligne.save_revision().publish()
+        brouillon = self._actualite("Brouillon", 1)
+        brouillon.a_la_une = True
+        brouillon.save_revision()
+
+        self.assertTrue(NewsPage.objects.get(pk=en_ligne.pk).a_la_une)
+        self.assertEqual(self._accueil().context["derniere_actualite"].title, "En ligne")
+
+    def test_formulaire_du_site_remplace_l_actualite_a_la_une(self):
+        precedente = self._actualite("Précédente", 10)
+        precedente.a_la_une = True
+        precedente.save_revision().publish()
+        self.client.force_login(self.admin)
+        self.client.post(reverse("news_ajouter"), {"titre": "Souper annuel", "date": "2026-10-17", "a_la_une": "on"})
+
+        self.assertFalse(NewsPage.objects.get(pk=precedente.pk).a_la_une)
+        self.assertEqual(self._accueil().context["derniere_actualite"].title, "Souper annuel")
 
     def test_case_du_formulaire_du_site(self):
         self.client.force_login(self.admin)
