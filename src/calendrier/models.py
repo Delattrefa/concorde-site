@@ -16,6 +16,7 @@ peut ainsi couvrir un seul jour (date_debut == date_fin) ou plusieurs jours
 consécutifs.
 """
 from datetime import timedelta
+from urllib.parse import quote
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -223,6 +224,24 @@ class Reservation(models.Model):
         if self.est_societe:
             return f"{self.nom_societe} (représentée par {self.nom_representant})"
         return self.nom_representant
+
+    @property
+    def periode_texte(self):
+        """« le 07/11/2026 » ou « du 28/11/2026 au 29/11/2026 »."""
+        if self.date_fin and self.date_fin != self.date_debut:
+            return f"du {self.date_debut:%d/%m/%Y} au {self.date_fin:%d/%m/%Y}"
+        return f"le {self.date_debut:%d/%m/%Y}"
+
+    def lien_reponse_email(self, signature=""):
+        """Lien mailto: vers le demandeur, avec l'objet et le début du
+        message déjà rédigés (la messagerie de l'administrateur s'ouvre)."""
+        objet = f"La Concorde asbl — votre demande de réservation de la salle {self.periode_texte}"
+        corps = (
+            f"Bonjour {self.nom_representant},\n\n"
+            f"Merci pour votre demande de réservation de la salle {self.periode_texte}.\n\n\n\n"
+            f"Cordialement,\n{signature + chr(10) if signature else ''}La Concorde asbl"
+        )
+        return f"mailto:{quote(self.email, safe='@')}?subject={quote(objet)}&body={quote(corps)}"
 
     @property
     def numero_tva_affiche(self):

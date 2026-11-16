@@ -463,6 +463,11 @@ class ReservationDetailView(UserPassesTestMixin, DetailView):
     def test_func(self):
         return _est_administrateur(self.request.user)
 
+    def get_context_data(self, **kwargs):
+        contexte = super().get_context_data(**kwargs)
+        contexte["lien_reponse"] = self.object.lien_reponse_email(self.request.user.get_full_name())
+        return contexte
+
 
 @user_passes_test(_est_administrateur, login_url="login")
 @require_POST

@@ -29,6 +29,10 @@
     <p><strong>Adresse :</strong> {{ reservation.adresse }}</p>
     <p><strong>E-mail :</strong> <a href="mailto:{{ reservation.email }}">{{ reservation.email }}</a></p>
     <p><strong>Téléphone / GSM :</strong> {{ reservation.telephone }}</p>
+    <p class="calendrier-detail__repondre">
+        <a class="btn btn--secondary" href="{{ lien_reponse }}">✉ Répondre par e-mail</a>
+        <span class="calendrier-detail__aide">Ouvre votre messagerie avec l'adresse, l'objet et le début du message déjà remplis.</span>
+    </p>
 
     <h2>Demande</h2>
     {% if reservation.date_fin != reservation.date_debut %}

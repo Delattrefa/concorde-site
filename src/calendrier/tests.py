@@ -210,6 +210,21 @@ class PermissionsTests(TestCase):
         self.assertContains(reponse, "Salle réservée")
         self.assertNotContains(reponse, "Durand")
 
+    def test_repondre_par_email_depuis_la_demande(self):
+        self.admin.first_name, self.admin.last_name = "Marie", "Dupont"
+        self.admin.save()
+        self.client.force_login(self.admin)
+        reponse = self.client.get(reverse("calendrier:reservation_detail", args=[self.reservation.pk]))
+        lien = reponse.context["lien_reponse"]
+        self.assertContains(reponse, "Répondre par e-mail")
+        self.assertTrue(lien.startswith("mailto:luc.durand@exemple.be?subject="))
+        jour = self.reservation.date_debut.strftime("%d/%m/%Y")
+        from urllib.parse import parse_qs, urlsplit
+        champs = parse_qs(urlsplit(lien).query)
+        self.assertEqual(champs["subject"], [f"La Concorde asbl — votre demande de réservation de la salle le {jour}"])
+        self.assertTrue(champs["body"][0].startswith("Bonjour Luc Durand,\n\nMerci pour votre demande"))
+        self.assertTrue(champs["body"][0].endswith("Cordialement,\nMarie Dupont\nLa Concorde asbl"))
+
     def _pages_administrateur(self):
         r, a, x = self.reservation.pk, self.article.pk, self.annexe.pk
         return [
