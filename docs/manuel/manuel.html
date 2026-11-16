@@ -369,6 +369,7 @@
   <p>Le visiteur clique sur le <strong>+</strong> d'un jour libre (ou sur le bouton sous le calendrier). Il indique s'il est un <strong>particulier</strong> ou une <strong>société</strong> (nom et n° de TVA), ses coordonnées, les dates souhaitées et des précisions (type d'événement, nombre de personnes…). Aucune inscription n'est nécessaire. Le formulaire est protégé contre les robots (champ piège et nombre d'envois limité).</p>
   <figure><img src="img/demande_reservation.jpg"><figcaption>Le formulaire public de demande de réservation de la salle.</figcaption></figure>
   <p>La demande est enregistrée avec le statut <strong>« En attente de traitement »</strong>. Elle n'apparaît pas encore dans le calendrier public.</p>
+  <p>Tous les comptes actifs avec le <strong>« Statut équipe »</strong> reçoivent aussitôt un e-mail « Nouvelle demande de réservation de la salle ». Il contient les coordonnées du demandeur, les dates, son message et un lien direct vers la fiche de la demande. Il signale aussi les autres demandes en attente sur les mêmes dates. Cliquer sur « Répondre » dans cet e-mail écrit directement au demandeur. Un compte sans adresse e-mail ne reçoit rien : complétez-la dans sa fiche utilisateur (chapitre 12).</p>
 
   <h2>2. Traiter les demandes</h2>
   <p>Les administrateurs voient dans le calendrier un rappel « <em>N demandes de réservation en attente de traitement</em> ». La page <strong>Demandes de réservation de salle</strong> (<span class="url">/calendrier/reservations/</span>) les liste toutes, avec un filtre par statut et des boutons d'action rapides.</p>
@@ -781,7 +782,7 @@
   <table>
     <tr><th style="width:30%">Pour…</th><th>Sur la fiche de l'utilisateur</th></tr>
     <tr><td>Un <strong>membre</strong> simple</td><td>Laissez « Actif » coché, rien d'autre.</td></tr>
-    <tr><td>Un <strong>administrateur</strong> (calendrier, location, contrats, photos, publication directe des actualités)</td><td>Cochez <strong>Statut équipe</strong> et ajoutez-le au groupe <strong>Moderators</strong>.</td></tr>
+    <tr><td>Un <strong>administrateur</strong> (calendrier, location, contrats, photos, publication directe des actualités)</td><td>Cochez <strong>Statut équipe</strong> (il reçoit alors un e-mail à chaque demande de location) et ajoutez-le au groupe <strong>Moderators</strong>.</td></tr>
     <tr><td>Un <strong>administrateur du calendrier</strong> dont les actualités passent par la validation</td><td>Cochez <strong>Statut équipe</strong>, sans le groupe Moderators. Il gère tout le calendrier (demandes de location, contrats, activités) et peut modifier toutes les actualités depuis le site, mais ses actualités et ses modifications attendent l'approbation d'un modérateur. Pour l'accès à Wagtail, ajoutez-le au groupe <strong>Editors</strong> (facultatif).</td></tr>
     <tr><td>Un <strong>modérateur</strong> des actualités</td><td>Groupe <strong>Moderators</strong> : il reçoit un e-mail à chaque actualité proposée et peut l'approuver.</td></tr>
     <tr><td>L'<strong>accès au Théâtre</strong></td><td>Section « Permissions de l'utilisateur » : ajoutez <em>Gestion du Théâtre | acces application | Peut accéder à l'application Théâtre</em>.</td></tr>

@@ -1,0 +1,24 @@
+{% autoescape off %}Bonjour,
+
+Une nouvelle demande de réservation de la salle a été déposée sur le site.
+
+Demandeur : {{ reservation.nom_affiche }}{% if reservation.est_societe and reservation.numero_tva %}
+N° de TVA : {{ reservation.numero_tva_affiche }}{% endif %}
+E-mail : {{ reservation.email }}
+Téléphone : {{ reservation.telephone }}
+Adresse : {{ reservation.adresse }}
+Dates souhaitées : {{ reservation.periode_texte }}{% if reservation.message %}
+
+Message :
+{{ reservation.message }}{% endif %}{% if autres_demandes %}
+
+Attention : {{ autres_demandes }} autre{{ autres_demandes|pluralize }} demande{{ autres_demandes|pluralize }} en attente porte{{ autres_demandes|pluralize:"nt" }} sur ces dates.{% endif %}
+
+Voir et traiter la demande : {{ lien_fiche }}
+Toutes les demandes : {{ lien_liste }}
+
+« Répondre » à cet e-mail écrit directement au demandeur.
+
+— Site de La Concorde asbl
+(e-mail envoyé aux comptes « Statut équipe »)
+{% endautoescape %}

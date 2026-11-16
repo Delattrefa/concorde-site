@@ -8,9 +8,11 @@ Tests de l'application calendrier :
 Lancement : python manage.py test calendrier
 """
 import io
+from unittest import mock
 from datetime import date, timedelta
 
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
@@ -68,6 +70,59 @@ class DemandeReservationAntispamTests(TestCase):
 
     def test_formulaire_contient_le_champ_piege(self):
         self.assertContains(self.client.get(self.url), 'name="website"')
+
+
+class SignalementEquipeTests(TestCase):
+    """E-mail aux comptes « Statut équipe » à chaque nouvelle demande."""
+
+    url = reverse("calendrier:reservation_demander")
+
+    def setUp(self):
+        cache.clear()
+        Utilisateur = get_user_model()
+        Utilisateur.objects.create_user("marie", "marie@la-concorde.be", "mdp", is_staff=True)
+        Utilisateur.objects.create_user("paul", "paul@la-concorde.be", "mdp", is_staff=True)
+        Utilisateur.objects.create_user("ancien", "ancien@la-concorde.be", "mdp", is_staff=True, is_active=False)
+        Utilisateur.objects.create_user("sans_adresse", "", "mdp", is_staff=True)
+        Utilisateur.objects.create_user("membre", "membre@exemple.be", "mdp")
+        self.jour = date.today() + timedelta(days=40)
+
+    def _demander(self, **champs):
+        donnees = {
+            "type_client": Reservation.TYPE_PARTICULIER, "nom": "Dupont", "prenom": "Marie",
+            "adresse": "Rue de la Station 1, 7387 Angre", "email": "marie.dupont@exemple.be",
+            "telephone": "0470 12 34 56", "date_debut": self.jour.isoformat(), "date_fin": self.jour.isoformat(),
+            "message": "Anniversaire, 60 personnes.",
+        }
+        donnees.update(champs)
+        with self.captureOnCommitCallbacks(execute=True):
+            return self.client.post(self.url, donnees, REMOTE_ADDR="192.0.2.7")
+
+    def test_un_email_par_compte_statut_equipe(self):
+        Reservation.objects.create(
+            nom="Martin", prenom="Luc", adresse="Rue Haute 5", email="luc@exemple.be", telephone="0470",
+            date_debut=self.jour, date_fin=self.jour,
+        )
+        self._demander()
+        demande = Reservation.objects.get(nom="Dupont")
+        self.assertEqual(sorted(m.to[0] for m in mail.outbox), ["marie@la-concorde.be", "paul@la-concorde.be"])
+        email = mail.outbox[0]
+        self.assertEqual(email.reply_to, ["marie.dupont@exemple.be"])
+        self.assertIn("Nouvelle demande de réservation de la salle — Marie Dupont, le", email.subject)
+        self.assertIn("Anniversaire, 60 personnes.", email.body)
+        self.assertIn(reverse("calendrier:reservation_detail", args=[demande.pk]), email.body)
+        self.assertIn("Attention : 1 autre demande en attente porte sur ces dates.", email.body)
+
+    def test_robot_ne_declenche_rien(self):
+        self._demander(website="https://spam.example")
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_echec_d_envoi_n_empeche_pas_la_demande(self):
+        with mock.patch("django.core.mail.backends.locmem.EmailBackend.send_messages", side_effect=OSError("SMTP")), \
+                self.assertLogs("calendrier.notifications", level="ERROR"):
+            reponse = self._demander()
+        self.assertEqual(reponse.status_code, 302)
+        self.assertEqual(Reservation.objects.count(), 1)
 
 
 def _pdf_vierge():

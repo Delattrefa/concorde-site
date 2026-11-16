@@ -23,6 +23,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.files.base import ContentFile
 from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.db import transaction
 from django.db.models import Q, Sum
 from django.urls import reverse, reverse_lazy
 from django.views import View
@@ -36,6 +37,7 @@ from concorde_site.antispam import compter_envoi, est_un_robot, limite_atteinte
 
 from .contrats import VARIABLES_DISPONIBLES, AIDE_MISE_EN_FORME, generer_pdf_contrat, nom_fichier_contrat
 from .forms import ReponseReservationForm
+from .notifications import signaler_nouvelle_demande
 from .forms import ActiviteForm, AnnexeContratForm, MiseEnPageContratForm, ReservationAdminForm, SuiviPaiementFormSet, images_de_signature, ArticleContratForm, ContratLocationForm, ReservationForm
 from .models import (
     Activite,
@@ -331,7 +333,10 @@ class ReservationCreateView(CreateView):
 
         compter_envoi(self.request, "calendrier-reservation")
         messages.success(self.request, message_succes)
-        return super().form_valid(form)
+        reponse = super().form_valid(form)
+        demande = self.object
+        transaction.on_commit(lambda: signaler_nouvelle_demande(demande))
+        return reponse
 
     def get_success_url(self):
         return reverse(
