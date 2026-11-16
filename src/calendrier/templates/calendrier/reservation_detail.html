@@ -30,8 +30,9 @@
     <p><strong>E-mail :</strong> <a href="mailto:{{ reservation.email }}">{{ reservation.email }}</a></p>
     <p><strong>Téléphone / GSM :</strong> {{ reservation.telephone }}</p>
     <p class="calendrier-detail__repondre">
-        <a class="btn btn--secondary" href="{{ lien_reponse }}">✉ Répondre par e-mail</a>
-        <span class="calendrier-detail__aide">Ouvre votre messagerie avec l'adresse, l'objet et le début du message déjà remplis.</span>
+        <a class="btn btn--secondary" href="{% url 'calendrier:reservation_repondre' reservation.pk %}">✉ Répondre par e-mail</a>
+        <span class="calendrier-detail__aide">Message envoyé depuis le site, avec pièces jointes si besoin —
+            ou <a href="{{ lien_reponse }}">avec votre messagerie</a>.</span>
     </p>
 
     <h2>Demande</h2>
@@ -44,6 +45,22 @@
         <p><strong>Message :</strong> {{ reservation.message|linebreaks }}</p>
     {% endif %}
     <p><strong>Demande reçue le :</strong> {{ reservation.date_demande|date:"d/m/Y H:i" }}</p>
+
+    {% if messages_envoyes %}
+        <h2 id="messages">Messages envoyés au demandeur</h2>
+        <ul class="calendrier-messages">
+            {% for m in messages_envoyes %}
+                <li>
+                    <details>
+                        <summary><strong>{{ m.objet }}</strong>
+                            <span class="calendrier-detail__aide">— le {{ m.envoye_le|date:"d/m/Y à H:i" }}{% if m.envoye_par %} par {{ m.envoye_par.get_full_name|default:m.envoye_par.username }}{% endif %}{% if m.pieces_jointes %} · 📎 {{ m.liste_pieces_jointes|length }}{% endif %}</span></summary>
+                        <div class="calendrier-messages__texte">{{ m.message|linebreaks }}</div>
+                        {% if m.pieces_jointes %}<p class="calendrier-detail__aide">Pièces jointes : {{ m.liste_pieces_jointes|join:", " }}</p>{% endif %}
+                    </details>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 
     {% if reservation.traite_par %}
         <p><strong>Traitée par :</strong> {{ reservation.traite_par.get_full_name|default:reservation.traite_par.username }}

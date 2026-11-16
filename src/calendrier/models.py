@@ -232,15 +232,20 @@ class Reservation(models.Model):
             return f"du {self.date_debut:%d/%m/%Y} au {self.date_fin:%d/%m/%Y}"
         return f"le {self.date_debut:%d/%m/%Y}"
 
-    def lien_reponse_email(self, signature=""):
-        """Lien mailto: vers le demandeur, avec l'objet et le début du
-        message déjà rédigés (la messagerie de l'administrateur s'ouvre)."""
+    def brouillon_reponse(self, signature=""):
+        """Objet et début du message d'une réponse au demandeur."""
         objet = f"La Concorde asbl — votre demande de réservation de la salle {self.periode_texte}"
         corps = (
             f"Bonjour {self.nom_representant},\n\n"
             f"Merci pour votre demande de réservation de la salle {self.periode_texte}.\n\n\n\n"
             f"Cordialement,\n{signature + chr(10) if signature else ''}La Concorde asbl"
         )
+        return objet, corps
+
+    def lien_reponse_email(self, signature=""):
+        """Lien mailto: vers le demandeur, avec le même brouillon (la
+        messagerie de l'administrateur s'ouvre)."""
+        objet, corps = self.brouillon_reponse(signature)
         return f"mailto:{quote(self.email, safe='@')}?subject={quote(objet)}&body={quote(corps)}"
 
     @property
@@ -333,6 +338,35 @@ def occupations_sur(debut, fin, exclure_reservation=None):
         for a in activites_sur(debut, fin)
     ]
     return textes
+
+
+class MessageReservation(models.Model):
+    """E-mail envoyé au demandeur depuis la fiche de sa réservation. Seuls
+    les noms des pièces jointes sont gardés, pas les fichiers."""
+
+    reservation = models.ForeignKey(
+        Reservation, on_delete=models.CASCADE, related_name="messages", verbose_name="Réservation",
+    )
+    destinataire = models.EmailField("Envoyé à")
+    objet = models.CharField("Objet", max_length=200)
+    message = models.TextField("Message")
+    pieces_jointes = models.TextField("Pièces jointes", blank=True, help_text="Une par ligne.")
+    envoye_par = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="+", verbose_name="Envoyé par",
+    )
+    envoye_le = models.DateTimeField("Envoyé le", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Message au demandeur"
+        verbose_name_plural = "Messages aux demandeurs"
+        ordering = ["-envoye_le"]
+
+    def __str__(self):
+        return f"{self.objet} ({self.envoye_le:%d/%m/%Y})"
+
+    def liste_pieces_jointes(self):
+        return [nom for nom in self.pieces_jointes.splitlines() if nom]
 
 
 class ContratLocation(models.Model):

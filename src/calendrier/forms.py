@@ -15,6 +15,7 @@ from .models import (
     AnnexeContrat,
     ArticleContrat,
     ContratLocation,
+    MessageReservation,
     MiseEnPageContrat,
     Reservation,
     activites_sur,
@@ -507,3 +508,76 @@ class MiseEnPageContratForm(forms.ModelForm):
         if commit:
             objet.save()
         return objet
+
+
+class _EntreePlusieursFichiers(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class ChampPlusieursFichiers(forms.FileField):
+    """Plusieurs fichiers en un seul champ (liste, vide si aucun)."""
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", _EntreePlusieursFichiers())
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        if not data:
+            return []
+        fichiers = data if isinstance(data, (list, tuple)) else [data]
+        return [super(ChampPlusieursFichiers, self).clean(f, initial) for f in fichiers]
+
+
+EXTENSIONS_PIECES_JOINTES = (
+    "pdf", "jpg", "jpeg", "png", "gif", "webp", "heic",
+    "doc", "docx", "odt", "xls", "xlsx", "ods", "txt",
+)
+TAILLE_MAX_PIECES_JOINTES = 15 * 1024 * 1024  # total, avec le contrat : sous les limites des messageries
+NOMBRE_MAX_PIECES_JOINTES = 10
+
+
+class ReponseReservationForm(forms.Form):
+    """Réponse au demandeur envoyée depuis le site, avec pièces jointes."""
+
+    objet = forms.CharField(label="Objet", max_length=200)
+    message = forms.CharField(label="Message", widget=forms.Textarea(attrs={"rows": 14}))
+    pieces_jointes = ChampPlusieursFichiers(
+        label="Pièces jointes", required=False,
+        help_text=(
+            f"Facultatif : {NOMBRE_MAX_PIECES_JOINTES} fichiers au plus, 15 Mo en tout "
+            "(PDF, images, documents Word, Excel ou LibreOffice). Maintenez Ctrl pour en choisir plusieurs."
+        ),
+    )
+    joindre_contrat = forms.BooleanField(label="Joindre le contrat de location (PDF)", required=False)
+    copie = forms.BooleanField(label="M'envoyer une copie", required=False)
+
+    def __init__(self, *args, contrat=None, copie_possible=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.contrat = contrat if contrat is not None and contrat.fichier_disponible else None
+        if not copie_possible:
+            del self.fields["copie"]  # pas d'adresse e-mail sur le compte
+        self.fields["pieces_jointes"].widget.attrs["accept"] = ",".join(f".{e}" for e in EXTENSIONS_PIECES_JOINTES)
+        if self.contrat is None:
+            del self.fields["joindre_contrat"]
+
+    def clean_pieces_jointes(self):
+        fichiers = self.cleaned_data["pieces_jointes"]
+        if len(fichiers) > NOMBRE_MAX_PIECES_JOINTES:
+            raise forms.ValidationError(f"{NOMBRE_MAX_PIECES_JOINTES} pièces jointes au maximum.")
+        refuses = [f.name for f in fichiers if f.name.rsplit(".", 1)[-1].lower() not in EXTENSIONS_PIECES_JOINTES]
+        if refuses:
+            raise forms.ValidationError(
+                "Type de fichier non accepté : " + ", ".join(refuses)
+                + ". Envoyez un PDF, une image ou un document bureautique."
+            )
+        return fichiers
+
+    def clean(self):
+        donnees = super().clean()
+        taille = sum(f.size for f in donnees.get("pieces_jointes", []))
+        if donnees.get("joindre_contrat") and self.contrat:
+            taille += self.contrat.fichier_pdf.size
+        if taille > TAILLE_MAX_PIECES_JOINTES:
+            self.add_error("pieces_jointes", f"Pièces jointes trop lourdes ({taille / 1048576:.1f} Mo) : 15 Mo au maximum.")
+        return donnees
+

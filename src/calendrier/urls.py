@@ -28,6 +28,7 @@ urlpatterns = [
     path("reservation/<int:pk>/", views.ReservationDetailView.as_view(), name="reservation_detail"),
     path("reservation/<int:pk>/modifier/", views.ReservationUpdateView.as_view(), name="reservation_modifier"),
     path("reservation/<int:pk>/traiter/", views.reservation_traiter, name="reservation_traiter"),
+    path("reservation/<int:pk>/repondre/", views.reservation_repondre, name="reservation_repondre"),
     path("reservation/<int:pk>/supprimer/", views.ReservationDeleteView.as_view(), name="reservation_supprimer"),
     path("reservation/<int:reservation_pk>/contrat/", views.rediger_contrat, name="reservation_contrat"),
     path("reservation/<int:reservation_pk>/contrat/pdf/", views.telecharger_contrat, name="reservation_contrat_pdf"),

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Répondre à {{ reservation.nom_court }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'calendrier/css/calendrier.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header fade-target">
+    <div class="wrap">
+        <p class="breadcrumb"><a href="{% url 'calendrier:reservation_detail' reservation.pk %}">← Retour à la réservation</a></p>
+        <h1>Répondre à {{ reservation.nom_court }}</h1>
+        <p class="page-header__intro">L'e-mail part de l'adresse de l'ASBL vers <strong>{{ reservation.email }}</strong> ; sa réponse arrivera dans la boîte de l'ASBL.</p>
+    </div>
+</section>
+
+<section class="calendrier-form wrap">
+    {% if messages %}
+        <ul class="messages">{% for message in messages %}<li class="message message--{{ message.tags }}">{{ message }}</li>{% endfor %}</ul>
+    {% endif %}
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="form-field">
+            <label>Destinataire</label>
+            <p>{{ reservation.nom_affiche }} &lt;{{ reservation.email }}&gt;</p>
+        </div>
+        {% for champ in form %}
+            <div class="form-field{% if champ.errors %} form-field--error{% endif %}{% if champ.field.widget.input_type == 'checkbox' %} form-field--case{% endif %}">
+                {% if champ.field.widget.input_type == "checkbox" %}
+                    <label>{{ champ }} {{ champ.label }}</label>
+                {% else %}
+                    {{ champ.label_tag }}
+                    {{ champ }}
+                {% endif %}
+                {% if champ.help_text %}<p class="form-field__help">{{ champ.help_text }}</p>{% endif %}
+                {{ champ.errors }}
+            </div>
+        {% endfor %}
+        <div class="calendrier-detail__actions">
+            <button type="submit" class="btn btn--primary">Envoyer l'e-mail</button>
+            <a class="btn btn--secondary" href="{% url 'calendrier:reservation_detail' reservation.pk %}">Annuler</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

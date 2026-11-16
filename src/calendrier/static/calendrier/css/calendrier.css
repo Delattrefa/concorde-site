@@ -242,6 +242,12 @@
 .calendrier-detail__actions { margin-top: 30px; display: flex; gap: 14px; flex-wrap: wrap; }
 .calendrier-detail__repondre { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
 .calendrier-detail__aide { font-size: .85rem; color: #7a6a6a; }
+.calendrier-messages { list-style: none; padding: 0; margin: 0; }
+.calendrier-messages li { border: 1px solid #e4d8cf; border-radius: 4px; padding: 10px 14px; margin-bottom: 8px; background: #fff; }
+.calendrier-messages summary { cursor: pointer; }
+.calendrier-messages__texte { margin-top: 8px; }
+.calendrier-form .form-field--case label { display: flex; align-items: center; gap: 8px; font-weight: 400; }
+.calendrier-form .form-field--case input { width: auto; }
 
 /* ---------- Liste des réservations (admin) ---------- */
 .calendrier-liste { padding: 20px 24px 90px; }

@@ -231,6 +231,7 @@ class PermissionsTests(TestCase):
             reverse("calendrier:reservation_liste"),
             reverse("calendrier:reservation_ajouter"),
             reverse("calendrier:reservation_detail", args=[r]),
+            reverse("calendrier:reservation_repondre", args=[r]),
             reverse("calendrier:reservation_modifier", args=[r]),
             reverse("calendrier:reservation_supprimer", args=[r]),
             reverse("calendrier:reservation_contrat", args=[r]),

@@ -13,7 +13,10 @@ Organisation (méthode CRUD) :
 from datetime import date, datetime
 from urllib.parse import urlencode
 
+import logging
+
 from django.contrib import messages
+from django.core.mail import EmailMessage
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
@@ -32,12 +35,14 @@ from django.utils import timezone
 from concorde_site.antispam import compter_envoi, est_un_robot, limite_atteinte
 
 from .contrats import VARIABLES_DISPONIBLES, AIDE_MISE_EN_FORME, generer_pdf_contrat, nom_fichier_contrat
+from .forms import ReponseReservationForm
 from .forms import ActiviteForm, AnnexeContratForm, MiseEnPageContratForm, ReservationAdminForm, SuiviPaiementFormSet, images_de_signature, ArticleContratForm, ContratLocationForm, ReservationForm
 from .models import (
     Activite,
     AnnexeContrat,
     ArticleContrat,
     ContratLocation,
+    MessageReservation,
     MiseEnPageContrat,
     Reservation,
     demandes_en_attente_sur,
@@ -48,6 +53,9 @@ from .utils import construire_semaines_du_mois, mois_adjacent
 
 # Demandes de réservation publiques acceptées par heure et par adresse IP.
 LIMITE_DEMANDES_PAR_IP = 5
+
+
+logger = logging.getLogger(__name__)
 
 
 def _est_administrateur(user):
@@ -466,7 +474,51 @@ class ReservationDetailView(UserPassesTestMixin, DetailView):
     def get_context_data(self, **kwargs):
         contexte = super().get_context_data(**kwargs)
         contexte["lien_reponse"] = self.object.lien_reponse_email(self.request.user.get_full_name())
+        contexte["messages_envoyes"] = self.object.messages.select_related("envoye_par")
         return contexte
+
+
+@user_passes_test(_est_administrateur, login_url="login")
+def reservation_repondre(request, pk):
+    """Répondre au demandeur depuis le site, avec des pièces jointes. L'envoi
+    est gardé dans l'historique de la demande (sans les fichiers)."""
+    reservation = get_object_or_404(Reservation, pk=pk)
+    contrat = getattr(reservation, "contrat", None)
+    options = {"contrat": contrat, "copie_possible": bool(request.user.email)}
+    if request.method == "POST":
+        form = ReponseReservationForm(request.POST, request.FILES, **options)
+        if form.is_valid():
+            donnees = form.cleaned_data
+            email = EmailMessage(
+                donnees["objet"], donnees["message"], to=[reservation.email],
+                bcc=[request.user.email] if donnees.get("copie") else None,
+            )
+            noms = []
+            for fichier in donnees["pieces_jointes"]:
+                email.attach(fichier.name, fichier.read(), fichier.content_type or None)
+                noms.append(fichier.name)
+            if donnees.get("joindre_contrat"):
+                nom = contrat.fichier_pdf.name.rsplit("/", 1)[-1]
+                with contrat.fichier_pdf.open("rb") as pdf:
+                    email.attach(nom, pdf.read(), "application/pdf")
+                noms.append(nom)
+            try:
+                email.send()
+            except Exception:
+                logger.exception("Réponse à la demande %s non envoyée", reservation.pk)
+                messages.error(request, "L'e-mail n'a pas pu partir. Réessayez dans quelques minutes "
+                                        "(les pièces jointes sont à choisir à nouveau).")
+            else:
+                MessageReservation.objects.create(
+                    reservation=reservation, destinataire=reservation.email, objet=donnees["objet"],
+                    message=donnees["message"], pieces_jointes="\n".join(noms), envoye_par=request.user,
+                )
+                messages.success(request, f"E-mail envoyé à {reservation.email}.")
+                return redirect(reverse("calendrier:reservation_detail", args=[reservation.pk]) + "#messages")
+    else:
+        objet, corps = reservation.brouillon_reponse(request.user.get_full_name())
+        form = ReponseReservationForm(initial={"objet": objet, "message": corps, "copie": True}, **options)
+    return render(request, "calendrier/reservation_repondre.html", {"reservation": reservation, "form": form})
 
 
 @user_passes_test(_est_administrateur, login_url="login")

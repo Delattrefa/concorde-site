@@ -243,6 +243,7 @@ with sync_playwright() as p:
         page.goto(BASE + "/calendrier/", wait_until="networkidle")  # vide le message « contrat généré »
     shot(page, "admin_reservations", "/calendrier/reservations/", hauteur=1400)
     shot(page, "admin_reservation_attente", f"/calendrier/reservation/{IDS['demande_attente']}/", hauteur=1300)
+    shot(page, "admin_reservation_repondre", f"/calendrier/reservation/{IDS['demande_attente']}/repondre/", hauteur=1350)
     if voulu("admin_contrat_form") or voulu("contrat_pdf"):
         rediger_contrat(page)
     shot(page, "admin_reservation_validee", f"/calendrier/reservation/{IDS['demande_validee']}/", hauteur=1400)
