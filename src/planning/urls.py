@@ -51,6 +51,7 @@ urlpatterns = [
     path("discussions/<int:pk>/", views_discussion.canal, name="canal"),
     path("discussions/<int:pk>/messages/", views_discussion.canal_messages, name="canal_messages"),
     path("discussions/<int:pk>/archiver/", views_discussion.canal_archiver, name="canal_archiver"),
+    path("message/<int:pk>/modifier/", views_discussion.message_modifier, name="message_modifier"),
     path("message/<int:pk>/supprimer/", views_discussion.message_supprimer, name="message_supprimer"),
 
     # Notifications

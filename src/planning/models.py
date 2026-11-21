@@ -314,6 +314,7 @@ class Message(models.Model):
     texte = models.TextField("Message", max_length=4000)
     mentions = models.ManyToManyField(MEMBRE, blank=True, related_name="+")
     cree_le = models.DateTimeField(auto_now_add=True)
+    modifie_le = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["pk"]

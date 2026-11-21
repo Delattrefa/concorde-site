@@ -367,6 +367,34 @@ class DiscussionTests(Base):
         destinataires = set(Notification.objects.filter(genre=Notification.MESSAGE).values_list("destinataire__username", flat=True))
         self.assertEqual(destinataires, {"bob", "chef"})
 
+    def test_modifier_et_supprimer_son_message(self):
+        canal = Canal.objects.get(nom="Général")
+        url = reverse("planning:canal_messages", args=[canal.pk])
+        donnees = self.client.post(url, {"texte": "Rendez-vous à 18h"}, HTTP_X_REQUESTED_WITH="fetch").json()["message"]
+        self.assertIn("url_modifier", donnees)
+        maj = self.client.get(url, {"apres": donnees["id"]}).json()["maj"]
+        reponse = self.client.post(donnees["url_modifier"], {"texte": "Rendez-vous à 19h, @bob"},
+                                   HTTP_X_REQUESTED_WITH="fetch").json()["message"]
+        self.assertIn("19h", reponse["html"])
+        self.assertTrue(reponse["modifie"])
+        self.assertTrue(Notification.objects.filter(destinataire=self.bob, genre=Notification.MENTION).exists())
+        # Les autres voient la modification à la prochaine interrogation
+        self.client.force_login(self.bob)
+        suivi = self.client.get(url, {"apres": donnees["id"], "premier": donnees["id"], "maj": maj}).json()
+        self.assertEqual([m["id"] for m in suivi["modifies"]], [donnees["id"]])
+        self.assertNotIn("url_modifier", suivi["modifies"][0])
+        # Ni Bob ni un responsable ne peuvent toucher au message d'Alice
+        self.assertEqual(self.client.post(donnees["url_modifier"], {"texte": "Piraté"}).status_code, 403)
+        self.assertEqual(self.client.post(donnees["url_supprimer"]).status_code, 403)
+        self.client.force_login(self.chef)
+        self.assertEqual(self.client.post(donnees["url_supprimer"]).status_code, 403)
+        # Alice le supprime : il disparaît chez les autres
+        self.client.force_login(self.alice)
+        self.client.post(donnees["url_supprimer"], HTTP_X_REQUESTED_WITH="fetch")
+        self.assertFalse(canal.messages.exists())
+        suivi = self.client.get(url, {"apres": donnees["id"], "premier": donnees["id"], "maj": maj}).json()
+        self.assertEqual(suivi["existants"], [])
+
     def test_texte_echappe(self):
         html = rendre_message("<script>alert(1)</script> https://exemple.be", {})
         self.assertNotIn("<script>", html)

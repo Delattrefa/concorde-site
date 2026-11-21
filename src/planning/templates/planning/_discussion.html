@@ -1,11 +1,11 @@
 {# Fil de discussion d'un canal (page du canal ou d'un événement) #}
 <div class="pl-discussion{% if pleine_page %} pl-discussion--page{% endif %}" data-discussion
-     data-url="{% url 'planning:canal_messages' canal.pk %}" data-dernier="{{ dernier_id }}">
+     data-url="{% url 'planning:canal_messages' canal.pk %}" data-dernier="{{ dernier_id }}" data-maj="{{ maj }}">
     <div class="pl-discussion__messages" data-messages aria-live="polite">
         {% if plus_anciens %}<p class="pl-muet" style="text-align:center"><a href="{% url 'planning:canal' canal.pk %}?avant={{ plus_anciens }}">Messages plus anciens</a></p>{% endif %}
         {% for m in messages_canal %}
-            <div class="pl-message{% if m.moi %} pl-message--moi{% endif %}" data-id="{{ m.id }}">
-                <div class="pl-message__entete"><strong>{{ m.auteur }}</strong><span>{{ m.heure }}</span></div>
+            <div class="pl-message{% if m.moi %} pl-message--moi{% endif %}" data-id="{{ m.id }}"{% if m.moi %} data-texte="{{ m.texte }}" data-url-modifier="{{ m.url_modifier }}" data-url-supprimer="{{ m.url_supprimer }}"{% endif %}>
+                <div class="pl-message__entete"><strong>{{ m.auteur }}</strong><span>{{ m.heure }}</span>{% if m.modifie %}<em class="pl-message__modifie">modifié</em>{% endif %}</div>
                 <div class="pl-message__texte">{{ m.html|safe }}</div>
             </div>
         {% empty %}

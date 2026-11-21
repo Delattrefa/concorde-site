@@ -11,6 +11,8 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Max, Q
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
@@ -39,6 +41,7 @@ def _marquer_lu(canal, user, dernier_id):
 
 def contexte_discussion(canal, user, avant=None):
     """Derniers messages d'un canal, pour la page du canal ou d'un événement."""
+    maintenant = timezone.now()
     requete = canal.messages.select_related("auteur")
     if avant:
         requete = requete.filter(pk__lt=avant)
@@ -53,6 +56,7 @@ def contexte_discussion(canal, user, avant=None):
         "messages_canal": [services.message_json(m, par_nom, user) for m in derniers],
         "plus_anciens": derniers[0].pk if plus_anciens and derniers else None,
         "dernier_id": derniers[-1].pk if derniers else 0,
+        "maj": maintenant.isoformat(),
         "membres_mention": [{"nom": nom_membre(m), "identifiant": m.username} for m in par_nom.values()],
     }
 
@@ -118,11 +122,24 @@ def canal_messages(request, pk):
         return redirect(canal.get_absolute_url())
     apres = request.GET.get("apres", "0")
     apres = int(apres) if apres.isdigit() else 0
+    maintenant = timezone.now()
     nouveaux = list(canal.messages.filter(pk__gt=apres).select_related("auteur").order_by("pk")[:100])
-    par_nom = services.membres_par_nom() if nouveaux else {}
+    reponse = {"maj": maintenant.isoformat()}
+    # Messages déjà affichés : lesquels existent encore, lesquels ont été modifiés
+    premier = request.GET.get("premier", "")
+    modifies = []
+    if premier.isdigit() and apres:
+        affiches = canal.messages.filter(pk__gte=int(premier), pk__lte=apres)
+        reponse["existants"] = list(affiches.values_list("pk", flat=True))
+        depuis = parse_datetime(request.GET.get("maj", ""))
+        if depuis:
+            modifies = list(affiches.filter(modifie_le__gte=depuis).select_related("auteur"))
+    par_nom = services.membres_par_nom() if nouveaux or modifies else {}
     if nouveaux:
         _marquer_lu(canal, request.user, nouveaux[-1].pk)
-    return JsonResponse({"messages": [services.message_json(m, par_nom, request.user) for m in nouveaux]})
+    reponse["messages"] = [services.message_json(m, par_nom, request.user) for m in nouveaux]
+    reponse["modifies"] = [services.message_json(m, par_nom, request.user) for m in modifies]
+    return JsonResponse(reponse)
 
 
 @login_required
@@ -137,14 +154,39 @@ def canal_archiver(request, pk):
     return redirect("planning:canaux")
 
 
+def _mon_message(request, pk):
+    """Un message ne se modifie ou ne se supprime que par son auteur."""
+    message = get_object_or_404(Message.objects.select_related("canal", "auteur"), pk=pk)
+    if message.auteur_id != request.user.pk or not message.canal.visible_par(request.user):
+        raise PermissionDenied
+    return message
+
+
+@login_required
+@require_POST
+def message_modifier(request, pk):
+    message = _mon_message(request, pk)
+    texte = request.POST.get("texte", "").strip()[:LONGUEUR_MAX]
+    ajax = request.headers.get("X-Requested-With") == "fetch"
+    if not texte:
+        if ajax:
+            return JsonResponse({"erreur": "Message vide."}, status=400)
+        return redirect(message.canal.get_absolute_url())
+    if texte != message.texte:
+        services.modifier_message(message, texte)
+    if ajax:
+        return JsonResponse({"message": services.message_json(message, services.membres_par_nom(), request.user)})
+    return redirect(message.canal.get_absolute_url())
+
+
 @login_required
 @require_POST
 def message_supprimer(request, pk):
-    message = get_object_or_404(Message.objects.select_related("canal"), pk=pk)
-    if message.auteur_id != request.user.pk and not est_responsable(request.user):
-        raise PermissionDenied
+    message = _mon_message(request, pk)
     canal = message.canal
     message.delete()
+    if request.headers.get("X-Requested-With") == "fetch":
+        return JsonResponse({"supprime": pk})
     return redirect(canal.get_absolute_url())
 
 

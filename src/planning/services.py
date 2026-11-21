@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html, urlize
 from django.utils.safestring import mark_safe
@@ -202,16 +203,40 @@ def publier(canal, auteur, texte):
     return message
 
 
+def modifier_message(message, texte):
+    """Nouveau texte d'un message déjà envoyé : seules les personnes
+    mentionnées pour la première fois sont prévenues."""
+    avant = set(message.mentions.values_list("pk", flat=True))
+    message.texte = texte
+    message.modifie_le = timezone.now()
+    message.save(update_fields=["texte", "modifie_le"])
+    mentionnes = mentions(texte)
+    message.mentions.set(mentionnes)
+    nouveaux = [m for m in mentionnes if m.pk not in avant]
+    canal = message.canal
+    notifier(nouveaux, Notification.MENTION,
+             f"{nom_membre(message.auteur)} vous a mentionné dans « {canal.nom} » : {Truncator(texte).chars(120)}",
+             canal.get_absolute_url(), exclure=message.auteur)
+    return message
+
+
 def message_json(message, membres_par_nom, user):
     auteur = message.auteur
-    return {
+    moi = auteur is not None and auteur.pk == user.pk
+    donnees = {
         "id": message.pk,
         "auteur": nom_membre(auteur),
         "initiales": "".join(p[0] for p in nom_membre(auteur).split()[:2]).upper(),
-        "moi": auteur is not None and auteur.pk == user.pk,
+        "moi": moi,
         "heure": f"{timezone.localtime(message.cree_le):%d/%m %H:%M}",
+        "modifie": message.modifie_le is not None,
         "html": str(rendre_message(message.texte, membres_par_nom)),
     }
+    if moi:
+        donnees["texte"] = message.texte
+        donnees["url_modifier"] = reverse("planning:message_modifier", args=[message.pk])
+        donnees["url_supprimer"] = reverse("planning:message_supprimer", args=[message.pk])
+    return donnees
 
 
 def membres_par_nom():

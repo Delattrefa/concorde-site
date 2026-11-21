@@ -33,9 +33,107 @@
         entete.append(auteur, heure);
         var texte = document.createElement("div");
         texte.className = "pl-message__texte";
-        texte.innerHTML = m.html;  // HTML échappé par le serveur
         div.append(entete, texte);
+        remplir(div, m);
         return div;
+    }
+
+    // Contenu d'un message (à l'arrivée ou après une modification)
+    function remplir(div, m) {
+        div.querySelector(".pl-message__texte").innerHTML = m.html;  // HTML échappé par le serveur
+        var entete = div.querySelector(".pl-message__entete");
+        if (m.modifie && !entete.querySelector(".pl-message__modifie")) {
+            var marque = document.createElement("em");
+            marque.className = "pl-message__modifie";
+            marque.textContent = "modifié";
+            entete.insertBefore(marque, entete.querySelector(".pl-message__actions"));
+        }
+        if (m.url_modifier) {
+            div.dataset.texte = m.texte;
+            div.dataset.urlModifier = m.url_modifier;
+            div.dataset.urlSupprimer = m.url_supprimer;
+        }
+    }
+
+    // Boutons « Modifier » et « Supprimer » sur ses propres messages
+    function ajouterActions(div, form) {
+        if (!div.dataset.urlModifier || div.querySelector(".pl-message__actions")) return;
+        var actions = document.createElement("span");
+        actions.className = "pl-message__actions";
+        var modifier = document.createElement("button");
+        modifier.type = "button";
+        modifier.textContent = "Modifier";
+        var supprimer = document.createElement("button");
+        supprimer.type = "button";
+        supprimer.textContent = "Supprimer";
+        actions.append(modifier, supprimer);
+        div.querySelector(".pl-message__entete").appendChild(actions);
+
+        function envoyer(url, donnees) {
+            donnees.append("csrfmiddlewaretoken", csrf(form));
+            return fetch(url, {
+                method: "POST", body: donnees, credentials: "same-origin",
+                headers: { "X-Requested-With": "fetch", "X-CSRFToken": csrf(form) }
+            }).then(function (r) {
+                if (!r.ok) throw new Error(r.status);
+                return r.json();
+            });
+        }
+
+        supprimer.addEventListener("click", function () {
+            if (!window.confirm("Supprimer ce message ?")) return;
+            envoyer(div.dataset.urlSupprimer, new FormData())
+                .then(function () { div.remove(); })
+                .catch(function () { window.alert("Le message n'a pas pu être supprimé."); });
+        });
+
+        modifier.addEventListener("click", function () {
+            if (div.querySelector(".pl-message__edition")) return;
+            var texte = div.querySelector(".pl-message__texte");
+            var edition = document.createElement("div");
+            edition.className = "pl-message__edition";
+            var zone = document.createElement("textarea");
+            zone.maxLength = 4000;
+            zone.rows = 3;
+            zone.value = div.dataset.texte;
+            zone.setAttribute("aria-label", "Modifier le message");
+            var enregistrer = document.createElement("button");
+            enregistrer.type = "button";
+            enregistrer.className = "btn btn--secondary btn--small";
+            enregistrer.textContent = "Enregistrer";
+            var annuler = document.createElement("button");
+            annuler.type = "button";
+            annuler.className = "btn btn--small";
+            annuler.textContent = "Annuler";
+            edition.append(zone, enregistrer, annuler);
+            texte.hidden = true;
+            actions.hidden = true;
+            div.appendChild(edition);
+            zone.focus();
+
+            function fermer() {
+                edition.remove();
+                texte.hidden = false;
+                actions.hidden = false;
+            }
+            function valider() {
+                var valeur = zone.value.trim();
+                if (!valeur) return;
+                var donnees = new FormData();
+                donnees.append("texte", valeur);
+                enregistrer.disabled = true;
+                envoyer(div.dataset.urlModifier, donnees)
+                    .then(function (d) { if (d.message) remplir(div, d.message); fermer(); })
+                    .catch(function () { window.alert("Le message n'a pas pu être modifié."); })
+                    .finally(function () { enregistrer.disabled = false; });
+            }
+            annuler.addEventListener("click", fermer);
+            enregistrer.addEventListener("click", valider);
+            zone.addEventListener("keydown", function (e) {
+                if (e.key === "Escape") { e.preventDefault(); fermer(); }
+                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); valider(); }
+            });
+        });
     }
 
     function initDiscussion(bloc) {
@@ -44,6 +142,7 @@
         var zone = form.querySelector("textarea");
         var url = bloc.dataset.url;
         var dernier = parseInt(bloc.dataset.dernier || "0", 10);
+        var maj = bloc.dataset.maj || "";
         var enCours = false;
 
         function enBas() {
@@ -55,21 +154,45 @@
             messages.forEach(function (m) {
                 if (m.id <= dernier || liste.querySelector('[data-id="' + m.id + '"]')) return;
                 if (vide) { vide.remove(); vide = null; }
-                liste.appendChild(elementMessage(m));
+                var div = elementMessage(m);
+                liste.appendChild(div);
+                ajouterActions(div, form);
                 dernier = m.id;
             });
             if (defiler && messages.length) liste.scrollTop = liste.scrollHeight;
         }
+        // Messages modifiés ou supprimés par leur auteur depuis l'affichage
+        function actualiser(d) {
+            if (d.existants) {
+                var restants = {};
+                d.existants.forEach(function (id) { restants[id] = true; });
+                liste.querySelectorAll(".pl-message[data-id]").forEach(function (div) {
+                    var id = parseInt(div.dataset.id, 10);
+                    if (id <= dernier && !restants[id]) div.remove();
+                });
+            }
+            (d.modifies || []).forEach(function (m) {
+                var div = liste.querySelector('.pl-message[data-id="' + m.id + '"]');
+                if (div && !div.querySelector(".pl-message__edition")) remplir(div, m);
+            });
+            if (d.maj) maj = d.maj;
+        }
         function recharger() {
             if (enCours || document.hidden) return;
             enCours = true;
-            fetch(url + "?apres=" + dernier, { headers: { "X-Requested-With": "fetch" }, credentials: "same-origin" })
+            var premier = liste.querySelector(".pl-message[data-id]");
+            var requete = "?apres=" + dernier;
+            if (premier && maj) {
+                requete += "&premier=" + premier.dataset.id + "&maj=" + encodeURIComponent(maj);
+            }
+            fetch(url + requete, { headers: { "X-Requested-With": "fetch" }, credentials: "same-origin" })
                 .then(function (r) { return r.ok ? r.json() : { messages: [] }; })
-                .then(function (d) { ajouter(d.messages || []); })
+                .then(function (d) { actualiser(d); ajouter(d.messages || []); })
                 .catch(function () {})
                 .finally(function () { enCours = false; });
         }
 
+        liste.querySelectorAll(".pl-message[data-id]").forEach(function (div) { ajouterActions(div, form); });
         liste.scrollTop = liste.scrollHeight;
         setInterval(recharger, DELAI_MESSAGES);
         document.addEventListener("visibilitychange", recharger);

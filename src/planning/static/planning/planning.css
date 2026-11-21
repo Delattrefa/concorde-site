@@ -187,6 +187,12 @@ details.pl-plier > summary { cursor: pointer; font-weight: 600; color: var(--col
 .pl-message__entete { display: flex; gap: 8px; align-items: baseline; font-size: .78rem; color: var(--pl-gris); }
 .pl-message__entete strong { color: var(--color-primary-dark); font-size: .82rem; }
 .pl-message__texte { overflow-wrap: anywhere; font-size: .93rem; }
+.pl-message__modifie { font-size: .72rem; }
+.pl-message__actions { margin-left: auto; display: inline-flex; gap: 6px; }
+.pl-message__actions button { background: none; border: 0; padding: 0; font: inherit; font-size: .74rem; color: var(--pl-gris); text-decoration: underline; cursor: pointer; }
+.pl-message__actions button:hover, .pl-message__actions button:focus-visible { color: var(--color-primary); }
+.pl-message__edition { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.pl-message__edition textarea { flex: 1 1 100%; min-height: 60px; padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px; font: inherit; font-size: .93rem; resize: vertical; }
 .mention { background: #fdf0c8; color: #6b4a00; border-radius: 3px; padding: 0 3px; font-weight: 600; }
 .pl-discussion__form { position: relative; display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--pl-bord); }
 .pl-discussion__form textarea { flex: 1; min-height: 42px; max-height: 160px; resize: vertical; padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; font: inherit; }
